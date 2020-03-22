@@ -1,7 +1,8 @@
 (ns roaman-life-clj.core
   (:require [me.raynes.fs :as fs]
             [clojure.java.io :as io]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [clojure.string :as str-utils])
   (:import (java.util.zip ZipFile)))
 
 (def ZIP-DIR "/home/thomas/Dropbox/Roam Exports/")
@@ -20,10 +21,21 @@
                         (io/copy (.getInputStream zip entry) f))
                       database-file-name))))
 
+(defn post?
+  [post]
+  (if (= (count (:children post)) 0)
+    false
+    (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children post))))
+             (str-utils/includes? (:string (first (:children post))) "#RoamanPost"))
+      true
+      false))
+  )
+
 (defn main
   []
   (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
-        roam-json (json/read-str (slurp json-path) :key-fn keyword)]
-    (first roam-json)))
+        roam-json (json/read-str (slurp json-path) :key-fn keyword)
+        posts (filter post? roam-json)]
+    (first posts)))
 
 (main)
