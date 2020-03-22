@@ -1,6 +1,7 @@
 (ns roaman-life-clj.core
   (:require [me.raynes.fs :as fs]
-        [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.data.json :as json])
   (:import (java.util.zip ZipFile)))
 
 (def ZIP-DIR "/home/thomas/Dropbox/Roam Exports/")
@@ -21,6 +22,8 @@
 
 (defn main
   []
-  (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR))
+  (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
+        roam-json (json/read-str (slurp json-path) :key-fn keyword)]
+    (first roam-json)))
 
 (main)
