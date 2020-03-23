@@ -39,12 +39,17 @@
            nil)
    :children (if (post? post) (rest (:children post)) (:children post))})
 
+(defn title-content-pair
+  [page]
+  [(:title page) page])
+
 (defn main
   []
   (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
         pages-as-rl-json (map to-rl-json roam-json)
+        title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
         posts (filter #(true? (:post %)) pages-as-rl-json)]
-    posts))
+    (last title-to-content-map)))
 
 (main)
