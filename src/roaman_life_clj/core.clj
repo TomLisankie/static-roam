@@ -34,7 +34,9 @@
   [post]
   {:title (:title post)
    :post (post? post)
-   :date (if (post? post) (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children post)))) nil)
+   :date (if (post? post)
+           (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children post))))
+           nil)
    :children (if (post? post) (rest (:children post)) (:children post))})
 
 (defn main
