@@ -28,14 +28,21 @@
     (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children post))))
              (str-utils/includes? (:string (first (:children post))) "#RoamanPost"))
       true
-      false))
-  )
+      false)))
+
+(defn to-rl-json
+  [post]
+  {:title (:title post)
+   :post (post? post)
+   :date (if (post? post) (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children post)))) nil)
+   :children (if (post? post) (rest (:children post)) (:children post))})
 
 (defn main
   []
   (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-        posts (filter post? roam-json)]
-    (first posts)))
+        pages-as-rl-json (map to-rl-json roam-json)
+        posts (filter #(true? (:post %)) pages-as-rl-json)]
+    posts))
 
 (main)
