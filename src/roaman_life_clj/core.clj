@@ -43,6 +43,19 @@
   [page]
   [(:title page) page])
 
+(defn remove-double-delimiters
+  [string]
+  (subs string 2 (- (count string) 2)))
+
+(defn get-pages-referenced-in-block
+  [string]
+  (set (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" string))))
+
+;; (defn get-pages-to-include
+;;   [start-pages depth-degree max-degree]
+;;   (if (< depth-degree max-degree)
+;;     ))
+
 (defn main
   []
   (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
@@ -50,6 +63,4 @@
         pages-as-rl-json (map to-rl-json roam-json)
         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
         posts (filter #(true? (:post %)) pages-as-rl-json)]
-    (last title-to-content-map)))
-
-(main)
+    posts))
