@@ -47,14 +47,17 @@
   [string]
   (subs string 2 (- (count string) 2)))
 
-(defn get-pages-referenced-in-block
+(defn get-pages-referenced-in-string
   [string]
   (set (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" string))))
 
-;; (defn get-pages-to-include
-;;   [start-pages depth-degree max-degree]
-;;   (if (< depth-degree max-degree)
-;;     ))
+(defn get-pages-referenced-in-block
+  [block]
+  )
+
+(defn get-pages-to-include
+  [start-pages depth-degree max-degree]
+  )
 
 (defn main
   []
