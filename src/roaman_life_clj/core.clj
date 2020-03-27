@@ -49,14 +49,12 @@
 
 (defn get-pages-referenced-in-string
   [string]
-  (set (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" string))))
+  (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" string)))
 
-(defn get-pages-referenced-in-block
-  [block]
-  )
-
-(defn get-pages-to-include
-  [start-pages depth-degree max-degree]
+(defn pages-mentioned-by-children
+  [post]
+  ;; needs to recursively visit children
+  (flatten (map get-pages-referenced-in-string (map second (map first (tree-seq #(:children %) #(:children %) post)))))
   )
 
 (defn main
@@ -65,5 +63,7 @@
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
         pages-as-rl-json (map to-rl-json roam-json)
         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
-        posts (filter #(true? (:post %)) pages-as-rl-json)]
-    posts))
+        posts (filter #(true? (:post %)) pages-as-rl-json)
+        included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map pages-mentioned-by-children posts))
+        ]
+    included-pages-to-mentioned-pages-map))
