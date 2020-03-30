@@ -2,7 +2,8 @@
   (:require [me.raynes.fs :as fs]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
-            [clojure.string :as str-utils])
+            [clojure.string :as str-utils]
+            [clojure.set :as set-fns])
   (:import (java.util.zip ZipFile)))
 
 (def ZIP-DIR "/home/thomas/Dropbox/Roam Exports/")
@@ -22,6 +23,7 @@
                       database-file-name))))
 
 (defn post?
+  ;; is this Roam page a post? Is it tagged as such in its first block?
   [post]
   (if (= (count (:children post)) 0)
     false
@@ -31,6 +33,7 @@
       false)))
 
 (defn to-rl-json
+  ;; strips Roam JSON of unneeded info and adds relevant info
   [post]
   {:title (:title post)
    :post (post? post)
@@ -52,10 +55,20 @@
   (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" string)))
 
 (defn pages-mentioned-by-children
-  [post]
+  [post-title page-to-content-map]
   ;; needs to recursively visit children
-  (flatten (map get-pages-referenced-in-string (map second (map first (tree-seq #(:children %) #(:children %) post)))))
-  )
+  (when (:children (get page-to-content-map post-title))
+    (set (flatten (map get-pages-referenced-in-string (map second (map first (tree-seq #(:children %) #(:children %) (get page-to-content-map post-title)))))))))
+
+(defn find-all-included-pages
+  [unexplored-posts max-depth page-to-content-map]
+  (loop [explored #{}
+         unexplored (set unexplored-posts)
+         current-depth 0]
+    ;; (json/pprint unexplored)
+    (if (> current-depth max-depth)
+      explored
+      (recur (set-fns/union unexplored explored) (reduce set-fns/union (map #(pages-mentioned-by-children % page-to-content-map) unexplored)) (inc current-depth)))))
 
 (defn main
   []
@@ -64,6 +77,6 @@
         pages-as-rl-json (map to-rl-json roam-json)
         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
         posts (filter #(true? (:post %)) pages-as-rl-json)
-        included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map pages-mentioned-by-children posts))
-        ]
-    included-pages-to-mentioned-pages-map))
+        included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) posts)))
+        titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)]
+    titles-of-included-pages))
