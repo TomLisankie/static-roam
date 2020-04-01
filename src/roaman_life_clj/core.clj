@@ -9,6 +9,8 @@
 (def ZIP-DIR "/home/thomas/Dropbox/Roam Exports/")
 (def ZIP-NAME "roam-test-export.zip")
 
+; 1) GET PAGES TO INCLUDE ON SITE
+
 (defn unzip-roam-json-archive
   "Takes the path to a zipfile `source` and unzips it to target-dir, returning the path of the target file"
   [source target-dir]
@@ -52,7 +54,7 @@
 
 (defn get-pages-referenced-in-string
   [string]
-  (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" string)))
+  (concat (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" string)) (map #(subs % 1) (re-seq #"\#..*?(?=\s|$)" string))))
 
 (defn pages-mentioned-by-children
   [post-title page-to-content-map]
@@ -70,6 +72,19 @@
       explored
       (recur (set-fns/union unexplored explored) (reduce set-fns/union (map #(pages-mentioned-by-children % page-to-content-map) unexplored)) (inc current-depth)))))
 
+;; 2) STATIC SITE GENERATION
+
+(defn page-template
+  [page] ;; each indent level is a new ul. Each element in an indent level is a new li
+  [:div
+   [:h1 (:title page)]
+   [:ul
+    [:li "Hello"]
+    [:ul
+     [:li "Yes"]
+     [:li "Woo"]]
+    [:li "Okay no"]]])
+
 (defn main
   []
   (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
@@ -78,5 +93,6 @@
         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
         posts (filter #(true? (:post %)) pages-as-rl-json)
         included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) posts)))
-        titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)]
-    titles-of-included-pages))
+        titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
+        included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))]
+    (stasis/export-pages {"/test.html" (hiccup/html (map rl/page-template (filter #(not= nil (:title %)) (vals (rl/main)))))} ".")))
