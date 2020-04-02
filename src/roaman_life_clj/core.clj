@@ -97,4 +97,4 @@
         included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) posts)))
         titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))]
-    (stasis/export-pages {"/test.html" (hiccup/html (map rl/page-template (filter #(not= nil (:title %)) (vals (rl/main)))))} ".")))
+    (stasis/export-pages {"/test.html" (hiccup/html (map page-template (filter #(not= nil (:title %)) (vals included-title-to-content-map))))} ".")))
