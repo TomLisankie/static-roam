@@ -7,4 +7,5 @@
                  [me.raynes/fs "1.4.6"]
                  [org.clojure/data.json "1.0.0"]
                  [hiccup "1.0.5"]
-                 [stasis "2.5.0"]])
+                 [stasis "2.5.0"]]
+  :main roaman-life-clj.core)

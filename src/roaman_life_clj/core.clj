@@ -87,7 +87,7 @@
      [:li "Woo"]]
     [:li "Okay no"]]])
 
-(defn main
+(defn -main
   []
   (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
