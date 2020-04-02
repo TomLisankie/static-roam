@@ -3,7 +3,9 @@
             [clojure.java.io :as io]
             [clojure.data.json :as json]
             [clojure.string :as str-utils]
-            [clojure.set :as set-fns])
+            [clojure.set :as set-fns]
+            [hiccup.core :as hiccup]
+            [stasis.core :as stasis])
   (:import (java.util.zip ZipFile)))
 
 (def ZIP-DIR "/home/thomas/Dropbox/Roam Exports/")
