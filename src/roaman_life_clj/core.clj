@@ -76,16 +76,17 @@
 
 ;; 2) STATIC SITE GENERATION
 
+(defn children-list-template ;; needs to traverse all children
+  [blockish]
+  (when (:children blockish)
+    [:ul
+     [:li (:string blockish)]]))
+
 (defn page-template
   [page] ;; each indent level is a new ul. Each element in an indent level is a new li
   [:div
    [:h1 (:title page)]
-   [:ul
-    [:li "Hello"]
-    [:ul
-     [:li "Yes"]
-     [:li "Woo"]]
-    [:li "Okay no"]]])
+   (children-list-template page)])
 
 (defn -main
   []
@@ -97,4 +98,5 @@
         included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) posts)))
         titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))]
-    (stasis/export-pages {"/test.html" (hiccup/html (map page-template (filter #(not= nil (:title %)) (vals included-title-to-content-map))))} ".")))
+    (stasis/export-pages {"/test.html" (hiccup/html (map page-template (filter #(not= nil (:title %)) (vals included-title-to-content-map))))} ".")
+    (json/pprint (vals included-title-to-content-map))))
