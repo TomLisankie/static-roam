@@ -80,14 +80,14 @@
   [blockish]
   (loop [children (when (:children blockish)
                     (:children blockish))
-         html []]
+         html [""]]
     (if (= 0 (count children))
       html
       (recur (rest children) (conj html
                                    [:ul [:li (:string (first children))]
                                     (if (:children (first children))
                                       (children-list-template (first children))
-                                      [:li ""])])))))
+                                      nil)])))))
 
 (defn page-template
   [page] ;; each indent level is a new ul. Each element in an indent level is a new li
@@ -103,5 +103,5 @@
         included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) posts)))
         titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))]
-    (stasis/export-pages {"/test.html" (hiccup/html (map page-template (filter #(and (:post %) (not= nil (:title %))) (vals included-title-to-content-map))))} ".")
+    (stasis/export-pages {"/test.html" (hiccup/html (map page-template (filter #(not= nil (:title %)) (vals included-title-to-content-map))))} ".")
     (json/pprint (vals included-title-to-content-map))))
