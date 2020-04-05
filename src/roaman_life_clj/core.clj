@@ -76,30 +76,24 @@
 
 ;; 2) STATIC SITE GENERATION
 
-(defn children-list-template ;; needs to traverse all children
-  [blockish level]
-  (loop [children (when (:children blockish)
-                    (:children blockish))
-         html []]
-    (if (= 0 (count children))
+(defn children-list-template
+  [blockish indent-level]
+  (loop [html []
+         children (:children blockish)]
+    (if (= (count children) 0)
       html
-      (recur (rest children)
-             (concat html (if (:children (first children))
-                            (conj [:ul
-                                   [:li (:string (first children))]]
-                                  (children-list-template (first children) (+ level 1)))
-                            (if (= level 0)
-                              [:ul
-                               [:li (:string (first children))]]
-                              [:li
-                               (:string (first children))])))))))
+      (recur (conj html (if (:children (first children))
+                          (vec (concat [:ul [:li (:string (first children))]]
+                                       (children-list-template (first children) (inc indent-level))))
+                          [:ul [:li (:string (first children))]]))
+             (rest children)))))
 
 (defn page-template
   [page] ;; each indent level is a new ul. Each element in an indent level is a new li
   ;; (when (= (:title page) "RL Blog Post")
   ;; (json/pprint (:children (last page))))
   (println (children-list-template page 0))
-  (vec (concat [:div [:h1 (:title page)]] [(children-list-template page 0)])))
+  (vec (concat [:div [:h1 (:title page)]] (children-list-template page 0))))
 
 (defn -main
   []
