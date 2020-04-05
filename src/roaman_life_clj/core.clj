@@ -95,6 +95,22 @@
   (println (children-list-template page 0))
   (vec (concat [:div [:h1 (:title page)]] (children-list-template page 0))))
 
+(defn- strip-chars
+  [chars collection]
+  (reduce str (remove #((set chars) %) collection)))
+
+(defn- replace-chars
+  [char-convert-map collection]
+  (reduce str (map #(if (get char-convert-map %) (get char-convert-map %) %))))
+
+(defn format-page-name
+  [string]
+  (->> string
+       (str-utils/lower-case)
+       (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
+       (replace-chars {\space \-})
+       (#(str % ".html"))))
+
 (defn -main
   []
   (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
