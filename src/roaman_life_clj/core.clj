@@ -92,7 +92,7 @@
   [page] ;; each indent level is a new ul. Each element in an indent level is a new li
   ;; (when (= (:title page) "RL Blog Post")
   ;; (json/pprint (:children (last page))))
-  (println (children-list-template page 0))
+  ;; (println (children-list-template page 0))
   (vec (concat [:div [:h1 (:title page)]] (children-list-template page 0))))
 
 (defn- strip-chars
@@ -101,15 +101,19 @@
 
 (defn- replace-chars
   [char-convert-map collection]
-  (reduce str (map #(if (get char-convert-map %) (get char-convert-map %) %))))
+  (reduce str (map #(if (get char-convert-map %) (get char-convert-map %) %) collection)))
 
-(defn format-page-name
+(defn page-title->html-file-title
   [string]
   (->> string
        (str-utils/lower-case)
        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
        (replace-chars {\space \-})
-       (#(str % ".html"))))
+       (#(str "/" % ".html"))))
+
+(defn html-file-titles
+  [page-titles]
+  (map page-title->html-file-title page-titles))
 
 (defn -main
   []
@@ -122,6 +126,8 @@
         titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))]
     (stasis/export-pages {"/test.html" (hiccup/html (map page-template (filter #(not= nil (:title %)) (vals included-title-to-content-map))))} ".")
+    (println (zipmap [(get included-title-to-content-map "RL Blog Post")] ["hello"]))
+    (stasis/export-pages (zipmap (html-file-titles (keys included-title-to-content-map)) (map #(hiccup/html %) (map page-template (filter #(not= nil (:title %)) (vals included-title-to-content-map))))) "./pages")
     ;; (json/pprint (vals included-title-to-content-map))
-    (get included-title-to-content-map "Fitness")
+    included-title-to-content-map
     ))
