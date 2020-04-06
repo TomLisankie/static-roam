@@ -125,9 +125,8 @@
         included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) posts)))
         titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))]
-    (stasis/export-pages {"/test.html" (hiccup/html (map page-template (filter #(not= nil (:title %)) (vals included-title-to-content-map))))} ".")
-    (println (zipmap [(get included-title-to-content-map "RL Blog Post")] ["hello"]))
-    (stasis/export-pages (zipmap (html-file-titles (keys included-title-to-content-map)) (map #(hiccup/html %) (map page-template (filter #(not= nil (:title %)) (vals included-title-to-content-map))))) "./pages")
-    ;; (json/pprint (vals included-title-to-content-map))
-    included-title-to-content-map
-    ))
+    (stasis/export-pages
+     (zipmap (html-file-titles (filter #(not= "" %) (keys included-title-to-content-map)))
+             (map #(hiccup/html %) (map page-template (vals included-title-to-content-map))))
+     "./pages")
+    included-title-to-content-map))
