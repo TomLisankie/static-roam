@@ -115,6 +115,16 @@
   [page-titles]
   (map page-title->html-file-title page-titles))
 
+(defn- page-link-from-title
+  ([dir page]
+   [:a {:href (str dir (page-title->html-file-title (:title page)))} (:title page)])
+  ([page]
+   [:a {:href (page-title->html-file-title (:title page))} (:title page)]))
+
+(defn- list-of-page-links
+  [links]
+  (conj [:ul ] (map (fn [a] [:li a]) links)))
+
 (defn -main
   []
   (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
@@ -129,4 +139,7 @@
      (zipmap (html-file-titles (filter #(not= "" %) (keys included-title-to-content-map)))
              (map #(hiccup/html %) (map page-template (vals included-title-to-content-map))))
      "./pages")
+    (stasis/export-pages
+     {"/index.html" (hiccup/html (list-of-page-links (map #(page-link-from-title "pages" %) (filter #(:post %) (vals included-title-to-content-map)))))}
+     ".")
     included-title-to-content-map))
