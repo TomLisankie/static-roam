@@ -140,6 +140,9 @@
              (map #(hiccup/html %) (map page-template (vals included-title-to-content-map))))
      "./pages")
     (stasis/export-pages
+     {"/index.html" (hiccup/html (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map)))))}
+     "./pages")
+    (stasis/export-pages
      {"/index.html" (hiccup/html (list-of-page-links (map #(page-link-from-title "pages" %) (filter #(:post %) (vals included-title-to-content-map)))))}
      ".")
     included-title-to-content-map))
