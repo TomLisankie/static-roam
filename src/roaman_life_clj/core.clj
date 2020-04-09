@@ -95,12 +95,14 @@
 
 (defn double-brackets->links
   [string]
-  (str-utils/replace string #"\[\[.*?\]\]" #(str "[" (remove-double-delimiters %) "](." (page-title->html-file-title %) ")") ))
+  (let [double-brackets-replaced (str-utils/replace string #"\[\[.*?\]\]" #(str "[" (remove-double-delimiters %) "](." (page-title->html-file-title %) ")") )
+        hashtags-replaced (str-utils/replace double-brackets-replaced #"\#..*?(?=\s|$)" #(str "[" (subs % 1) "](." (page-title->html-file-title %) ")") )]
+    hashtags-replaced))
 
 (defn roam-md->hiccup
   [string]
   (->> string double-brackets->links mdh/md->hiccup mdh/component))
-(roam-md->hiccup "You should learn more about web technologies, database indexes, and database normalization. (It’s also a good idea to learn how [[HTTP]] works at a deep enough level that you know things like how cookies are implemented.) [This course is good](https://tomlisankie.com) (but it's also much more than you need to know).")
+(roam-md->hiccup "You should learn more about web technologies, database indexes, and database normalization. (It’s also a good idea to learn how #HTTP works at a deep enough level that you know things like how cookies are implemented.) [Homepage](https://tomlisankie.com) (but it's also much more than you need to know).")
 
 (defn children-list-template
   [blockish indent-level]
