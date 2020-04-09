@@ -5,7 +5,8 @@
             [clojure.string :as str-utils]
             [clojure.set :as set-fns]
             [hiccup.core :as hiccup]
-            [stasis.core :as stasis])
+            [stasis.core :as stasis]
+            [markdown-to-hiccup.core :as mdh])
   (:import (java.util.zip ZipFile)))
 
 (def ZIP-DIR "/home/thomas/Dropbox/Roam Exports/")
@@ -76,25 +77,6 @@
 
 ;; 2) STATIC SITE GENERATION
 
-(defn children-list-template
-  [blockish indent-level]
-  (loop [html []
-         children (:children blockish)]
-    (if (= (count children) 0)
-      html
-      (recur (conj html (if (:children (first children))
-                          (vec (concat [:ul [:li (:string (first children))]]
-                                       (children-list-template (first children) (inc indent-level))))
-                          [:ul [:li (:string (first children))]]))
-             (rest children)))))
-
-(defn page-template
-  [page] ;; each indent level is a new ul. Each element in an indent level is a new li
-  ;; (when (= (:title page) "RL Blog Post")
-  ;; (json/pprint (:children (last page))))
-  ;; (println (children-list-template page 0))
-  (vec (concat [:div [:h1 (:title page)]] (children-list-template page 0))))
-
 (defn- strip-chars
   [chars collection]
   (reduce str (remove #((set chars) %) collection)))
@@ -110,6 +92,34 @@
        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
        (replace-chars {\space \-})
        (#(str "/" % ".html"))))
+
+(defn double-brackets->links
+  [string]
+  (str-utils/replace string #"\[\[.*?\]\]" #(str "[" (remove-double-delimiters %) "](." (page-title->html-file-title %) ")") ))
+
+(defn roam-md->hiccup
+  [string]
+  (->> string double-brackets->links mdh/md->hiccup mdh/component))
+(roam-md->hiccup "You should learn more about web technologies, database indexes, and database normalization. (It’s also a good idea to learn how [[HTTP]] works at a deep enough level that you know things like how cookies are implemented.) [This course is good](https://tomlisankie.com) (but it's also much more than you need to know).")
+
+(defn children-list-template
+  [blockish indent-level]
+  (loop [html []
+         children (:children blockish)]
+    (if (= (count children) 0)
+      html
+      (recur (conj html (if (:children (first children))
+                          (vec (concat [:ul [:li (roam-md->hiccup (:string (first children)))]]
+                                       (children-list-template (first children) (inc indent-level))))
+                          [:ul [:li (roam-md->hiccup (:string (first children)))]]))
+             (rest children)))))
+
+(defn page-template
+  [page] ;; each indent level is a new ul. Each element in an indent level is a new li
+  ;; (when (= (:title page) "RL Blog Post")
+  ;; (json/pprint (:children (last page))))
+  ;; (println (children-list-template page 0))
+  (vec (concat [:div [:h1 (:title page)]] (children-list-template page 0))))
 
 (defn html-file-titles
   [page-titles]
@@ -146,3 +156,4 @@
      {"/index.html" (hiccup/html (list-of-page-links (map #(page-link-from-title "pages" %) (filter #(:post %) (vals included-title-to-content-map)))))}
      ".")
     included-title-to-content-map))
+
