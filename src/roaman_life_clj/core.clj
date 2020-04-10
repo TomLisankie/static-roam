@@ -131,11 +131,44 @@
   ([dir page]
    [:a {:href (str dir (page-title->html-file-title (:title page)))} (:title page)])
   ([page]
-   [:a {:href (page-title->html-file-title (:title page))} (:title page)]))
+   [:a {:href (page-title->html-file-title (:title page))} (:title page)])
+  ([dir page link-class]
+   [:a {:class link-class :href (str dir (page-title->html-file-title (:title page)))} (:title page)]))
 
 (defn- list-of-page-links
   [links]
-  (conj [:ul ] (map (fn [a] [:li a]) links)))
+  (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) links)))
+
+(defn home-page-hiccup
+  [link-list title]
+  [:html
+   [:head
+    [:link {:rel "stylesheet" :href "./main.css"}]]
+   [:body
+    [:header.site-header {:role "banner"}
+     [:div.wrapper
+      [:a.site-title {:rel "author" :href "."} title]]]
+    [:main.page-content {:aria-label="Content"}
+     [:div.wrapper
+      [:div.home
+       [:h2.post-list-heading "Entry Points"]
+       link-list]]]]])
+
+(defn page-index-hiccup
+  [link-list]
+  [:html
+   [:head
+    [:link {:rel "stylesheet" :href "../main.css"}]]
+   [:body
+    link-list]])
+
+(defn page-hiccup
+  [link-list]
+  [:html
+   [:head
+    [:link {:rel "stylesheet" :href "../main.css"}]]
+   [:body
+    link-list]])
 
 (defn -main
   []
@@ -149,13 +182,13 @@
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))]
     (stasis/export-pages
      (zipmap (html-file-titles (filter #(not= "" %) (keys included-title-to-content-map)))
-             (map #(hiccup/html %) (map page-template (vals included-title-to-content-map))))
+             (map #(hiccup/html (page-hiccup %)) (map page-template (vals included-title-to-content-map))))
      "./pages")
     (stasis/export-pages
-     {"/index.html" (hiccup/html (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map)))))}
+     {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
      "./pages")
     (stasis/export-pages
-     {"/index.html" (hiccup/html (list-of-page-links (map #(page-link-from-title "pages" %) (filter #(:post %) (vals included-title-to-content-map)))))}
+     {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "post-link") (filter #(:post %) (vals included-title-to-content-map)))) "TL Roam Blog"))}
      ".")
     included-title-to-content-map))
 
