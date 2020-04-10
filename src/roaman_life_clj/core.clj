@@ -111,7 +111,7 @@
     (if (= (count children) 0)
       html
       (recur (conj html (if (:children (first children))
-                          (vec (concat [:ul [:li (roam-md->hiccup (:string (first children)))]]
+                          (vec (concat [:ul {:style "list-style-type: none"} [:li (roam-md->hiccup (:string (first children)))]]
                                        (children-list-template (first children) (inc indent-level))))
                           [:ul [:li (roam-md->hiccup (:string (first children)))]]))
              (rest children)))))
