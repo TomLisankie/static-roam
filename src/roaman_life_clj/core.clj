@@ -121,7 +121,7 @@
   ;; (when (= (:title page) "RL Blog Post")
   ;; (json/pprint (:children (last page))))
   ;; (println (children-list-template page 0))
-  (vec (concat [:div [:h1 (:title page)]] (children-list-template page 0))))
+  (vec (concat [:div [:title (:title page)] [:h1 (:title page)]] (children-list-template page 0))))
 
 (defn html-file-titles
   [page-titles]
@@ -143,6 +143,7 @@
   [link-list title]
   [:html
    [:head
+    [:title title]
     [:link {:rel "stylesheet" :href "./main.css"}]]
    [:body
     [:header.site-header {:role "banner"}
@@ -188,7 +189,7 @@
      {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
      "./pages")
     (stasis/export-pages
-     {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "post-link") (filter #(:post %) (vals included-title-to-content-map)))) "TL Roam Blog"))}
+     {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "post-link") (filter #(:post %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
      ".")
     included-title-to-content-map))
 
