@@ -182,7 +182,7 @@
         titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))]
     (stasis/export-pages
-     (zipmap (html-file-titles (filter #(not= "" %) (keys included-title-to-content-map)))
+     (zipmap (html-file-titles (keys included-title-to-content-map))
              (map #(hiccup/html (page-hiccup %)) (map page-template (vals included-title-to-content-map))))
      "./pages")
     (stasis/export-pages
