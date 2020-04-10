@@ -33,7 +33,7 @@
   (if (= (count (:children post)) 0)
     false
     (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children post))))
-             (str-utils/includes? (:string (first (:children post))) "#RoamanPost"))
+             (str-utils/includes? (:string (first (:children post))) "#EntryPoint"))
       true
       false)))
 
