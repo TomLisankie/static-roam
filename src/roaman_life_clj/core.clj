@@ -89,8 +89,7 @@
        (rest children)
        (into
         id-to-content
-        (concat [{(:uid (first children)) (:string (first children))}]
-                (map children-id-content-map (:children (first children)))))))))
+        [{(:uid (first children)) (:string (first children))} (children-id-content-map (first children))])))))
 
 ;; 2) STATIC SITE GENERATION
 
