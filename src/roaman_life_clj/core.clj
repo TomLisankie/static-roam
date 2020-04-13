@@ -69,12 +69,6 @@
   (when (:children (get page-to-content-map post-title))
     (set (flatten (map get-pages-referenced-in-string (map second (map first (tree-seq #(:children %) #(:children %) (get page-to-content-map post-title)))))))))
 
-(defn blocks-mentioned-by-children
-  [post-title page-to-content-map]
-  ;; needs to recursively visit children
-  (when (:children (get page-to-content-map post-title))
-    (set (flatten (map get-blocks-referenced-in-string (map second (map first (tree-seq #(:children %) #(:children %) (get page-to-content-map post-title)))))))))
-
 (defn find-all-included-pages
   [unexplored-posts max-depth page-to-content-map]
   (loop [explored #{}
@@ -85,15 +79,18 @@
       explored
       (recur (set-fns/union unexplored explored) (reduce set-fns/union (map #(pages-mentioned-by-children % page-to-content-map) unexplored)) (inc current-depth)))))
 
-(defn find-all-included-blocks
-  [unexplored-posts max-depth page-to-content-map]
-  (loop [explored #{}
-         unexplored (set unexplored-posts)
-         current-depth 0]
-    ;; (json/pprint unexplored)
-    (if (> current-depth max-depth)
-      explored
-      (recur (set-fns/union unexplored explored) (reduce set-fns/union (map #(blocks-mentioned-by-children % page-to-content-map) unexplored)) (inc current-depth)))))
+(defn children-id-content-map
+  [page]
+  (loop [children (:children page)
+         id-to-content {}]
+    (if (or (= 0 (count children)) (nil? children))
+      id-to-content
+      (recur
+       (rest children)
+       (into
+        id-to-content
+        (concat [{(:uid (first children)) (:string (first children))}]
+                (map children-id-content-map (:children (first children)))))))))
 
 ;; 2) STATIC SITE GENERATION
 
@@ -201,7 +198,7 @@
         included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) posts)))
         titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))
-        block-id-to-content-map nil ;;(map blocks-mentioned-by-children pages-as-rl-json) ;; go through all children of pages-as-rl-json and map block id to content. then convert the actual mentioned block id text to block content during roam-md->hiccup
+        block-id-to-content-map (into {} (map children-id-content-map pages-as-rl-json))
         ]
     (stasis/export-pages
      (zipmap (html-file-titles (keys included-title-to-content-map))
@@ -213,7 +210,8 @@
     (stasis/export-pages
      {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "post-link") (filter #(:post %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
      ".")
-    (println block-id-to-content-map)))
+    block-id-to-content-map))
 
 (time (-main)) ;; currently around 595 msecs
+(get (-main) "3xGzOgpwQ")
 
