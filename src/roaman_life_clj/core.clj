@@ -111,8 +111,14 @@
 
 (defn double-brackets->links
   [string]
-  (let [double-brackets-replaced (str-utils/replace string #"\[\[.*?\]\]" #(str "[" (remove-double-delimiters %) "](." (page-title->html-file-title %) ")") )
-        hashtags-replaced (str-utils/replace double-brackets-replaced #"\#..*?(?=\s|$)" #(str "[" (subs % 1) "](." (page-title->html-file-title %) ")") )]
+  (let [double-brackets-replaced (str-utils/replace
+                                  string
+                                  #"\[\[.*?\]\]"
+                                  #(str "[" (remove-double-delimiters %) "](." (page-title->html-file-title %) ")"))
+        hashtags-replaced (str-utils/replace
+                           double-brackets-replaced
+                           #"\#..*?(?=\s|$)"
+                           #(str "[" (subs % 1) "](." (page-title->html-file-title %) ")"))]
     hashtags-replaced))
 
 (defn roam-md->hiccup
@@ -137,7 +143,12 @@
   ;; (when (= (:title page) "RL Blog Post")
   ;; (json/pprint (:children (last page))))
   ;; (println (children-list-template page 0))
-  (vec (concat [:div [:title (:title page)] [:h1 (:title page)]] (children-list-template page 0))))
+  (vec
+   (concat
+    [:div
+     [:title (:title page)]
+     [:h1 (:title page)]]
+    (children-list-template page 0))))
 
 (defn html-file-titles
   [page-titles]
@@ -197,8 +208,7 @@
         included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) posts)))
         titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))
-        block-id-to-content-map (into {} (map children-id-content-map pages-as-rl-json))
-        ]
+        block-id-to-content-map (into {} (map children-id-content-map pages-as-rl-json))]
     (stasis/export-pages
      (zipmap (html-file-titles (keys included-title-to-content-map))
              (map #(hiccup/html (page-hiccup %)) (map page-template (vals included-title-to-content-map))))
