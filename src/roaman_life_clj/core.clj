@@ -97,20 +97,16 @@
   [chars collection]
   (reduce str (remove #((set chars) %) collection)))
 
-(defn- replace-chars
-  [char-convert-map collection]
-  (reduce str (map #(if (get char-convert-map %) (get char-convert-map %) %) collection)))
-
 (defn page-title->html-file-title
   [string]
   (->> string
        (str-utils/lower-case)
        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
-       (replace-chars {\space \-})
+       (#(str-utils/replace % #"\s" "-"))
        (#(str "/" % ".html"))))
 
 (defn double-brackets->links
-  [string]
+  [string block-id-content-map]
   (let [double-brackets-replaced (str-utils/replace
                                   string
                                   #"\[\[.*?\]\]"
@@ -118,28 +114,31 @@
         hashtags-replaced (str-utils/replace
                            double-brackets-replaced
                            #"\#..*?(?=\s|$)"
-                           #(str "[" (subs % 1) "](." (page-title->html-file-title %) ")"))]
-    hashtags-replaced))
+                           #(str "[" (subs % 1) "](." (page-title->html-file-title %) ")"))
+        block-refs-transcluded (str-utils/replace
+                                hashtags-replaced
+                                #"\(\(.*?\)\)"
+                                (get block-id-content-map ()))]
+    block-refs-transcluded))
 
 (defn roam-md->hiccup
-  [string]
-  (->> string double-brackets->links mdh/md->hiccup mdh/component))
-(roam-md->hiccup "You should learn more about web technologies, database indexes, and database normalization. (It’s also a good idea to learn how #HTTP works at a deep enough level that you know things like how cookies are implemented.) [Homepage](https://tomlisankie.com) (but it's also much more than you need to know).")
+  [string block-id-content-map]
+  (->> string (double-brackets->links block-id-content-map) mdh/md->hiccup mdh/component))
 
 (defn children-list-template
-  [blockish indent-level]
+  [blockish indent-level block-id-content-map]
   (loop [html []
          children (:children blockish)]
     (if (= (count children) 0)
       html
       (recur (conj html (if (:children (first children))
-                          (vec (concat [:ul {:style "list-style-type: none"} [:li (roam-md->hiccup (:string (first children)))]]
-                                       (children-list-template (first children) (inc indent-level))))
-                          [:ul [:li (roam-md->hiccup (:string (first children)))]]))
+                          (vec (concat [:ul {:style "list-style-type: none"} [:li (roam-md->hiccup (:string (first children)) block-id-content-map)]]
+                                       (children-list-template (first children) (inc indent-level) block-id-content-map)))
+                          [:ul [:li (roam-md->hiccup (:string (first children)) block-id-content-map)]]))
              (rest children)))))
 
 (defn page-template
-  [page] ;; each indent level is a new ul. Each element in an indent level is a new li
+  [page block-id-content-map] ;; each indent level is a new ul. Each element in an indent level is a new li
   ;; (when (= (:title page) "RL Blog Post")
   ;; (json/pprint (:children (last page))))
   ;; (println (children-list-template page 0))
@@ -148,7 +147,7 @@
     [:div
      [:title (:title page)]
      [:h1 (:title page)]]
-    (children-list-template page 0))))
+    (children-list-template page 0 block-id-content-map))))
 
 (defn html-file-titles
   [page-titles]
@@ -211,7 +210,7 @@
         block-id-to-content-map (into {} (map children-id-content-map pages-as-rl-json))]
     (stasis/export-pages
      (zipmap (html-file-titles (keys included-title-to-content-map))
-             (map #(hiccup/html (page-hiccup %)) (map page-template (vals included-title-to-content-map))))
+             (map #(hiccup/html (page-hiccup %)) (map #(page-template % block-id-to-content-map) (vals included-title-to-content-map))))
      "./pages")
     (stasis/export-pages
      {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
@@ -222,5 +221,5 @@
     block-id-to-content-map))
 
 (time (-main)) ;; currently around 595 msecs
-(get (-main) "3xGzOgpwQ")
+(get (-main) "")
 
