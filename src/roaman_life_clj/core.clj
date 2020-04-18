@@ -119,7 +119,13 @@
                                 hashtags-replaced
                                 #"\(\(.*?\)\)"
                                 #(get block-id-content-map (remove-double-delimiters %) "BLOCK NOT FOUND"))]
-    block-refs-transcluded))
+    block-refs-transcluded
+    (if (or
+         (re-find #"\[\[.*?\]\]" block-refs-transcluded)
+         (re-find #"\#..*?(?=\s|$)" block-refs-transcluded)
+         (re-find #"\(\(.*?\)\)" block-refs-transcluded))
+      (double-brackets->links block-refs-transcluded block-id-content-map)
+      block-refs-transcluded)))
 
 (defn roam-md->hiccup
   [string block-id-content-map]
