@@ -118,12 +118,16 @@
         block-refs-transcluded (str-utils/replace
                                 hashtags-replaced
                                 #"\(\(.*?\)\)"
-                                (get block-id-content-map ()))]
+                                #(get block-id-content-map (remove-double-delimiters %) "BLOCK NOT FOUND"))]
     block-refs-transcluded))
 
 (defn roam-md->hiccup
   [string block-id-content-map]
-  (->> string (double-brackets->links block-id-content-map) mdh/md->hiccup mdh/component))
+  (->>
+   string
+   (#(double-brackets->links % block-id-content-map))
+   mdh/md->hiccup
+   mdh/component))
 
 (defn children-list-template
   [blockish indent-level block-id-content-map]
@@ -132,9 +136,21 @@
     (if (= (count children) 0)
       html
       (recur (conj html (if (:children (first children))
-                          (vec (concat [:ul {:style "list-style-type: none"} [:li (roam-md->hiccup (:string (first children)) block-id-content-map)]]
-                                       (children-list-template (first children) (inc indent-level) block-id-content-map)))
-                          [:ul [:li (roam-md->hiccup (:string (first children)) block-id-content-map)]]))
+                          (vec
+                           (concat
+                            [:ul
+                             {:style "list-style-type: none"}
+                             [:li (roam-md->hiccup
+                                   (:string (first children))
+                                   block-id-content-map)]]
+                            (children-list-template
+                             (first children)
+                             (inc indent-level)
+                             block-id-content-map)))
+                          [:ul
+                           [:li (roam-md->hiccup
+                                 (:string (first children))
+                                 block-id-content-map)]]))
              (rest children)))))
 
 (defn page-template
@@ -208,9 +224,13 @@
         titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))
         block-id-to-content-map (into {} (map children-id-content-map pages-as-rl-json))]
-    (stasis/export-pages
+    (stasis/export-pages ;; creates a map from file title to HTML for that file title
      (zipmap (html-file-titles (keys included-title-to-content-map))
-             (map #(hiccup/html (page-hiccup %)) (map #(page-template % block-id-to-content-map) (vals included-title-to-content-map))))
+             ;; supposed to generate HTML for each included page of the db
+             (map #(hiccup/html (page-hiccup %)) ;; Makes all of the hiccup to standard HTML for pages
+                  (map
+                   #(page-template % block-id-to-content-map) ;; this is the problem line. Something is wrong with page template or block-id-to-content-map
+                   (vals included-title-to-content-map))))
      "./pages")
     (stasis/export-pages
      {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
@@ -221,5 +241,6 @@
     block-id-to-content-map))
 
 (time (-main)) ;; currently around 595 msecs
-(get (-main) "")
+(-main)
+(get (-main) "rAhLBlh68")
 
