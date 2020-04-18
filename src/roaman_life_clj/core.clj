@@ -27,25 +27,25 @@
                         (io/copy (.getInputStream zip entry) f))
                       database-file-name))))
 
-(defn post?
-  ;; is this Roam page a post? Is it tagged as such in its first block?
-  [post]
-  (if (= (count (:children post)) 0)
+(defn entry-point?
+  ;; is this Roam page a entry-point? Is it tagged as such in its first block?
+  [entry-point]
+  (if (= (count (:children entry-point)) 0)
     false
-    (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children post))))
-             (str-utils/includes? (:string (first (:children post))) "#EntryPoint"))
+    (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children entry-point))))
+             (str-utils/includes? (:string (first (:children entry-point))) "#EntryPoint"))
       true
       false)))
 
 (defn to-rl-json
   ;; strips Roam JSON of unneeded info and adds relevant info
-  [post]
-  {:title (:title post)
-   :post (post? post)
-   :date (if (post? post)
-           (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children post))))
+  [entry-point]
+  {:title (:title entry-point)
+   :entry-point (entry-point? entry-point)
+   :date (if (entry-point? entry-point)
+           (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children entry-point))))
            nil)
-   :children (if (post? post) (rest (:children post)) (:children post))})
+   :children (if (entry-point? entry-point) (rest (:children entry-point)) (:children entry-point))})
 
 (defn title-content-pair
   [page]
@@ -64,15 +64,15 @@
   (map remove-double-delimiters (re-seq #"\(\(.*?\)\)" string)))
 
 (defn pages-mentioned-by-children
-  [post-title page-to-content-map]
+  [entry-point-title page-to-content-map]
   ;; needs to recursively visit children
-  (when (:children (get page-to-content-map post-title))
-    (set (flatten (map get-pages-referenced-in-string (map second (map first (tree-seq #(:children %) #(:children %) (get page-to-content-map post-title)))))))))
+  (when (:children (get page-to-content-map entry-point-title))
+    (set (flatten (map get-pages-referenced-in-string (map second (map first (tree-seq #(:children %) #(:children %) (get page-to-content-map entry-point-title)))))))))
 
 (defn find-all-included-pages
-  [unexplored-posts max-depth page-to-content-map]
+  [unexplored-entry-points max-depth page-to-content-map]
   (loop [explored #{}
-         unexplored (set unexplored-posts)
+         unexplored (set unexplored-entry-points)
          current-depth 0]
     ;; (json/pprint unexplored)
     (if (> current-depth max-depth)
@@ -161,9 +161,6 @@
 
 (defn page-template
   [page block-id-content-map] ;; each indent level is a new ul. Each element in an indent level is a new li
-  ;; (when (= (:title page) "RL Blog Post")
-  ;; (json/pprint (:children (last page))))
-  ;; (println (children-list-template page 0))
   (vec
    (concat
     [:div
@@ -225,9 +222,9 @@
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
         pages-as-rl-json (map to-rl-json roam-json)
         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
-        posts (filter #(true? (:post %)) pages-as-rl-json)
-        included-pages-to-mentioned-pages-map (zipmap (map #(:title %) posts) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) posts)))
-        titles-of-included-pages (find-all-included-pages (map #(:title %) posts) 5 title-to-content-map)
+        entry-points (filter #(true? (:entry-point %)) pages-as-rl-json)
+        included-pages-to-mentioned-pages-map (zipmap (map #(:title %) entry-points) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) entry-points)))
+        titles-of-included-pages (find-all-included-pages (map #(:title %) entry-points) 5 title-to-content-map)
         included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))
         block-id-to-content-map (into {} (map children-id-content-map pages-as-rl-json))]
     (stasis/export-pages ;; creates a map from file title to HTML for that file title
@@ -242,7 +239,7 @@
      {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
      "./pages")
     (stasis/export-pages
-     {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "post-link") (filter #(:post %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
+     {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "entry-point-link") (filter #(:entry-point %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
      ".")
     block-id-to-content-map))
 
