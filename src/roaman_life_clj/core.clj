@@ -51,29 +51,26 @@
   [page]
   [(:title page) page])
 
+(defn remove-n-surrounding-delimiters
+  [n string]
+  (subs string n (- (count string) n)))
+
 (defn remove-double-delimiters
   [string]
-  (subs string 2 (- (count string) 2)))
+  (remove-n-surrounding-delimiters 2 string))
+
+(defn remove-triple-delimiters
+  [string]
+  (remove-n-surrounding-delimiters 3 string))
 
 (defn get-pages-referenced-in-string
   [string]
-  (println string)
   (concat
    (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" string))
    (map #(subs % 1) (re-seq #"\#..*?(?=\s|$)" string))
    (map
     #(subs % 0 (- (count %) 2))
     (re-seq #"^.+?::" string))))
-
-(get-pages-referenced-in-string "Twitter Profile:: https://twitter.com/vers_laLune")
-
-(def example-metadata-string "Twitter Profile:: https://twitter.com/vers_laLune")
-(def example-tag-string "#Twitter")
-(map
- #(subs % 0 (- (count %) 2))
- (re-seq #"^(.+?)::" example-metadata-string))
-(re-seq #"^.+?::" example-metadata-string)
-(re-seq #"\#..*?(?=\s|$)" example-tag-string)
 
 (defn get-blocks-referenced-in-string
   [string]
@@ -131,14 +128,22 @@
                            double-brackets-replaced
                            #"\#..*?(?=\s|$)"
                            #(str "[" (subs % 1) "](." (page-title->html-file-title %) ")"))
+        block-alias-links (str-utils/replace
+                           hashtags-replaced
+                           #"\[.*?\]\(\(\(.*?\)\)\)"
+                           #(str
+                             (re-find #"\[.*?\]" %)
+                             "(." (page-title->html-file-title
+                                   (remove-triple-delimiters
+                                    (re-find #"\(\(\(.*?\)\)\)" %))) ")"))
         block-refs-transcluded (str-utils/replace
-                                hashtags-replaced
+                                block-alias-links
                                 #"\(\(.*?\)\)"
                                 #(get block-id-content-map (remove-double-delimiters %) "BLOCK NOT FOUND"))
         metadata-replaced (str-utils/replace
                            block-refs-transcluded
                            #"^.+?::"
-                           #(str "[" (subs % 0 (- (count %) 2)) ":](." (page-title->html-file-title %) ")"))
+                           #(str "__[" (subs % 0 (- (count %) 2)) ":](." (page-title->html-file-title %) ")__"))
         ]
     (if (or
          (re-find #"\[\[.*?\]\]" metadata-replaced)
