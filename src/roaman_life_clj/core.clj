@@ -143,8 +143,7 @@
         metadata-replaced (str-utils/replace
                            block-refs-transcluded
                            #"^.+?::"
-                           #(str "__[" (subs % 0 (- (count %) 2)) ":](." (page-title->html-file-title %) ")__"))
-        ]
+                           #(str "__[" (subs % 0 (- (count %) 2)) ":](." (page-title->html-file-title %) ")__"))]
     (if (or
          (re-find #"\[\[.*?\]\]" metadata-replaced)
          (re-find #"\#..*?(?=\s|$)" metadata-replaced)
