@@ -162,8 +162,11 @@
         block-refs-transcluded (str-utils/replace
                                 block-alias-links
                                 #"\(\(.*?\)\)"
-                                #(get block-id-content-map
-                                      (remove-double-delimiters %) "BLOCK NOT FOUND"))
+                                #(str
+                                  (get block-id-content-map
+                                       (remove-double-delimiters %) "BLOCK NOT FOUND")
+                                  "  [Block Link](."
+                                  (page-title->html-file-title % :case-sensitive) ")"))
         metadata-replaced (str-utils/replace
                            block-refs-transcluded
                            #"^.+?::"
