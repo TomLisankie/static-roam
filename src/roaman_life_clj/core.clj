@@ -219,6 +219,13 @@
      [:h1 (:title page)]]
     (children-list-template page 0 block-id-content-map))))
 
+(defn block-page-template
+  [block-string block-id-content-map] ;; each indent level is a new ul. Each element in an indent level is a new li
+  (vec
+   (concat
+    [:div
+     [:h3 (roam-md->hiccup block-string block-id-content-map)]])))
+
 (defn html-file-titles
   ([page-titles]
    (map page-title->html-file-title page-titles))
@@ -309,7 +316,7 @@
      (zipmap (html-file-titles (keys mentioned-block-id-to-content-map) :case-sensitive)
              (map #(hiccup/html (page-hiccup %))
                   (map
-                   #(page-template % block-id-to-content-map)
+                   #(block-page-template % block-id-to-content-map)
                    (vals mentioned-block-id-to-content-map))))
      "./pages")
     (stasis/export-pages
