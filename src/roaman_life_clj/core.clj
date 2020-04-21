@@ -33,7 +33,8 @@
   (if (= (count (:children entry-point)) 0)
     false
     (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children entry-point))))
-             (str-utils/includes? (:string (first (:children entry-point))) "#EntryPoint"))
+             (str-utils/includes?
+              (:string (first (:children entry-point))) "#EntryPoint"))
       true
       false)))
 
@@ -45,7 +46,9 @@
    :date (if (entry-point? entry-point)
            (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children entry-point))))
            nil)
-   :children (if (entry-point? entry-point) (rest (:children entry-point)) (:children entry-point))})
+   :children (if (entry-point? entry-point)
+               (rest (:children entry-point))
+               (:children entry-point))})
 
 (defn title-content-pair
   [page]
@@ -80,7 +83,14 @@
   [entry-point-title page-to-content-map]
   ;; needs to recursively visit children
   (when (:children (get page-to-content-map entry-point-title))
-    (set (flatten (map get-pages-referenced-in-string (map second (map first (tree-seq #(:children %) #(:children %) (get page-to-content-map entry-point-title)))))))))
+    (set
+     (flatten
+      (map get-pages-referenced-in-string
+           (map second
+                (map first
+                     (tree-seq #(:children %)
+                               #(:children %)
+                               (get page-to-content-map entry-point-title)))))))))
 
 (defn find-all-included-pages
   [unexplored-entry-points max-depth page-to-content-map]
@@ -90,7 +100,11 @@
     ;; (json/pprint unexplored)
     (if (> current-depth max-depth)
       explored
-      (recur (set-fns/union unexplored explored) (reduce set-fns/union (map #(pages-mentioned-by-children % page-to-content-map) unexplored)) (inc current-depth)))))
+      (recur (set-fns/union unexplored explored)
+             (reduce set-fns/union
+                     (map #(pages-mentioned-by-children %
+                                                        page-to-content-map)
+                          unexplored)) (inc current-depth)))))
 
 (defn children-id-content-map
   [page]
@@ -102,7 +116,9 @@
        (rest children)
        (into
         id-to-content
-        [{(:uid (first children)) (:string (first children))} (children-id-content-map (first children))])))))
+        [{(:uid (first children))
+          (:string (first children))}
+         (children-id-content-map (first children))])))))
 
 ;; 2) STATIC SITE GENERATION
 
@@ -123,7 +139,8 @@
   (let [double-brackets-replaced (str-utils/replace
                                   string
                                   #"\[\[.*?\]\]"
-                                  #(str "[" (remove-double-delimiters %) "](." (page-title->html-file-title %) ")"))
+                                  #(str "[" (remove-double-delimiters %)
+                                        "](." (page-title->html-file-title %) ")"))
         hashtags-replaced (str-utils/replace
                            double-brackets-replaced
                            #"\#..*?(?=\s|$)"
@@ -139,11 +156,14 @@
         block-refs-transcluded (str-utils/replace
                                 block-alias-links
                                 #"\(\(.*?\)\)"
-                                #(get block-id-content-map (remove-double-delimiters %) "BLOCK NOT FOUND"))
+                                #(get block-id-content-map
+                                      (remove-double-delimiters %) "BLOCK NOT FOUND"))
         metadata-replaced (str-utils/replace
                            block-refs-transcluded
                            #"^.+?::"
-                           #(str "__[" (subs % 0 (- (count %) 2)) ":](." (page-title->html-file-title %) ")__"))]
+                           #(str
+                             "__[" (subs % 0 (- (count %) 2)) ":](."
+                             (page-title->html-file-title %) ")__"))]
     (if (or
          (re-find #"\[\[.*?\]\]" metadata-replaced)
          (re-find #"\#..*?(?=\s|$)" metadata-replaced)
@@ -203,7 +223,9 @@
   ([page]
    [:a {:href (page-title->html-file-title (:title page))} (:title page)])
   ([dir page link-class]
-   [:a {:class link-class :href (str dir (page-title->html-file-title (:title page)))} (:title page)]))
+   [:a {:class link-class
+        :href (str dir (page-title->html-file-title (:title page)))}
+    (:title page)]))
 
 (defn- list-of-page-links
   [links]
@@ -248,16 +270,27 @@
         pages-as-rl-json (map to-rl-json roam-json)
         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
         entry-points (filter #(true? (:entry-point %)) pages-as-rl-json)
-        included-pages-to-mentioned-pages-map (zipmap (map #(:title %) entry-points) (map #(pages-mentioned-by-children % title-to-content-map) (map #(:title %) entry-points)))
-        titles-of-included-pages (find-all-included-pages (map #(:title %) entry-points) 5 title-to-content-map)
-        included-title-to-content-map (zipmap titles-of-included-pages (map #(get title-to-content-map %) titles-of-included-pages))
-        block-id-to-content-map (into {} (map children-id-content-map pages-as-rl-json))]
-    (stasis/export-pages ;; creates a map from file title to HTML for that file title
+        included-pages-to-mentioned-pages-map (zipmap
+                                               (map #(:title %) entry-points)
+                                               (map
+                                                #(pages-mentioned-by-children
+                                                  % title-to-content-map)
+                                                (map #(:title %) entry-points)))
+        titles-of-included-pages (find-all-included-pages
+                                  (map #(:title %) entry-points)
+                                  5 title-to-content-map)
+        included-title-to-content-map (zipmap
+                                       titles-of-included-pages
+                                       (map
+                                        #(get title-to-content-map %)
+                                        titles-of-included-pages))
+        block-id-to-content-map (into {}
+                                      (map children-id-content-map pages-as-rl-json))]
+    (stasis/export-pages
      (zipmap (html-file-titles (keys included-title-to-content-map))
-             ;; supposed to generate HTML for each included page of the db
-             (map #(hiccup/html (page-hiccup %)) ;; Makes all of the hiccup to standard HTML for pages
+             (map #(hiccup/html (page-hiccup %))
                   (map
-                   #(page-template % block-id-to-content-map) ;; this is the problem line. Something is wrong with page template or block-id-to-content-map
+                   #(page-template % block-id-to-content-map)
                    (vals included-title-to-content-map))))
      "./pages")
     (stasis/export-pages
