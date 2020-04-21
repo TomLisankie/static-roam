@@ -81,7 +81,6 @@
 
 (defn pages-mentioned-by-children
   [entry-point-title page-to-content-map]
-  ;; needs to recursively visit children
   (when (:children (get page-to-content-map entry-point-title))
     (set
      (flatten
@@ -97,7 +96,6 @@
   (loop [explored #{}
          unexplored (set unexplored-entry-points)
          current-depth 0]
-    ;; (json/pprint unexplored)
     (if (> current-depth max-depth)
       explored
       (recur (set-fns/union unexplored explored)
@@ -127,12 +125,20 @@
   (reduce str (remove #((set chars) %) collection)))
 
 (defn page-title->html-file-title
-  [string]
-  (->> string
-       (str-utils/lower-case)
-       (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
-       (#(str-utils/replace % #"\s" "-"))
-       (#(str "/" % ".html"))))
+  ([string]
+   (->> string
+        (str-utils/lower-case)
+        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
+        (#(str-utils/replace % #"\s" "-"))
+        (#(str "/" % ".html"))))
+  ([string case-sensitive?]
+   (->> string
+        (#(if case-sensitive?
+            %
+            (str-utils/lower-case %)))
+        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
+        (#(str-utils/replace % #"\s" "-"))
+        (#(str "/" % ".html")))))
 
 (defn double-brackets->links
   [string block-id-content-map]
@@ -214,8 +220,10 @@
     (children-list-template page 0 block-id-content-map))))
 
 (defn html-file-titles
-  [page-titles]
-  (map page-title->html-file-title page-titles))
+  ([page-titles]
+   (map page-title->html-file-title page-titles))
+  ([page-titles case-sensitive?]
+   (map #(page-title->html-file-title % case-sensitive?) page-titles)))
 
 (defn- page-link-from-title
   ([dir page]
@@ -285,13 +293,24 @@
                                         #(get title-to-content-map %)
                                         titles-of-included-pages))
         block-id-to-content-map (into {}
-                                      (map children-id-content-map pages-as-rl-json))]
+                                      (map children-id-content-map pages-as-rl-json))
+        mentioned-block-id-to-content-map (into {}
+                                                (map
+                                                 children-id-content-map
+                                                 (vals included-title-to-content-map)))]
     (stasis/export-pages
      (zipmap (html-file-titles (keys included-title-to-content-map))
              (map #(hiccup/html (page-hiccup %))
                   (map
                    #(page-template % block-id-to-content-map)
                    (vals included-title-to-content-map))))
+     "./pages")
+    (stasis/export-pages
+     (zipmap (html-file-titles (keys mentioned-block-id-to-content-map) :case-sensitive)
+             (map #(hiccup/html (page-hiccup %))
+                  (map
+                   #(page-template % block-id-to-content-map)
+                   (vals mentioned-block-id-to-content-map))))
      "./pages")
     (stasis/export-pages
      {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
