@@ -142,8 +142,16 @@
 
 (defn double-brackets->links
   [string block-id-content-map]
-  (let [double-brackets-replaced (str-utils/replace
-                                  string
+  (let [todos-replaced (str-utils/replace
+                        string
+                        #"\{\{\[\[TODO\]\]\}\}"
+                        "<input type=\"checkbox\" disabled>")
+        dones-replaced (str-utils/replace
+                         todos-replaced
+                         #"\{\{\[\[DONE\]\]\}\}"
+                         "<input type=\"checkbox\" checked disabled>")
+        double-brackets-replaced (str-utils/replace
+                                  dones-replaced
                                   #"\[\[.*?\]\]"
                                   #(str "[" (remove-double-delimiters %)
                                         "](." (page-title->html-file-title %) ")"))
