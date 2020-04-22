@@ -200,7 +200,12 @@
                            (concat
                             [:ul
                              {:style "list-style-type: none"}
-                             [:li (if (:heading (first children))
+                             [:li
+                              {:style (str "text-align:"
+                                           (if (:text-align (first children))
+                                             (:text-align (first children))
+                                             "none"))}
+                              (if (:heading (first children))
                                     [(cond (= (:heading (first children)) 1) :h1
                                            (= (:heading (first children)) 2) :h2
                                            (= (:heading (first children)) 3) :h3)
@@ -215,7 +220,12 @@
                              (inc indent-level)
                              block-id-content-map)))
                           [:ul
-                           [:li (if (:heading (first children))
+                           [:li
+                            {:style (str "text-align:"
+                                         (if (:text-align (first children))
+                                           (:text-align (first children))
+                                           "none"))}
+                            (if (:heading (first children))
                                   [(cond (= (:heading (first children)) 1) :h1
                                          (= (:heading (first children)) 2) :h2
                                          (= (:heading (first children)) 3) :h3)
