@@ -29,12 +29,12 @@
 
 (defn entry-point?
   ;; is this Roam page a entry-point? Is it tagged as such in its first block?
-  [entry-point]
-  (if (= (count (:children entry-point)) 0)
+  [page]
+  (if (= (count (:children page)) 0)
     false
-    (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children entry-point))))
+    (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children page))))
              (str-utils/includes?
-              (:string (first (:children entry-point))) "#EntryPoint"))
+              (:string (first (:children page))) "#EntryPoint"))
       true
       false)))
 
@@ -285,6 +285,7 @@
   [link-list title]
   [:html
    [:head
+    [:meta {:charset "utf-8"}]
     [:title title]
     [:link {:rel "stylesheet" :href "./main.css"}]]
    [:body
@@ -301,6 +302,7 @@
   [link-list]
   [:html
    [:head
+    [:meta {:charset "utf-8"}]
     [:link {:rel "stylesheet" :href "../main.css"}]]
    [:body
     link-list]])
@@ -309,6 +311,7 @@
   [link-list]
   [:html
    [:head
+    [:meta {:charset "utf-8"}]
     [:link {:rel "stylesheet" :href "../main.css"}]]
    [:body
     link-list]])
