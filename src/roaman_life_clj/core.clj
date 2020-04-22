@@ -200,17 +200,31 @@
                            (concat
                             [:ul
                              {:style "list-style-type: none"}
-                             [:li (roam-md->hiccup
-                                   (:string (first children))
-                                   block-id-content-map)]]
+                             [:li (if (:heading (first children))
+                                    [(cond (= (:heading (first children)) 1) :h1
+                                           (= (:heading (first children)) 2) :h2
+                                           (= (:heading (first children)) 3) :h3)
+                                     (roam-md->hiccup
+                                      (:string (first children))
+                                      block-id-content-map)]
+                                    (roam-md->hiccup
+                                     (:string (first children))
+                                     block-id-content-map))]]
                             (children-list-template
                              (first children)
                              (inc indent-level)
                              block-id-content-map)))
                           [:ul
-                           [:li (roam-md->hiccup
-                                 (:string (first children))
-                                 block-id-content-map)]]))
+                           [:li (if (:heading (first children))
+                                  [(cond (= (:heading (first children)) 1) :h1
+                                         (= (:heading (first children)) 2) :h2
+                                         (= (:heading (first children)) 3) :h3)
+                                   (roam-md->hiccup
+                                    (:string (first children))
+                                    block-id-content-map)]
+                                  (roam-md->hiccup
+                                   (:string (first children))
+                                   block-id-content-map))]]))
              (rest children)))))
 
 (defn page-template
@@ -331,6 +345,5 @@
     block-id-to-content-map))
 
 (time (-main)) ;; currently around 595 msecs
-(-main)
-(get (-main) "rAhLBlh68")
+
 
