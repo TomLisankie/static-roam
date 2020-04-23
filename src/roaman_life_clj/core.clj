@@ -140,6 +140,15 @@
         (#(str-utils/replace % #"\s" "-"))
         (#(str "/" % ".html")))))
 
+(defn get-youtube-vid-embed
+  [string]
+  (str "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube-nocookie.com/embed/"
+       (cond
+         (re-find #"youtube\.com" string) (subs string 43 (- (count string) 2))
+         (re-find #"youtu\.be" string) (subs string 28 (- (count string) 2))
+         :else "NO VALID ID FOUND")
+       "\" frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>"))
+
 (defn double-brackets->links
   [string block-id-content-map titles-of-included-pages]
   (let [todos-replaced (str-utils/replace
@@ -150,8 +159,12 @@
                          todos-replaced
                          #"\{\{\[\[DONE\]\]\}\}"
                          "<input type=\"checkbox\" checked disabled>")
+        youtubes-replaced (str-utils/replace
+                           dones-replaced
+                           #"\{\{youtube: .*?\}\}"
+                           #(get-youtube-vid-embed %))
         double-brackets-replaced (str-utils/replace
-                                  dones-replaced
+                                  youtubes-replaced
                                   #"\[\[.*?\]\]"
                                   #(if (get titles-of-included-pages (remove-double-delimiters %))
                                      (str "[" (remove-double-delimiters %)
