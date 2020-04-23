@@ -141,7 +141,7 @@
         (#(str "/" % ".html")))))
 
 (defn double-brackets->links
-  [string block-id-content-map]
+  [string block-id-content-map titles-of-included-pages]
   (let [todos-replaced (str-utils/replace
                         string
                         #"\{\{\[\[TODO\]\]\}\}"
@@ -153,8 +153,10 @@
         double-brackets-replaced (str-utils/replace
                                   dones-replaced
                                   #"\[\[.*?\]\]"
-                                  #(str "[" (remove-double-delimiters %)
-                                        "](." (page-title->html-file-title %) ")"))
+                                  #(if (get titles-of-included-pages (remove-double-delimiters %))
+                                     (str "[" (remove-double-delimiters %)
+                                          "](." (page-title->html-file-title %) ")")
+                                     (remove-double-delimiters %)))
         hashtags-replaced (str-utils/replace
                            double-brackets-replaced
                            #"\#..*?(?=\s|$)"
@@ -186,19 +188,19 @@
          (re-find #"\#..*?(?=\s|$)" metadata-replaced)
          (re-find #"\(\(.*?\)\)" metadata-replaced)
          (re-find #"^.+?::" metadata-replaced))
-      (double-brackets->links metadata-replaced block-id-content-map)
+      (double-brackets->links metadata-replaced block-id-content-map titles-of-included-pages)
       metadata-replaced)))
 
 (defn roam-md->hiccup
-  [string block-id-content-map]
+  [string block-id-content-map titles-of-included-pages]
   (->>
    string
-   (#(double-brackets->links % block-id-content-map))
+   (#(double-brackets->links % block-id-content-map titles-of-included-pages))
    mdh/md->hiccup
    mdh/component))
 
 (defn children-list-template
-  [blockish indent-level block-id-content-map]
+  [blockish indent-level block-id-content-map titles-of-included-pages]
   (loop [html []
          children (:children blockish)]
     (if (= (count children) 0)
@@ -219,14 +221,17 @@
                                            (= (:heading (first children)) 3) :h3)
                                      (roam-md->hiccup
                                       (:string (first children))
-                                      block-id-content-map)]
+                                      block-id-content-map
+                                      titles-of-included-pages)]
                                     (roam-md->hiccup
                                      (:string (first children))
-                                     block-id-content-map))]]
+                                     block-id-content-map
+                                     titles-of-included-pages))]]
                             (children-list-template
                              (first children)
                              (inc indent-level)
-                             block-id-content-map)))
+                             block-id-content-map
+                             titles-of-included-pages)))
                           [:ul
                            [:li
                             {:style (str "text-align:"
@@ -239,27 +244,29 @@
                                          (= (:heading (first children)) 3) :h3)
                                    (roam-md->hiccup
                                     (:string (first children))
-                                    block-id-content-map)]
+                                    block-id-content-map
+                                    titles-of-included-pages)]
                                   (roam-md->hiccup
                                    (:string (first children))
-                                   block-id-content-map))]]))
+                                   block-id-content-map
+                                   titles-of-included-pages))]]))
              (rest children)))))
 
 (defn page-template
-  [page block-id-content-map] ;; each indent level is a new ul. Each element in an indent level is a new li
+  [page block-id-content-map titles-of-included-pages] ;; each indent level is a new ul. Each element in an indent level is a new li
   (vec
    (concat
     [:div
      [:title (:title page)]
      [:h1 (:title page)]]
-    (children-list-template page 0 block-id-content-map))))
+    (children-list-template page 0 block-id-content-map titles-of-included-pages))))
 
 (defn block-page-template
-  [block-string block-id-content-map] ;; each indent level is a new ul. Each element in an indent level is a new li
+  [block-string block-id-content-map titles-of-included-pages] ;; each indent level is a new ul. Each element in an indent level is a new li
   (vec
    (concat
     [:div
-     [:h3 (roam-md->hiccup block-string block-id-content-map)]])))
+     [:h3 (roam-md->hiccup block-string block-id-content-map titles-of-included-pages)]])))
 
 (defn html-file-titles
   ([page-titles]
@@ -331,7 +338,7 @@
                                                 (map #(:title %) entry-points)))
         titles-of-included-pages (find-all-included-pages
                                   (map #(:title %) entry-points)
-                                  5 title-to-content-map)
+                                  3 title-to-content-map)
         included-title-to-content-map (zipmap
                                        titles-of-included-pages
                                        (map
@@ -347,14 +354,14 @@
      (zipmap (html-file-titles (keys included-title-to-content-map))
              (map #(hiccup/html (page-hiccup %))
                   (map
-                   #(page-template % block-id-to-content-map)
+                   #(page-template % block-id-to-content-map titles-of-included-pages)
                    (vals included-title-to-content-map))))
      "./pages")
     (stasis/export-pages
      (zipmap (html-file-titles (keys mentioned-block-id-to-content-map) :case-sensitive)
              (map #(hiccup/html (page-hiccup %))
                   (map
-                   #(block-page-template % block-id-to-content-map)
+                   #(block-page-template % block-id-to-content-map titles-of-included-pages)
                    (vals mentioned-block-id-to-content-map))))
      "./pages")
     (stasis/export-pages
