@@ -28,7 +28,7 @@
                       database-file-name))))
 
 (defn entry-point?
-  ;; is this Roam page a entry-point? Is it tagged as such in its first block?
+  "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
   [page]
   (if (= (count (:children page)) 0)
     false
@@ -39,7 +39,7 @@
       false)))
 
 (defn to-rl-json
-  ;; strips Roam JSON of unneeded info and adds relevant info
+  "Filters out irrelevant info from Roam JSON"
   [entry-point]
   {:title (:title entry-point)
    :entry-point (entry-point? entry-point)
