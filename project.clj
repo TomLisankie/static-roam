@@ -1,4 +1,4 @@
-(defproject roaman-life-clj "0.1.0-SNAPSHOT"
+(defproject static-roam "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -9,4 +9,4 @@
                  [hiccup "1.0.5"]
                  [stasis "2.5.0"]
                  [markdown-to-hiccup "0.6.2"]]
-  :main roaman-life-clj.core)
+  :main static-roam.core)

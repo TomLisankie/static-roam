@@ -1,4 +1,4 @@
-(ns roaman-life-clj.core
+(ns static-roam.core
   (:require [me.raynes.fs :as fs]
             [clojure.java.io :as io]
             [clojure.data.json :as json]

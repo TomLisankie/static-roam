@@ -1,7 +1,7 @@
-(ns roaman-life-clj.core-test
+(ns static-roam.core-test
   (:require [clojure.test :refer :all]
             [clojure.java.io :as io]
-            [roaman-life-clj.core :refer :all]))
+            [static-roam.core :refer :all]))
 
 (deftest test-unzip-roam-json-archive
   (testing "FIXME, I fail."
