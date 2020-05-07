@@ -40,33 +40,38 @@
 
 (defn to-rl-json
   "Filters out irrelevant info from Roam JSON"
-  [entry-point]
-  {:title (:title entry-point)
-   :entry-point (entry-point? entry-point)
-   :date (if (entry-point? entry-point)
-           (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children entry-point))))
+  [page]
+  {:title (:title page)
+   :entry-point (entry-point? page)
+   :date (if (entry-point? page)
+           (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children page))))
            nil)
-   :children (if (entry-point? entry-point)
-               (rest (:children entry-point))
-               (:children entry-point))})
+   :children (if (entry-point? page)
+               (rest (:children page))
+               (:children page))})
 
 (defn title-content-pair
+  "Creates an ordered pair of the title of the page and the page itself"
   [page]
   [(:title page) page])
 
 (defn remove-n-surrounding-delimiters
+  "Removes n surrounding characters from both the beginning and end of a string"
   [n string]
   (subs string n (- (count string) n)))
 
 (defn remove-double-delimiters
+  "Removes 2 surrounding characters from both the beginning and end of a string"
   [string]
   (remove-n-surrounding-delimiters 2 string))
 
 (defn remove-triple-delimiters
+  "Removes 3 surrounding characters from both the beginning and end of a string"
   [string]
   (remove-n-surrounding-delimiters 3 string))
 
 (defn get-pages-referenced-in-string
+  "Returns a sequence of all page references in a string"
   [string]
   (concat
    (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" string))
@@ -76,10 +81,12 @@
     (re-seq #"^.+?::" string))))
 
 (defn get-blocks-referenced-in-string
+  "Returns a sequence of all block references in a string"
   [string]
   (map remove-double-delimiters (re-seq #"\(\(.*?\)\)" string)))
 
 (defn pages-mentioned-by-children
+  "Finds all pages mentioned in all blocks of a page"
   [entry-point-title page-to-content-map]
   (when (:children (get page-to-content-map entry-point-title))
     (set
@@ -92,6 +99,7 @@
                                (get page-to-content-map entry-point-title)))))))))
 
 (defn find-all-included-pages
+  "Finds all pages to be included for a Static-Roam site"
   [unexplored-entry-points max-depth page-to-content-map]
   (loop [explored #{}
          unexplored (set unexplored-entry-points)
@@ -104,7 +112,8 @@
                                                         page-to-content-map)
                           unexplored)) (inc current-depth)))))
 
-(defn children-id-content-map
+(defn child-block-ids-content-map
+  "Generates a map of block IDs to their content"
   [page]
   (loop [children (:children page)
          id-to-content {}]
@@ -116,15 +125,17 @@
         id-to-content
         [{(:uid (first children))
           (:string (first children))}
-         (children-id-content-map (first children))])))))
+         (child-block-ids-content-map (first children))])))))
 
 ;; 2) STATIC SITE GENERATION
 
 (defn- strip-chars
+  "Removes every character of a given set from a string"
   [chars collection]
   (reduce str (remove #((set chars) %) collection)))
 
 (defn page-title->html-file-title
+  "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   ([string]
    (->> string
         (str-utils/lower-case)
@@ -141,6 +152,7 @@
         (#(str "/" % ".html")))))
 
 (defn get-youtube-vid-embed
+  "Returns an iframe for a YouTube embedding"
   [string]
   (str "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube-nocookie.com/embed/"
        (cond
@@ -150,6 +162,7 @@
        "\" frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>"))
 
 (defn double-brackets->links
+  "Convert Roam markup to web links"
   [string block-id-content-map titles-of-included-pages]
   (let [todos-replaced (str-utils/replace
                         string
@@ -205,6 +218,7 @@
       metadata-replaced)))
 
 (defn roam-md->hiccup
+  "Convert Roam markup to Hiccup"
   [string block-id-content-map titles-of-included-pages]
   (->>
    string
@@ -213,6 +227,7 @@
    mdh/component))
 
 (defn children-list-template
+  "Hiccup template for list of a page or block's children"
   [blockish indent-level block-id-content-map titles-of-included-pages]
   (loop [html []
          children (:children blockish)]
@@ -266,6 +281,7 @@
              (rest children)))))
 
 (defn page-template
+  "Hiccup template for the content of a Static-Roam page"
   [page block-id-content-map titles-of-included-pages] ;; each indent level is a new ul. Each element in an indent level is a new li
   (vec
    (concat
@@ -275,6 +291,7 @@
     (children-list-template page 0 block-id-content-map titles-of-included-pages))))
 
 (defn block-page-template
+  "Hiccup template for a block being shown as a page"
   [block-string block-id-content-map titles-of-included-pages] ;; each indent level is a new ul. Each element in an indent level is a new li
   (vec
    (concat
@@ -282,12 +299,14 @@
      [:h3 (roam-md->hiccup block-string block-id-content-map titles-of-included-pages)]])))
 
 (defn html-file-titles
+  "Get a sequence of all given page titles as file names for their corresponding HTML"
   ([page-titles]
    (map page-title->html-file-title page-titles))
   ([page-titles case-sensitive?]
    (map #(page-title->html-file-title % case-sensitive?) page-titles)))
 
 (defn- page-link-from-title
+  "Given a page and a directory for the page to go in, create Hiccup that contains the link to the HTML of that page"
   ([dir page]
    [:a {:href (str dir (page-title->html-file-title (:title page)))} (:title page)])
   ([page]
@@ -298,10 +317,12 @@
     (:title page)]))
 
 (defn- list-of-page-links
+  "Generate a Hiccup unordered list of links to pages"
   [links]
   (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) links)))
 
 (defn home-page-hiccup
+  "Hiccup template for the homepage of the Static-Roam site"
   [link-list title]
   [:html
    [:head
@@ -319,6 +340,7 @@
        link-list]]]]])
 
 (defn page-index-hiccup
+  "Hiccup template for an index of all pages in the Static-Roam"
   [link-list]
   [:html
    [:head
@@ -328,6 +350,7 @@
     link-list]])
 
 (defn page-hiccup
+  "Hiccup for a Static-Roam page"
   [link-list]
   [:html
    [:head
@@ -358,10 +381,10 @@
                                         #(get title-to-content-map %)
                                         titles-of-included-pages))
         block-id-to-content-map (into {}
-                                      (map children-id-content-map pages-as-rl-json))
+                                      (map child-block-ids-content-map pages-as-rl-json))
         mentioned-block-id-to-content-map (into {}
                                                 (map
-                                                 children-id-content-map
+                                                 child-block-ids-content-map
                                                  (vals included-title-to-content-map)))]
     (stasis/export-pages
      (zipmap (html-file-titles (keys included-title-to-content-map))
@@ -385,6 +408,6 @@
      ".")
     block-id-to-content-map))
 
-(time (-main)) ;; currently around 595 msecs
+(time (-main)) ;; currently around 1200 msecs
 
 
