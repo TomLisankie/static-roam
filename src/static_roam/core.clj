@@ -9,9 +9,6 @@
             [markdown-to-hiccup.core :as mdh])
   (:import (java.util.zip ZipFile)))
 
-(def ZIP-DIR "/home/thomas/Dropbox/Roam Exports/")
-(def ZIP-NAME "roam-test-export.zip")
-
 ; 1) GET PAGES TO INCLUDE ON SITE
 
 (defn unzip-roam-json-archive
@@ -360,8 +357,8 @@
     link-list]])
 
 (defn -main
-  []
-  (let [json-path (unzip-roam-json-archive (str ZIP-DIR ZIP-NAME) ZIP-DIR)
+  [path-to-zip]
+  (let [json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
         pages-as-rl-json (map to-rl-json roam-json)
         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
@@ -407,7 +404,4 @@
      {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "entry-point-link") (filter #(:entry-point %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
      ".")
     block-id-to-content-map))
-
-(time (-main)) ;; currently around 1200 msecs
-
 
