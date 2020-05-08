@@ -88,12 +88,10 @@
   (when (:children (get page-to-content-map entry-point-title))
     (set
      (flatten
-      (map get-pages-referenced-in-string
-           (map second
-                (map first
-                     (tree-seq #(:children %)
-                               #(:children %)
-                               (get page-to-content-map entry-point-title)))))))))
+      (map #(->> % first second get-pages-referenced-in-string)
+                (tree-seq #(:children %)
+                          #(:children %)
+                          (get page-to-content-map entry-point-title)))))))
 
 (defn find-all-included-pages
   "Finds all pages to be included for a Static-Roam site"
@@ -355,6 +353,12 @@
     [:link {:rel "stylesheet" :href "../main.css"}]]
    [:body
     link-list]])
+
+;; okay so I basically need some way of adding a block's list of pages-that-point-to-it to the block.
+;; this happens as a page / block is seeing which pages it references
+;; There's block A and block B. As A is seeing which pages it references, it informs each page that it's referencing it.
+;; Block A comes across the fact that it references block B. Block A says "okay, I'm going to add block B to the list of blocks I reference and tell block B that I'm referencing so it knows and can tell the user which pages / blocks reference it."
+;; So I need to find the function where block A is going through its children-blocks to find which ones it references.
 
 (defn -main
   [path-to-zip]
