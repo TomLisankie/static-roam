@@ -237,7 +237,8 @@
                               {:style (str "text-align:"
                                            (if (:text-align (first children))
                                              (:text-align (first children))
-                                             "none"))}
+                                             "none"))
+                               :onclick "bulletClicked()"}
                               (if (:heading (first children))
                                     [(cond (= (:heading (first children)) 1) :h1
                                            (= (:heading (first children)) 2) :h2
@@ -260,7 +261,8 @@
                             {:style (str "text-align:"
                                          (if (:text-align (first children))
                                            (:text-align (first children))
-                                           "none"))}
+                                           "none"))
+                             :onclick "bulletClicked()"}
                             (if (:heading (first children))
                                   [(cond (= (:heading (first children)) 1) :h1
                                          (= (:heading (first children)) 2) :h2
@@ -323,7 +325,7 @@
    [:head
     [:meta {:charset "utf-8"}]
     [:title title]
-    [:link {:rel "stylesheet" :href "./main.css"}]]
+    [:link {:rel "stylesheet" :href "./assets/css/main.css"}]]
    [:body
     [:header.site-header {:role "banner"}
      [:div.wrapper
@@ -340,7 +342,7 @@
   [:html
    [:head
     [:meta {:charset "utf-8"}]
-    [:link {:rel "stylesheet" :href "../main.css"}]]
+    [:link {:rel "stylesheet" :href "../assets/css/main.css"}]]
    [:body
     link-list]])
 
@@ -350,7 +352,9 @@
   [:html
    [:head
     [:meta {:charset "utf-8"}]
-    [:link {:rel "stylesheet" :href "../main.css"}]]
+    [:link {:rel "stylesheet" :href "../assets/css/main.css"}]
+    [:script {:src "../assets/js/jquery-3.5.1.min.js"}]
+    [:script {:src "../assets/js/tree-collapse.js"}]]
    [:body
     link-list]])
 

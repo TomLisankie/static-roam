@@ -12,3 +12,4 @@ pom.xml.asc
 *.#*
 *.html
 output.json
+/assets
