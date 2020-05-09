@@ -6,7 +6,8 @@
             [clojure.set :as set-fns]
             [hiccup.core :as hiccup]
             [stasis.core :as stasis]
-            [markdown-to-hiccup.core :as mdh])
+            [markdown-to-hiccup.core :as mdh]
+            [datascript.core :as ds])
   (:import (java.util.zip ZipFile)))
 
 ; 1) GET PAGES TO INCLUDE ON SITE
@@ -86,12 +87,13 @@
   "Finds all pages mentioned in all blocks of a page"
   [entry-point-title page-to-content-map]
   (when (:children (get page-to-content-map entry-point-title))
-    (set
-     (flatten
-      (map #(->> % first second get-pages-referenced-in-string)
-                (tree-seq #(:children %)
-                          #(:children %)
-                          (get page-to-content-map entry-point-title)))))))
+    (->>
+     (map #(->> % first second get-pages-referenced-in-string)
+          (tree-seq #(:children %)
+                    #(:children %)
+                    (get page-to-content-map entry-point-title)))
+     flatten
+     set)))
 
 (defn find-all-included-pages
   "Finds all pages to be included for a Static-Roam site"
@@ -412,4 +414,33 @@
      {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "entry-point-link") (filter #(:entry-point %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
      ".")
     block-id-to-content-map))
+
+(let [path-to-zip "/home/thomas/Desktop/RoamExports/roam-test-export.zip"
+      json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
+      roam-json (json/read-str (slurp json-path) :key-fn keyword)
+      example-page (nth roam-json 4)
+      schema {:block/title {:db/type :db.type/string}
+              :block/entry-point {:db/type :db.type/boolean}
+              :block/children {:db/cardinality :db.cardinality/one}
+              :block/links-to {:db/cardinality :db.cardinality/many}}
+      conn (ds/create-conn schema)]
+  (doseq [page roam-json]
+    (ds/transact! conn [{:block/id (:title page)
+                         :block/entry-point (entry-point? page)
+                         :block/children (map :uid (:children page))
+                         :block/links-to []}]))
+  (ds/q '[:find ?children
+          :where [?e :block/entry-point true]
+          [?e :block/children ?children]]
+        @conn)
+  ;; example-page
+  )
+
+
+
+
+
+
+
+
 
