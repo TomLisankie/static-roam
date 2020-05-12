@@ -415,18 +415,50 @@
      ".")
     block-id-to-content-map))
 
+(defn batch-transact!
+  [data conn]
+  (doseq [row data]
+    (ds/transact! conn [{:block/id (:title page)
+                         :block/string (:title page)
+                         :block/entry-point (entry-point? page)
+                         :block/included? (entry-point? page)
+                         :block/children (map :uid (:children page))
+                         :block/links-to []}])))
+
+(defn new-main
+  [path-to-zip]
+  (let [db-schema {:block/id {:db/type :db.type/string}
+                   :block/string {:db/type :db.type/string}
+                   :block/entry-point {:db/type :db.type/boolean}
+                   :block/included? {:db/type :db.type/boolean}
+                   :block/children {:db/cardinality :db.cardinality/one}
+                   :block/links-to {:db/cardinality :db.cardinality/many}}
+        conn (ds/create-conn schema)
+        json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
+        roam-json (json/read-str (slurp json-path) :key-fn keyword)
+        add-all-pages (batch-transact! roam-json conn)
+        child-blocks (children-datoms roam-json)
+        add-all-child-blocks (batch-transact! child-blocks conn)
+;; Left off here
+        ]
+    ))
+
 (let [path-to-zip "/home/thomas/Desktop/RoamExports/roam-test-export.zip"
       json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
       roam-json (json/read-str (slurp json-path) :key-fn keyword)
       example-page (nth roam-json 4)
-      schema {:block/title {:db/type :db.type/string}
+      schema {:block/id {:db/type :db.type/string}
+              :block/string {:db/type :db.type/string}
               :block/entry-point {:db/type :db.type/boolean}
+              :block/included? {:db/type :db.type/boolean}
               :block/children {:db/cardinality :db.cardinality/one}
               :block/links-to {:db/cardinality :db.cardinality/many}}
       conn (ds/create-conn schema)]
   (doseq [page roam-json]
     (ds/transact! conn [{:block/id (:title page)
+                         :block/string (:title page)
                          :block/entry-point (entry-point? page)
+                         :block/included? (entry-point? page)
                          :block/children (map :uid (:children page))
                          :block/links-to []}]))
   (ds/q '[:find ?children
@@ -435,8 +467,6 @@
         @conn)
   ;; example-page
   )
-
-
 
 
 
