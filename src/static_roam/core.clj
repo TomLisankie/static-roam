@@ -415,49 +415,6 @@
      ".")
     block-id-to-content-map))
 
-;; (defn batch-transact!
-;;   [data conn]
-;;   (doseq [row data]
-;;     (ds/transact! conn [{:block/id (:title page)
-;;                          :block/string (:title page)
-;;                          :block/entry-point (entry-point? page)
-;;                          :block/included? (entry-point? page)
-;;                          :block/children (map :uid (:children page))
-;;                          :block/links-to []}])))
-
-;; (defn new-main
-;;   [path-to-zip]
-;;   (let [db-schema {:block/id {:db/type :db.type/string}
-;;                    :block/string {:db/type :db.type/string}
-;;                    :block/entry-point {:db/type :db.type/boolean}
-;;                    :block/included? {:db/type :db.type/boolean}
-;;                    :block/children {:db/cardinality :db.cardinality/one}
-;;                    :block/links-to {:db/cardinality :db.cardinality/many}}
-;;         conn (ds/create-conn db-schema)
-;;         json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
-;;         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-;;         add-all-pages (batch-transact! roam-json conn)
-;;         child-blocks (children-datoms roam-json)
-;;         add-all-child-blocks (batch-transact! child-blocks conn)
-;; ;; Left off here
-;;         ]
-;;     ))
-
-(defn child-block-ids-content-map
-  "Generates a map of block IDs to their content"
-  [page]
-  (loop [children (:children page)
-         id-to-content {}]
-    (if (or (= 0 (count children)) (nil? children))
-      id-to-content
-      (recur
-       (rest children)
-       (into
-        id-to-content
-        [{(:uid (first children))
-          (:string (first children))}
-         (child-block-ids-content-map (first children))])))))
-
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
   [roam-json db-conn]
@@ -470,30 +427,38 @@
                                    [[:db/add (if (:title block)
                                                (:title block)
                                                (:uid block)) :block/id (if (:title block)
-                                                                      (:title block)
-                                                                      (:uid block))]]
+                                                                         (:title block)
+                                                                         (:uid block))]]
                                    (when (:string block)
                                      [[:db/add (:uid block) :block/content (:string block)]])
                                    (when (:heading block)
                                      [[:db/add (:uid block) :block/heading (:heading block)]])
                                    (when (:text-align block)
-                                     [[:db/add (:uid block) :block/text-align (:text-align block)]]))))
+                                     [[:db/add (:uid block) :block/text-align (:text-align block)]])
+                                   (when (:title block)
+                                     [[:db/add (:title block) :block/entry-point (entry-point? block)]
+                                      [:db/add (:title block) :block/page true]]))))
     (populate-db! (:children block) db-conn)))
 
-(defn test [] (let [path-to-zip "/home/thomas/Desktop/RoamExports/roam-test-export.zip"
-      json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
-      roam-json (json/read-str (slurp json-path) :key-fn keyword)
-      example-page (nth roam-json 4)
-      schema {:block/content {:db/type :db.type/string}
-              :block/entry-point {:db/type :db.type/boolean}
-              :block/included? {:db/type :db.type/boolean}
-              :block/children {:db/cardinality :db.cardinality/one}
-              :block/links-to {:db/cardinality :db.cardinality/many}}
-                    conn (ds/create-conn schema)]
-                (populate-db! roam-json conn)
-                conn))
+(defn test []
+  (let [path-to-zip "/home/thomas/Desktop/RoamExports/roam-test-export.zip"
+        json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
+        roam-json (json/read-str (slurp json-path) :key-fn keyword)
+        example-page (nth roam-json 4)
+        conn (ds/create-conn)]
+    (populate-db! roam-json conn)
+    conn))
 
+(def conn (test))
+(def query (ds/q '[:find ?layer-1
+                   :where
+                   [?entry-point-id :block/entry-point true]
+                   [?entry-point-id :block/children ?layer-1]
+                   ;; [?layer-1-ids :block/id ?layer-1]
+                   ;; [?layer-1-ids :block/content ?layer-1-content]
+                   ] @conn))
 
+query
 
 
 
