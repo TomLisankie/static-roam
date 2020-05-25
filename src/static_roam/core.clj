@@ -440,26 +440,39 @@
                                       [:db/add (:title block) :block/page true]]))))
     (populate-db! (:children block) db-conn)))
 
-(defn test []
-  (let [path-to-zip "/home/thomas/Desktop/RoamExports/roam-test-export.zip"
-        json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
+(defn new-main [path-to-zip]
+  (let [path-to-zip path-to-zip
+        json-path (unzip-roam-json-archive
+                   path-to-zip
+                   (->> path-to-zip
+                        (#(str-utils/split % #"/"))
+                        drop-last
+                        (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
         example-page (nth roam-json 4)
         conn (ds/create-conn)]
     (populate-db! roam-json conn)
     conn))
 
-(def conn (test))
-(def query (ds/q '[:find ?layer-1
-                   :where
-                   [?entry-point-id :block/entry-point true]
-                   [?entry-point-id :block/children ?layer-1]
-                   ;; [?layer-1-ids :block/id ?layer-1]
-                   ;; [?layer-1-ids :block/content ?layer-1-content]
-                   ] @conn))
+(def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
 
-query
+(ds/q '[:find ?content
+        :where
+        [?id :block/id "ZCC0hHtot"]
+        [?id :block/content ?content]]
+      @conn)
+
+(doseq [block-ds-id (vec (ds/q '[:find ?id
+                            :where
+                                 [?id]]
+                               @conn))]
+  (ds/transact! conn [[:db/add (first block-ds-id) :block/included (if (= 0 (mod (first block-ds-id) 2))
+                                                                      true
+                                                                      false)]]))
 
 
-
-
+(sort
+ (ds/q '[:find ?included
+         :where
+         [?included :block/included true]]
+       @conn))
