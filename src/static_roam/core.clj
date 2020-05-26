@@ -462,17 +462,40 @@
         [?id :block/content ?content]]
       @conn)
 
+(defn excluded?
+  "Does it have #SR-Exclude as a child?"
+  [id]
+  ;; TODO implement
+  false)
+
 (doseq [block-ds-id (vec (ds/q '[:find ?id
-                            :where
+                                 :where
                                  [?id]]
                                @conn))]
-  (ds/transact! conn [[:db/add (first block-ds-id) :block/included (if (= 0 (mod (first block-ds-id) 2))
-                                                                      true
-                                                                      false)]]))
+  (ds/transact! conn [[:db/add (first block-ds-id) :block/included (if (excluded? (first block-ds-id))
+                                                                     false
+                                                                     true)]]))
 
+(defn block-content->hiccup
+  [content conn]
+  content)
 
-(sort
- (ds/q '[:find ?included
-         :where
-         [?included :block/included true]]
-       @conn))
+(doseq [included-block-ds-id (vec (ds/q '[:find ?id
+                                          :where
+                                          [?id :block/included true]]
+                                        @conn))]
+  (let [content (ds/q '[:find ?content
+                        :where
+                        [?included-block-ds-id :block/content ?content]]
+                      @conn)]
+    (ds/transact! conn [[:db/add (first included-block-ds-id)
+                         :block/hiccup (block-content->hiccup
+                                        conn
+                                        content)]])))
+
+(ds/datoms @conn :eavt 4000)
+
+(sort (ds/q '[:find ?hiccup
+        :where
+        [4000 :block/hiccup ?hiccup]]
+      @conn))
