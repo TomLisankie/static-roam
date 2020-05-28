@@ -9,5 +9,6 @@
                  [hiccup "1.0.5"]
                  [stasis "2.5.0"]
                  [markdown-to-hiccup "0.6.2"]
-                 [datascript "0.18.11"]]
+                 [datascript "0.18.11"]
+                 [io.replikativ/datahike "0.3.1-SNAPSHOT"]]
   :main static-roam.core)

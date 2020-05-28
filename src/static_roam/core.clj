@@ -7,7 +7,7 @@
             [hiccup.core :as hiccup]
             [stasis.core :as stasis]
             [markdown-to-hiccup.core :as mdh]
-            [datascript.core :as ds])
+            [datahike.api :as dh])
   (:import (java.util.zip ZipFile)))
 
                                         ; 1) GET PAGES TO INCLUDE ON SITE
@@ -429,7 +429,7 @@
   "Populate database with relevant properties of pages and blocks"
   [roam-json db-conn]
   (doseq [block roam-json]
-    (ds/transact! db-conn (vec
+    (dh/transact! db-conn (vec
                            (concat [[:db/add (if (:title block)
                                                (:title block)
                                                (:uid block))
@@ -441,9 +441,10 @@
                                                                          (:uid block))]]
                                    (when (:string block)
                                      [[:db/add (:uid block) :block/content (:string block)]
-                                      [:db/add (:uid block) :block/hiccup (if (excluded? block)
-                                                                            []
-                                                                            (block-content->hiccup (:string block) db-conn))]])
+                                      ;; [:db/add (:uid block) :block/hiccup (if (excluded? block)
+                                      ;;                                       []
+                                      ;;                                       (block-content->hiccup (:string block) db-conn))]
+                                      ])
                                    (when (:heading block)
                                      [[:db/add (:uid block) :block/heading (:heading block)]])
                                    (when (:text-align block)
@@ -463,47 +464,59 @@
                         (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
         example-page (nth roam-json 4)
-        conn (ds/create-conn)]
+        conn (dh/create-conn)]
     (populate-db! roam-json conn)
     conn))
 
 (def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
 
-(ds/q '[:find ?content
+(dh/q '[:find ?content
         :where
         [?id :block/id "ZCC0hHtot"]
         [?id :block/content ?content]]
       @conn)
 
-(doseq [block-ds-id (vec (ds/q '[:find ?id
+(doseq [block-ds-id (vec (dh/q '[:find ?id
                                  :where
                                  [?id]]
                                @conn))]
-  (ds/transact! conn [[:db/add (first block-ds-id) :block/included (if (excluded? (first block-ds-id))
+  (dh/transact! conn [[:db/add (first block-ds-id) :block/included (if (excluded? (first block-ds-id))
                                                                      false
                                                                      true)]]))
 
-(doseq [included-block-ds-id (vec (ds/q '[:find ?id
-                                          :where
-                                          [?id :block/included true]]
-                                        @conn))]
-  (let [content (first (first (vec (ds/q '[:find ?content
-                                           :where
-                                           [?included-block-ds-id :block/content ?content]]
-                                         @conn))))]
-    (ds/transact! conn [[:db/add (first included-block-ds-id)
-                         :block/hiccup (block-content->hiccup
-                                        conn
-                                        content)]])))
+;; (doseq [included-block-ds-id (vec (dh/q '[:find ?id
+;;                                           :where
+;;                                           [?id :block/included true]]
+;;                                         @conn))]
+;;   (let [content (first (first (vec (dh/q '[:find ?content
+;;                                            :where
+;;                                            [?included-block-ds-id :block/content ?content]]
+;;                                          @conn))))]
+;;     (dh/transact! conn [[:db/add (first included-block-ds-id)
+;;                          :block/hiccup (block-content->hiccup
+;;                                         conn
+;;                                         content)]])))
 
-(vec (ds/q '[:find ?content
-             :where
-             [4000 :block/content ?content]]
-           @conn))
+;; (let [db @conn
+;;       id+content (dh/q '[:find ?id ?content
+;;                          :where
+;;                          [?id :block/included true]
+;;                          [?id :block/content ?content]]
+;;                        db)
+;;       tx (for [[id content] id+content]
+;;            [:db/add id :block/hiccup (block-content->hiccup conn content)])]
+;;   (dh/transact! conn tx))
 
-(ds/datoms @conn :eavt 4000)
+;; (vec (dh/q '[:find ?content
+;;              :where
+;;              [4000 :block/content ?content]]
+;;            @conn))
 
-(sort (ds/q '[:find ?hiccup
-              :where
-              [4000 :block/hiccup ?hiccup]]
-            @conn))
+;; (dh/datoms @conn :eavt 4000)
+
+;; (dh/q '[:find ?hiccup
+;;         :where
+;;         [4000 :block/hiccup ?hiccup]]
+;;       @conn)
+
+;; (:block/hiccup (dh/entity @conn 4000))
