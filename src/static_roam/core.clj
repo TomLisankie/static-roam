@@ -10,7 +10,7 @@
             [datascript.core :as ds])
   (:import (java.util.zip ZipFile)))
 
-; 1) GET PAGES TO INCLUDE ON SITE
+                                        ; 1) GET PAGES TO INCLUDE ON SITE
 
 (defn unzip-roam-json-archive
   "Takes the path to a zipfile `source` and unzips it to target-dir, returning the path of the target file"
@@ -166,9 +166,9 @@
                         #"\{\{\[\[TODO\]\]\}\}"
                         "<input type=\"checkbox\" disabled>")
         dones-replaced (str-utils/replace
-                         todos-replaced
-                         #"\{\{\[\[DONE\]\]\}\}"
-                         "<input type=\"checkbox\" checked disabled>")
+                        todos-replaced
+                        #"\{\{\[\[DONE\]\]\}\}"
+                        "<input type=\"checkbox\" checked disabled>")
         youtubes-replaced (str-utils/replace
                            dones-replaced
                            #"\{\{youtube: .*?\}\}"
@@ -242,17 +242,17 @@
                                              "none"))
                                :onclick "bulletClicked()"}
                               (if (:heading (first children))
-                                    [(cond (= (:heading (first children)) 1) :h1
-                                           (= (:heading (first children)) 2) :h2
-                                           (= (:heading (first children)) 3) :h3)
-                                     (roam-md->hiccup
-                                      (:string (first children))
-                                      block-id-content-map
-                                      titles-of-included-pages)]
-                                    (roam-md->hiccup
-                                     (:string (first children))
-                                     block-id-content-map
-                                     titles-of-included-pages))]]
+                                [(cond (= (:heading (first children)) 1) :h1
+                                       (= (:heading (first children)) 2) :h2
+                                       (= (:heading (first children)) 3) :h3)
+                                 (roam-md->hiccup
+                                  (:string (first children))
+                                  block-id-content-map
+                                  titles-of-included-pages)]
+                                (roam-md->hiccup
+                                 (:string (first children))
+                                 block-id-content-map
+                                 titles-of-included-pages))]]
                             (children-list-template
                              (first children)
                              (inc indent-level)
@@ -266,17 +266,17 @@
                                            "none"))
                              :onclick "bulletClicked()"}
                             (if (:heading (first children))
-                                  [(cond (= (:heading (first children)) 1) :h1
-                                         (= (:heading (first children)) 2) :h2
-                                         (= (:heading (first children)) 3) :h3)
-                                   (roam-md->hiccup
-                                    (:string (first children))
-                                    block-id-content-map
-                                    titles-of-included-pages)]
-                                  (roam-md->hiccup
-                                   (:string (first children))
-                                   block-id-content-map
-                                   titles-of-included-pages))]]))
+                              [(cond (= (:heading (first children)) 1) :h1
+                                     (= (:heading (first children)) 2) :h2
+                                     (= (:heading (first children)) 3) :h3)
+                               (roam-md->hiccup
+                                (:string (first children))
+                                block-id-content-map
+                                titles-of-included-pages)]
+                              (roam-md->hiccup
+                               (:string (first children))
+                               block-id-content-map
+                               titles-of-included-pages))]]))
              (rest children)))))
 
 (defn page-template
@@ -415,6 +415,16 @@
      ".")
     block-id-to-content-map))
 
+(defn excluded?
+  "Does it have #SR-Exclude as a child?"
+  [block]
+  ;; TODO implement
+  false)
+
+(defn block-content->hiccup
+  [content conn]
+  content)
+
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
   [roam-json db-conn]
@@ -430,7 +440,10 @@
                                                                          (:title block)
                                                                          (:uid block))]]
                                    (when (:string block)
-                                     [[:db/add (:uid block) :block/content (:string block)]])
+                                     [[:db/add (:uid block) :block/content (:string block)]
+                                      [:db/add (:uid block) :block/hiccup (if (excluded? block)
+                                                                            []
+                                                                            (block-content->hiccup (:string block) db-conn))]])
                                    (when (:heading block)
                                      [[:db/add (:uid block) :block/heading (:heading block)]])
                                    (when (:text-align block)
@@ -462,12 +475,6 @@
         [?id :block/content ?content]]
       @conn)
 
-(defn excluded?
-  "Does it have #SR-Exclude as a child?"
-  [id]
-  ;; TODO implement
-  false)
-
 (doseq [block-ds-id (vec (ds/q '[:find ?id
                                  :where
                                  [?id]]
@@ -476,26 +483,27 @@
                                                                      false
                                                                      true)]]))
 
-(defn block-content->hiccup
-  [content conn]
-  content)
-
 (doseq [included-block-ds-id (vec (ds/q '[:find ?id
                                           :where
                                           [?id :block/included true]]
                                         @conn))]
-  (let [content (ds/q '[:find ?content
-                        :where
-                        [?included-block-ds-id :block/content ?content]]
-                      @conn)]
+  (let [content (first (first (vec (ds/q '[:find ?content
+                                           :where
+                                           [?included-block-ds-id :block/content ?content]]
+                                         @conn))))]
     (ds/transact! conn [[:db/add (first included-block-ds-id)
                          :block/hiccup (block-content->hiccup
                                         conn
                                         content)]])))
 
+(vec (ds/q '[:find ?content
+             :where
+             [4000 :block/content ?content]]
+           @conn))
+
 (ds/datoms @conn :eavt 4000)
 
 (sort (ds/q '[:find ?hiccup
-        :where
-        [4000 :block/hiccup ?hiccup]]
-      @conn))
+              :where
+              [4000 :block/hiccup ?hiccup]]
+            @conn))
