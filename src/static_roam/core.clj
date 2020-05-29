@@ -440,10 +440,7 @@
                                                                          (:title block)
                                                                          (:uid block))]]
                                    (when (:string block)
-                                     [[:db/add (:uid block) :block/content (:string block)]
-                                      [:db/add (:uid block) :block/hiccup (if (excluded? block)
-                                                                            []
-                                                                            (block-content->hiccup (:string block) db-conn))]])
+                                     [[:db/add (:uid block) :block/content (:string block)]])
                                    (when (:heading block)
                                      [[:db/add (:uid block) :block/heading (:heading block)]])
                                    (when (:text-align block)
@@ -483,27 +480,23 @@
                                                                      false
                                                                      true)]]))
 
-(doseq [included-block-ds-id (vec (ds/q '[:find ?id
-                                          :where
-                                          [?id :block/included true]]
-                                        @conn))]
-  (let [content (first (first (vec (ds/q '[:find ?content
-                                           :where
-                                           [?included-block-ds-id :block/content ?content]]
-                                         @conn))))]
-    (ds/transact! conn [[:db/add (first included-block-ds-id)
-                         :block/hiccup (block-content->hiccup
-                                        conn
-                                        content)]])))
+(let [db @conn
+      id+content (ds/q '[:find ?id ?content
+                         :where [?id :block/included true]
+                         [?id :block/content ?content]]
+                       db)
+      tx (for [[id content] id+content]
+           [:db/add id :block/hiccup (block-content->hiccup content db)])]
+  (ds/transact! conn tx))
 
-(vec (ds/q '[:find ?content
-             :where
-             [4000 :block/content ?content]]
-           @conn))
+(ds/q '[:find ?content
+        :where
+        [4000 :block/content ?content]]
+      @conn)
 
 (ds/datoms @conn :eavt 4000)
 
-(sort (ds/q '[:find ?hiccup
-              :where
-              [4000 :block/hiccup ?hiccup]]
-            @conn))
+(ds/q '[:find ?hiccup
+        :where
+        [4000 :block/hiccup ?hiccup]]
+      @conn)
