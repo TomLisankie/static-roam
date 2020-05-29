@@ -421,9 +421,68 @@
   ;; TODO implement
   false)
 
-(defn block-content->hiccup
+(defn roam-web-elements
   [content conn]
-  content)
+  (let [todos-replaced (str-utils/replace
+                        string
+                        #"\{\{\[\[TODO\]\]\}\}"
+                        "<input type=\"checkbox\" disabled>")
+        dones-replaced (str-utils/replace
+                        todos-replaced
+                        #"\{\{\[\[DONE\]\]\}\}"
+                        "<input type=\"checkbox\" checked disabled>")
+        youtubes-replaced (str-utils/replace
+                           dones-replaced
+                           #"\{\{youtube: .*?\}\}"
+                           #(get-youtube-vid-embed %))
+        double-brackets-replaced (str-utils/replace
+                                  youtubes-replaced
+                                  #"\[\[.*?\]\]"
+                                  #(if (get titles-of-included-pages (remove-double-delimiters %)) ;; TODO replace with db stuff
+                                     (str "[" (remove-double-delimiters %)
+                                          "](." (page-title->html-file-title %) ")")
+                                     (remove-double-delimiters %)))
+        hashtags-replaced (str-utils/replace
+                           double-brackets-replaced
+                           #"\#..*?(?=\s|$)"
+                           #(str "[" (subs % 1) "](." (page-title->html-file-title %) ")"))
+        block-alias-links (str-utils/replace
+                           hashtags-replaced
+                           #"\[.*?\]\(\(\(.*?\)\)\)"
+                           #(str
+                             (re-find #"\[.*?\]" %)
+                             "(." (page-title->html-file-title
+                                   (remove-triple-delimiters
+                                    (re-find #"\(\(\(.*?\)\)\)" %))) ")"))
+        block-refs-transcluded (str-utils/replace
+                                block-alias-links
+                                #"\(\(.*?\)\)"
+                                #(str
+                                  (get block-id-content-map ;; TODO replace with db stuff
+                                       (remove-double-delimiters %) "BLOCK NOT FOUND")
+                                  "  [Block Link](."
+                                  (page-title->html-file-title % :case-sensitive) ")"))
+        metadata-replaced (str-utils/replace
+                           block-refs-transcluded
+                           #"^.+?::"
+                           #(str
+                             "__[" (subs % 0 (- (count %) 2)) ":](."
+                             (page-title->html-file-title %) ")__"))]
+    (if (or
+         (re-find #"\[\[.*?\]\]" metadata-replaced)
+         (re-find #"\#..*?(?=\s|$)" metadata-replaced)
+         (re-find #"\(\(.*?\)\)" metadata-replaced)
+         (re-find #"^.+?::" metadata-replaced))
+      (double-brackets->links metadata-replaced block-id-content-map titles-of-included-pages)
+      metadata-replaced)))
+
+(defn block-content->hiccup
+  "Convert Roam markup to Hiccup"
+  [content conn]
+  (->> content
+       (#(roam-web-elements content conn))
+       mdh/md->hiccup
+       mdh/component))
 
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
@@ -459,44 +518,23 @@
                         drop-last
                         (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-        example-page (nth roam-json 4)
         conn (ds/create-conn)]
     (populate-db! roam-json conn)
+    (doseq [block-ds-id (vec (ds/q '[:find ?id
+                                     :where
+                                     [?id]]
+                                   @conn))]
+      (ds/transact! conn [[:db/add (first block-ds-id) :block/included (if (excluded? (first block-ds-id))
+                                                                         false
+                                                                         true)]]))
+    (let [db @conn
+          id+content (ds/q '[:find ?id ?content
+                             :where [?id :block/included true]
+                             [?id :block/content ?content]]
+                           db)
+          tx (for [[id content] id+content]
+               [:db/add id :block/hiccup (block-content->hiccup content db)])]
+      (ds/transact! conn tx))
     conn))
 
 (def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
-
-(ds/q '[:find ?content
-        :where
-        [?id :block/id "ZCC0hHtot"]
-        [?id :block/content ?content]]
-      @conn)
-
-(doseq [block-ds-id (vec (ds/q '[:find ?id
-                                 :where
-                                 [?id]]
-                               @conn))]
-  (ds/transact! conn [[:db/add (first block-ds-id) :block/included (if (excluded? (first block-ds-id))
-                                                                     false
-                                                                     true)]]))
-
-(let [db @conn
-      id+content (ds/q '[:find ?id ?content
-                         :where [?id :block/included true]
-                         [?id :block/content ?content]]
-                       db)
-      tx (for [[id content] id+content]
-           [:db/add id :block/hiccup (block-content->hiccup content db)])]
-  (ds/transact! conn tx))
-
-(ds/q '[:find ?content
-        :where
-        [4000 :block/content ?content]]
-      @conn)
-
-(ds/datoms @conn :eavt 4000)
-
-(ds/q '[:find ?hiccup
-        :where
-        [4000 :block/hiccup ?hiccup]]
-      @conn)
