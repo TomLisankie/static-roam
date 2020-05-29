@@ -425,33 +425,68 @@
   [content conn]
   content)
 
+(def db-config {:store {:backend :file
+                        :path "/tmp/static-roam"}})
+(dh/create-database db-config)
+
+(defn define-schema!
+  [conn]
+  (dh/transact! conn {:block/id {:db/unique :db.unique/identity
+                                 :db/valueType :db.type/string
+                                 :db/cardinality :db.cardinality/one}
+                      :block/children {:db/type :db.type/ref
+                                       :db/cardinality :db.cardinality/many}
+                      :block/content {:db/valueType :db.type/string
+                                      :db/cardinality :db.cardinality/one}
+                      :block/heading {:db/valueType :db.type/bigint
+                                      :db/cardinality :db.cardinality/one}
+                      :block/text-align {:db/valueType :db.type/string
+                                         :db/cardinality :db.cardinality/one}
+                      :block/entry-point {:db/valueType :db.type/boolean
+                                          :db/cardinality :db.cardinality/one}
+                      :block/page {:db/valueType :db.type/boolean
+                                   :db/cardinality :db.cardinality/one}
+                      :block/included {:db/valueType :db.type/boolean
+                                       :db/cardinality :db.cardinality/one}}))
+
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
   [roam-json db-conn]
   (doseq [block roam-json]
-    (dh/transact! db-conn (vec
-                           (concat [[:db/add (if (:title block)
-                                               (:title block)
-                                               (:uid block))
-                                     :block/children (map :uid (:children block))]]
-                                   [[:db/add (if (:title block)
-                                               (:title block)
-                                               (:uid block)) :block/id (if (:title block)
-                                                                         (:title block)
-                                                                         (:uid block))]]
-                                   (when (:string block)
-                                     [[:db/add (:uid block) :block/content (:string block)]
-                                      ;; [:db/add (:uid block) :block/hiccup (if (excluded? block)
-                                      ;;                                       []
-                                      ;;                                       (block-content->hiccup (:string block) db-conn))]
-                                      ])
-                                   (when (:heading block)
-                                     [[:db/add (:uid block) :block/heading (:heading block)]])
-                                   (when (:text-align block)
-                                     [[:db/add (:uid block) :block/text-align (:text-align block)]])
-                                   (when (:title block)
-                                     [[:db/add (:title block) :block/entry-point (entry-point? block)]
-                                      [:db/add (:title block) :block/page true]]))))
+    ;; (dh/transact db-conn (vec
+    ;;                        (concat [[:db/add (if (:title block)
+    ;;                                            (:title block)
+    ;;                                            (:uid block))
+    ;;                                  :block/children (map :uid (:children block))]]
+    ;;                                [[:db/add (if (:title block)
+    ;;                                            (:title block)
+    ;;                                            (:uid block)) :block/id (if (:title block)
+    ;;                                                                      (:title block)
+    ;;                                                                      (:uid block))]]
+    ;;                                (when (:string block)
+    ;;                                  [[:db/add (:uid block) :block/content (:string block)]
+    ;;                                   ;; [:db/add (:uid block) :block/hiccup (if (excluded? block)
+    ;;                                   ;;                                       []
+    ;;                                   ;;                                       (block-content->hiccup (:string block) db-conn))]
+    ;;                                   ])
+    ;;                                (when (:heading block)
+    ;;                                  [[:db/add (:uid block) :block/heading (:heading block)]])
+    ;;                                (when (:text-align block)
+    ;;                                  [[:db/add (:uid block) :block/text-align (:text-align block)]])
+    ;;                                (when (:title block)
+    ;;                                  [[:db/add (:title block) :block/entry-point (entry-point? block)]
+    ;;                                   [:db/add (:title block) :block/page true]]))))
+    (dh/transact db-conn {:block/id (if (:title block)
+                                      (:title block)
+                                      (:uid block))
+                          :block/children []
+                          :block/content (:string block)
+                          :block/heading (:heading block)
+                          :block/text-align (:text-align block)
+                          :block/entry-point (entry-point? block)
+                          :block/page (if (:title block)
+                                        true
+                                        false)})
     (populate-db! (:children block) db-conn)))
 
 (defn new-main [path-to-zip]
@@ -464,8 +499,9 @@
                         (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
         example-page (nth roam-json 4)
-        conn (dh/create-conn)]
-    (populate-db! roam-json conn)
+        conn (dh/connect db-config)]
+    (define-schema! conn)
+    ;; (populate-db! roam-json conn)
     conn))
 
 (def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
