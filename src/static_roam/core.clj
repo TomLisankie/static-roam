@@ -475,12 +475,8 @@
         block-refs-transcluded (str-utils/replace
                                 block-alias-links
                                 #"\(\(.*?\)\)"
-                                #(str
-                                  (get block-id-content-map ;; TODO replace with db stuff
-                                       (remove-double-delimiters %) "BLOCK NOT FOUND")
-                                  "  [Block Link](."
-                                  (page-title->html-file-title % :case-sensitive) ")")
-                                )
+                                #(str "[" (content-find (remove-double-delimiters %))
+                                      "](." (page-title->html-file-title % :case-sensitive) ")"))
         metadata-replaced (str-utils/replace
                            block-refs-transcluded
                            #"^.+?::"
@@ -492,20 +488,16 @@
          (re-find #"\#..*?(?=\s|$)" metadata-replaced)
          (re-find #"\(\(.*?\)\)" metadata-replaced)
          (re-find #"^.+?::" metadata-replaced))
-      (double-brackets->links metadata-replaced block-id-content-map titles-of-included-pages)
+      (roam-web-elements metadata-replaced conn)
       metadata-replaced)))
 
-;; (defn block-content->hiccup
-;;   "Convert Roam markup to Hiccup"
-;;   [content conn]
-;;   (->> content
-;;        (#(roam-web-elements content conn))
-;;        mdh/md->hiccup
-;;        mdh/component))
-
 (defn block-content->hiccup
+  "Convert Roam markup to Hiccup"
   [content conn]
-  conn)
+  (->> content
+       (#(roam-web-elements % conn))
+       mdh/md->hiccup
+       mdh/component))
 
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
@@ -556,9 +548,15 @@
                              [?id :block/content ?content]]
                            db)
           tx (for [[id content] id+content]
-               [:db/add id :block/hiccup (block-content->hiccup content db)])]
+               [:db/add id :block/hiccup (block-content->hiccup content conn)])]
       (ds/transact! conn tx))
     conn))
 
 (def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
 
+
+(ds/q '[:find ?hiccup
+        :where
+        [?id :block/id "W3HhTpgl4"]
+        [?id :block/hiccup ?hiccup]]
+      @conn)
