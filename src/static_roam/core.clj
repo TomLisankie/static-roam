@@ -421,10 +421,28 @@
   ;; TODO implement
   false)
 
+(defn included?
+  [id-passed]
+  (contains? (ds/q '[:find ?included
+                     :where
+                     [?id :block/id ?id-passed]
+                     [?id :block/included ?included]]
+                   @conn)
+             [true]))
+
+(defn content-find
+  [id-passed]
+  (ds/q '[:find ?content
+          :in $ ?id-passed
+          :where
+          [?id :block/id ?id-passed]
+          [?id :block/content ?content]]
+        @conn id-passed))
+
 (defn roam-web-elements
   [content conn]
   (let [todos-replaced (str-utils/replace
-                        string
+                        content
                         #"\{\{\[\[TODO\]\]\}\}"
                         "<input type=\"checkbox\" disabled>")
         dones-replaced (str-utils/replace
@@ -438,7 +456,7 @@
         double-brackets-replaced (str-utils/replace
                                   youtubes-replaced
                                   #"\[\[.*?\]\]"
-                                  #(if (get titles-of-included-pages (remove-double-delimiters %)) ;; TODO replace with db stuff
+                                  #(if (included? (remove-double-delimiters %))
                                      (str "[" (remove-double-delimiters %)
                                           "](." (page-title->html-file-title %) ")")
                                      (remove-double-delimiters %)))
@@ -461,7 +479,8 @@
                                   (get block-id-content-map ;; TODO replace with db stuff
                                        (remove-double-delimiters %) "BLOCK NOT FOUND")
                                   "  [Block Link](."
-                                  (page-title->html-file-title % :case-sensitive) ")"))
+                                  (page-title->html-file-title % :case-sensitive) ")")
+                                )
         metadata-replaced (str-utils/replace
                            block-refs-transcluded
                            #"^.+?::"
@@ -476,13 +495,17 @@
       (double-brackets->links metadata-replaced block-id-content-map titles-of-included-pages)
       metadata-replaced)))
 
+;; (defn block-content->hiccup
+;;   "Convert Roam markup to Hiccup"
+;;   [content conn]
+;;   (->> content
+;;        (#(roam-web-elements content conn))
+;;        mdh/md->hiccup
+;;        mdh/component))
+
 (defn block-content->hiccup
-  "Convert Roam markup to Hiccup"
   [content conn]
-  (->> content
-       (#(roam-web-elements content conn))
-       mdh/md->hiccup
-       mdh/component))
+  conn)
 
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
@@ -538,3 +561,4 @@
     conn))
 
 (def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
+
