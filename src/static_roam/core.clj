@@ -422,7 +422,7 @@
   false)
 
 (defn included?
-  [id-passed]
+  [id-passed conn]
   (contains? (ds/q '[:find ?included
                      :where
                      [?id :block/id ?id-passed]
@@ -431,7 +431,7 @@
              [true]))
 
 (defn content-find
-  [id-passed]
+  [id-passed conn]
   (ds/q '[:find ?content
           :in $ ?id-passed
           :where
@@ -456,7 +456,7 @@
         double-brackets-replaced (str-utils/replace
                                   youtubes-replaced
                                   #"\[\[.*?\]\]"
-                                  #(if (included? (remove-double-delimiters %))
+                                  #(if (included? (remove-double-delimiters %) conn)
                                      (str "[" (remove-double-delimiters %)
                                           "](." (page-title->html-file-title %) ")")
                                      (remove-double-delimiters %)))
@@ -475,7 +475,7 @@
         block-refs-transcluded (str-utils/replace
                                 block-alias-links
                                 #"\(\(.*?\)\)"
-                                #(str "[" (content-find (remove-double-delimiters %))
+                                #(str "[" (content-find (remove-double-delimiters %) conn)
                                       "](." (page-title->html-file-title % :case-sensitive) ")"))
         metadata-replaced (str-utils/replace
                            block-refs-transcluded
@@ -550,6 +550,20 @@
           tx (for [[id content] id+content]
                [:db/add id :block/hiccup (block-content->hiccup content conn)])]
       (ds/transact! conn tx))
+    (stasis/export-pages
+     (zipmap (new-html-file-titles (ds/q '[:find ?block-title
+                                           :where
+                                           [?included-id :block/included true]
+                                           [?included-id :block/id ?block-title]]
+                                         @conn))
+             (map #(hiccup/html (page-hiccup %))
+                  (map #(block-page-template % conn)
+                       (ds/q '[:find ?hiccup
+                               :where
+                               [?included-id :block/included true]
+                               [?included-id :block/hiccup ?hiccup]]
+                             @conn))))
+          "./pages")
     conn))
 
 (def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
