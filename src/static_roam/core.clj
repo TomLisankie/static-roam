@@ -415,29 +415,17 @@
      ".")
     block-id-to-content-map))
 
-(defn excluded?
-  "Does it have #SR-Exclude as a child?"
-  [block]
-  ;; TODO implement
-  false)
-
 (defn included?
   [id-passed conn]
-  (contains? (ds/q '[:find ?included
-                     :where
-                     [?id :block/id ?id-passed]
-                     [?id :block/included ?included]]
-                   @conn)
-             [true]))
+  (true? (:block/included (ds/entity @conn [:block/id id-passed]))))
+
+(defn excluded?
+  [block-id conn]
+  (not (included? block-id conn)))
 
 (defn content-find
   [id-passed conn]
-  (ds/q '[:find ?content
-          :in $ ?id-passed
-          :where
-          [?id :block/id ?id-passed]
-          [?id :block/content ?content]]
-        @conn id-passed))
+  (:block/content (ds/entity @conn [:block/id id-passed])))
 
 (defn roam-web-elements
   [content conn]
@@ -503,16 +491,17 @@
   "Populate database with relevant properties of pages and blocks"
   [roam-json db-conn]
   (doseq [block roam-json]
-    (ds/transact! db-conn {:block/id (if (:title block)
-                                       (:title block)
-                                       (:uid block))
-                           :block/children (map :uid (:children block))
-                           :block/content (:string block)
-                           :block/heading (:heading block)
-                           :block/text-align (:text-align block)
-                           :block/entry-point (entry-point? block)
-                           :block/page (when (:title block)
-                                         true)})
+    (ds/transact! db-conn [{:block/id (if (:title block)
+                                        (:title block)
+                                        (:uid block))
+                            :block/children (map :uid (:children block))
+                            :block/content (:string block (:title block))
+                            :block/heading (:heading block -1)
+                            :block/text-align (:text-align block "")
+                            :block/entry-point (entry-point? block)
+                            :block/page (if (:title block)
+                                         true
+                                         false)}])
     (populate-db! (:children block) db-conn)))
 
 (defn new-html-file-titles
@@ -546,31 +535,31 @@
                         drop-last
                         (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-        schema {:block/id {:db/valueType :db.type/string
-                           :db/cardinality :db.cardinality/one}
-                :block/children {:db/valueType :db.type/string
-                                 :db/cardinality :db.cardinality/many}
-                :block/content {:db/valueType :db.type/string
-                                :db/cardinality :db.cardinality/one}
-                :block/heading {:db/valueType :db.type/bigint
-                                :db/cardinality :db.cardinality/one}
-                :block/text-align {:db/valueType :db.type/string
-                                   :db/cardinality :db.cardinality/one}
-                :block/entry-point {:db/valueType :db.type/boolean
-                                    :db/cardinality :db.cardinality/one}
-                :block/page {:db/valueType :db.type/boolean
-                             :db/cardinality :db.cardinality/one}
-                :block/included {:db/valueType :db.type/boolean
-                                 :db/cardinality :db.cardinality/one}}
+        schema {
+                :block/id {:db/unique :db.unique/identity}
+                ;; :block/children {:db/valueType :db.type/string
+                ;;                  :db/cardinality :db.cardinality/many}
+                ;; :block/content {:db/valueType :db.type/string
+                ;;                 :db/cardinality :db.cardinality/one}
+                ;; :block/heading {:db/valueType :db.type/bigint
+                ;;                 :db/cardinality :db.cardinality/one}
+                ;; :block/text-align {:db/valueType :db.type/string
+                ;;                    :db/cardinality :db.cardinality/one}
+                ;; :block/entry-point {:db/valueType :db.type/boolean
+                ;;                     :db/cardinality :db.cardinality/one}
+                ;; :block/page {:db/valueType :db.type/boolean
+                ;;              :db/cardinality :db.cardinality/one}
+                ;; :block/included {:db/valueType :db.type/boolean
+                ;;                  :db/cardinality :db.cardinality/one}
+                }
         conn (ds/create-conn schema)]
     (populate-db! roam-json conn)
-    (doseq [block-ds-id (vec (ds/q '[:find ?id
+    (doseq [block-ds-id (vec (ds/q '[:find ?block-id
                                      :where
-                                     [?id]]
+                                     [_ :block/id ?block-id]]
                                    @conn))]
-      (ds/transact! conn [[:db/add (first block-ds-id) :block/included (if (excluded? (first block-ds-id))
-                                                                         false
-                                                                         true)]]))
+      (ds/transact! conn [{:block/id (first block-ds-id)
+                          :block/included true}]))
     (let [db @conn
           id+content (ds/q '[:find ?id ?content
                              :where [?id :block/included true]
