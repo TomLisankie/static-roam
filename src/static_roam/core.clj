@@ -134,12 +134,14 @@
 (defn page-title->html-file-title
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   ([string]
+   {:pre [(string? string)]}
    (->> string
         (str-utils/lower-case)
         (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
         (#(str-utils/replace % #"\s" "-"))
         (#(str "/" % ".html"))))
   ([string case-sensitive?]
+   {:pre [(string? string)]}
    (->> string
         (#(if case-sensitive?
             %
@@ -306,14 +308,14 @@
 
 (defn- page-link-from-title
   "Given a page and a directory for the page to go in, create Hiccup that contains the link to the HTML of that page"
-  ([dir page]
-   [:a {:href (str dir (page-title->html-file-title (:title page)))} (:title page)])
-  ([page]
-   [:a {:href (page-title->html-file-title (:title page))} (:title page)])
-  ([dir page link-class]
+  ([dir block-content]
+   [:a {:href (str dir (page-title->html-file-title block-content))} block-content])
+  ([block-content]
+   [:a {:href (page-title->html-file-title block-content)} block-content])
+  ([dir block-content link-class]
    [:a {:class link-class
-        :href (str dir (page-title->html-file-title (:title page)))}
-    (:title page)]))
+        :href (str dir (page-title->html-file-title block-content))}
+    block-content]))
 
 (defn- list-of-page-links
   "Generate a Hiccup unordered list of links to pages"
@@ -500,8 +502,8 @@
                             :block/text-align (:text-align block "")
                             :block/entry-point (entry-point? block)
                             :block/page (if (:title block)
-                                         true
-                                         false)}])
+                                          true
+                                          false)}])
     (populate-db! (:children block) db-conn)))
 
 (defn new-html-file-titles
@@ -525,6 +527,48 @@
      (concat
       [:div
        [:h3 (block-content->hiccup block-content conn)]]))))
+
+(defn new-page-index-hiccup
+  [link-list css-path js-path]
+  [:html
+   [:head
+    [:meta {:charset "utf-8"}]
+    [:link {:rel "stylesheet" :href css-path}]
+    [:script {:src js-path}]]
+   [:body link-list]])
+
+(defn new-home-page-hiccup
+  [link-list title css-path js-path]
+  [:html
+   [:head
+    [:meta {:charset "utf-8"}]
+    [:title title]
+    [:link {:rel "stylesheet" :href css-path}]
+    [:script {:src js-path}]]
+   [:body
+    [:header.site-header {:role "banner"}
+     [:div.wrapper
+      [:a.site-title {:rel "author" :href "."} title]]]
+    [:main.page-content {:aria-label="Content"}
+     [:div.wrapper
+      [:div.home
+       [:h2.post-list-heading "Entry Points"]
+       link-list]]]]])
+
+(defn- new-list-of-page-links
+  "Generate a Hiccup unordered list of links to pages"
+  ([page-titles]
+   (let [page-titles-vals (map first page-titles)
+         page-links (map page-link-from-title page-titles-vals)]
+     (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
+  ([page-titles dir]
+   (let [page-titles-vals (map first page-titles)
+         page-links (map #(page-link-from-title dir %) page-titles-vals)]
+     (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
+  ([page-titles dir link-class]
+   (let [page-titles-vals (map first page-titles)
+         page-links (map #(page-link-from-title dir % link-class) page-titles-vals)]
+     (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links)))))
 
 (defn new-main [path-to-zip]
   (let [path-to-zip path-to-zip
@@ -559,7 +603,7 @@
                                      [_ :block/id ?block-id]]
                                    @conn))]
       (ds/transact! conn [{:block/id (first block-ds-id)
-                          :block/included true}]))
+                           :block/included true}]))
     (let [db @conn
           id+content (ds/q '[:find ?id ?content
                              :where [?id :block/included true]
@@ -584,8 +628,24 @@
                                 :where
                                 [?included-id :block/included true]
                                 [?included-id :block/hiccup ?hiccup]]
-                             @conn)))))
-          "./pages")
+                              @conn)))))
+     "./pages")
+    (stasis/export-pages
+     {"/index.html" (hiccup/html (new-page-index-hiccup (new-list-of-page-links (sort (ds/q '[:find ?included-page-title
+                                                                                              :where
+                                                                                              [?id :block/page true]
+                                                                                              [?id :block/included true]
+                                                                                              [?id :block/id ?included-page-title]]
+                                                                                            @conn)) ".") "../assets/css/main.css" "../assets/js/extra.js"))}
+     "./pages")
+    (stasis/export-pages
+     {"/index.html" (hiccup/html (new-home-page-hiccup (new-list-of-page-links (sort (ds/q '[:find ?entry-point-content
+                                                                                             :where
+                                                                                             [?id :block/included true]
+                                                                                             [?id :block/entry-point true]
+                                                                                             [?id :block/content ?entry-point-content]]
+                                                                                           @conn)) "pages" "emtry-point-link") "Part of My Second Brain" "../assets/css/main.css" "../assets/js/extra.js"))}
+     ".")
     conn))
 
 (def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
