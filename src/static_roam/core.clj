@@ -309,12 +309,12 @@
 (defn- page-link-from-title
   "Given a page and a directory for the page to go in, create Hiccup that contains the link to the HTML of that page"
   ([dir block-content]
-   [:a {:href (str dir (page-title->html-file-title block-content))} block-content])
+   [:a {:href (str dir (page-title->html-file-title block-content :case-sensitive))} block-content])
   ([block-content]
-   [:a {:href (page-title->html-file-title block-content)} block-content])
+   [:a {:href (page-title->html-file-title block-content :case-sensitive)} block-content])
   ([dir block-content link-class]
    [:a {:class link-class
-        :href (str dir (page-title->html-file-title block-content))}
+        :href (str dir (page-title->html-file-title block-content :case-sensitive))}
     block-content]))
 
 (defn- list-of-page-links
@@ -448,12 +448,12 @@
                                   #"\[\[.*?\]\]"
                                   #(if (included? (remove-double-delimiters %) conn)
                                      (str "[" (remove-double-delimiters %)
-                                          "](." (page-title->html-file-title %) ")")
+                                          "](." (page-title->html-file-title % :case-sensitive) ")")
                                      (remove-double-delimiters %)))
         hashtags-replaced (str-utils/replace
                            double-brackets-replaced
                            #"\#..*?(?=\s|$)"
-                           #(str "[" (subs % 1) "](." (page-title->html-file-title %) ")"))
+                           #(str "[" (subs % 1) "](." (page-title->html-file-title % :case-sensitive) ")"))
         block-alias-links (str-utils/replace
                            hashtags-replaced
                            #"\[.*?\]\(\(\(.*?\)\)\)"
@@ -472,7 +472,7 @@
                            #"^.+?::"
                            #(str
                              "__[" (subs % 0 (- (count %) 2)) ":](."
-                             (page-title->html-file-title %) ")__"))]
+                             (page-title->html-file-title % :case-sensitive) ")__"))]
     (if (or
          (re-find #"\[\[.*?\]\]" metadata-replaced)
          (re-find #"\#..*?(?=\s|$)" metadata-replaced)
@@ -523,10 +523,8 @@
 (defn new-block-page-template
   [block-content conn]
   (let [block-content (second block-content)]
-    (vec
-     (concat
-      [:div
-       [:h3 (block-content->hiccup block-content conn)]]))))
+    [:div
+     [:h3 (block-content->hiccup block-content conn)]]))
 
 (defn new-page-index-hiccup
   [link-list css-path js-path]
@@ -624,10 +622,10 @@
                   (map #(new-block-page-template % conn)
                        (sort-by
                         #(first %)
-                        (ds/q '[:find ?included-id ?hiccup
+                        (ds/q '[:find ?included-id ?content
                                 :where
                                 [?included-id :block/included true]
-                                [?included-id :block/hiccup ?hiccup]]
+                                [?included-id :block/content ?content]]
                               @conn)))))
      "./pages")
     (stasis/export-pages
@@ -644,7 +642,7 @@
                                                                                              [?id :block/included true]
                                                                                              [?id :block/entry-point true]
                                                                                              [?id :block/content ?entry-point-content]]
-                                                                                           @conn)) "pages" "emtry-point-link") "Part of My Second Brain" "../assets/css/main.css" "../assets/js/extra.js"))}
+                                                                                           @conn)) "pages" "entry-point-link") "Part of My Second Brain" "./assets/css/main.css" "./assets/js/extra.js"))}
      ".")
     conn))
 
