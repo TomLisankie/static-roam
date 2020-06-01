@@ -429,8 +429,53 @@
   [id-passed conn]
   (:block/content (ds/entity @conn [:block/id id-passed])))
 
+(defn- replace-double-brackets
+  [block-ds-id content conn]
+  ;; find all pages it mentions and add transact them to db
+  (let [tx (for [reference (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" content))]
+             [:db/add block-ds-id :block/refers-to reference])]
+    (ds/transact! conn tx))
+  ;; then replace them with links
+  (str-utils/replace
+   content
+   #"\[\[.*?\]\]"
+   #(if (included? (remove-double-delimiters %) conn)
+      (str "[" (remove-double-delimiters %)
+           "](." (page-title->html-file-title % :case-sensitive) ")")
+      (remove-double-delimiters %))))
+
+(defn- replace-hashtags
+  [block-ds-id content conn]
+  ;; find all hashtags (pages) mentioned and transact them to db
+  ;; then replace them with links
+  (str-utils/replace
+   content
+   #"\#..*?(?=\s|$)"
+   #(str "[" (subs % 1) "](." (page-title->html-file-title % :case-sensitive) ")")))
+
+(defn- transclude-block-refs
+  [block-ds-id content conn]
+  ;; find block references and transact to db
+  ;; then replace with links
+  (str-utils/replace
+   content
+   #"\(\(.*?\)\)"
+   #(str "[" (content-find (remove-double-delimiters %) conn)
+         "](." (page-title->html-file-title % :case-sensitive) ")")))
+
+(defn- replace-metadata
+  [block-ds-id content conn]
+  ;; find metadata tags and transact to db
+  ;; then replace with links
+  (str-utils/replace
+   content
+   #"^.+?::"
+   #(str
+     "__[" (subs % 0 (- (count %) 2)) ":](."
+     (page-title->html-file-title % :case-sensitive) ")__")))
+
 (defn roam-web-elements
-  [content conn]
+  [block-ds-id content conn]
   (let [todos-replaced (str-utils/replace
                         content
                         #"\{\{\[\[TODO\]\]\}\}"
@@ -443,17 +488,8 @@
                            dones-replaced
                            #"\{\{youtube: .*?\}\}"
                            #(get-youtube-vid-embed %))
-        double-brackets-replaced (str-utils/replace
-                                  youtubes-replaced
-                                  #"\[\[.*?\]\]"
-                                  #(if (included? (remove-double-delimiters %) conn)
-                                     (str "[" (remove-double-delimiters %)
-                                          "](." (page-title->html-file-title % :case-sensitive) ")")
-                                     (remove-double-delimiters %)))
-        hashtags-replaced (str-utils/replace
-                           double-brackets-replaced
-                           #"\#..*?(?=\s|$)"
-                           #(str "[" (subs % 1) "](." (page-title->html-file-title % :case-sensitive) ")"))
+        double-brackets-replaced (replace-double-brackets block-ds-id youtubes-replaced conn)
+        hashtags-replaced (replace-hashtags block-ds-id double-brackets-replaced conn)
         block-alias-links (str-utils/replace
                            hashtags-replaced
                            #"\[.*?\]\(\(\(.*?\)\)\)"
@@ -462,30 +498,21 @@
                              "(." (page-title->html-file-title
                                    (remove-triple-delimiters
                                     (re-find #"\(\(\(.*?\)\)\)" %))) ")"))
-        block-refs-transcluded (str-utils/replace
-                                block-alias-links
-                                #"\(\(.*?\)\)"
-                                #(str "[" (content-find (remove-double-delimiters %) conn)
-                                      "](." (page-title->html-file-title % :case-sensitive) ")"))
-        metadata-replaced (str-utils/replace
-                           block-refs-transcluded
-                           #"^.+?::"
-                           #(str
-                             "__[" (subs % 0 (- (count %) 2)) ":](."
-                             (page-title->html-file-title % :case-sensitive) ")__"))]
+        block-refs-transcluded (transclude-block-refs block-ds-id block-alias-links conn)
+        metadata-replaced (replace-metadata block-ds-id block-refs-transcluded conn)]
     (if (or
          (re-find #"\[\[.*?\]\]" metadata-replaced)
          (re-find #"\#..*?(?=\s|$)" metadata-replaced)
          (re-find #"\(\(.*?\)\)" metadata-replaced)
          (re-find #"^.+?::" metadata-replaced))
-      (roam-web-elements metadata-replaced conn)
+      (roam-web-elements block-ds-id metadata-replaced conn)
       metadata-replaced)))
 
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
-  [content conn]
+  [block-ds-id content conn]
   (->> content
-       (#(roam-web-elements % conn))
+       (#(roam-web-elements block-ds-id % conn))
        mdh/md->hiccup
        mdh/component))
 
@@ -503,7 +530,8 @@
                             :block/entry-point (entry-point? block)
                             :block/page (if (:title block)
                                           true
-                                          false)}])
+                                          false)
+                            :block/refers-to []}])
     (populate-db! (:children block) db-conn)))
 
 (defn new-html-file-titles
@@ -531,13 +559,27 @@
        ;; otherwise, evaluate to empty vector
        [:div]))])
 
+(defn- linked-references
+  [block-ds-id conn]
+  [:div (ds/q '[:find ?blocks-content
+                :in $ ?block-ds-id
+                :where
+                [?block-ds-id :block/id ?block-id]
+                [?blocks-that-link-here :block/refers-to ?block-id]
+                [?blocks-that-link-here :block/content ?blocks-content]]
+         @conn block-ds-id)])
+
 (defn new-block-page-template
   [block-content conn]
   (let [block-content-text (second block-content)
         block-ds-id (first block-content)]
     [:div
-     [:h2 (block-content->hiccup block-content-text conn)]
-     (children-of-block-template (:block/id (ds/entity @conn block-ds-id)) conn)]))
+     [:div
+      [:h2 (block-content->hiccup block-ds-id block-content-text conn)]
+      (children-of-block-template (:block/id (ds/entity @conn block-ds-id)) conn)]
+     [:div {:style "background-color:lightblue;"}
+      [:h3 "Linked References"]
+      (linked-references block-ds-id conn)]]))
 
 (defn new-page-index-hiccup
   [link-list css-path js-path]
@@ -621,7 +663,7 @@
                              [?id :block/content ?content]]
                            db)
           tx (for [[id content] id+content]
-               [:db/add id :block/hiccup (block-content->hiccup content conn)])]
+               [:db/add id :block/hiccup (block-content->hiccup id content conn)])]
       (ds/transact! conn tx))
     (stasis/export-pages
      (zipmap (new-html-file-titles (sort-by
@@ -661,8 +703,7 @@
 
 (def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
 
-(ds/q '[:find ?hiccup
+(ds/q '[:find ?content
         :where
-        [?id :block/id "W3HhTpgl4"]
-        [?id :block/hiccup ?hiccup]]
+        [13502 :block/content ?content]]
       @conn)
