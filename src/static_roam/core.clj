@@ -520,11 +520,24 @@
     [:script {:src js-path}]]
    [:body body-hiccup]])
 
+(defn children-of-block-template
+  [block-id conn]
+  [:ul
+   [:li (:block/hiccup (ds/entity @conn [:block/id block-id]))]
+   (let [children (:block/children (ds/entity @conn [:block/id block-id]))]
+     (if (not= 0 (count children))
+       ;; recurse on each of the children
+       (map #(children-of-block-template % conn) children)
+       ;; otherwise, evaluate to empty vector
+       [:div]))])
+
 (defn new-block-page-template
   [block-content conn]
-  (let [block-content (second block-content)]
+  (let [block-content-text (second block-content)
+        block-ds-id (first block-content)]
     [:div
-     [:h3 (block-content->hiccup block-content conn)]]))
+     [:h2 (block-content->hiccup block-content-text conn)]
+     (children-of-block-template (:block/id (ds/entity @conn block-ds-id)) conn)]))
 
 (defn new-page-index-hiccup
   [link-list css-path js-path]
