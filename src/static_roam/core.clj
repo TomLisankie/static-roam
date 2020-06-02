@@ -475,8 +475,40 @@
      (page-title->html-file-title % :case-sensitive) ")__")))
 
 (defn roam-web-elements
-  [block-ds-id content conn]
-  (let [todos-replaced (str-utils/replace
+  ([block-ds-id content conn]
+   (let [todos-replaced (str-utils/replace
+                         content
+                         #"\{\{\[\[TODO\]\]\}\}"
+                         "<input type=\"checkbox\" disabled>")
+         dones-replaced (str-utils/replace
+                         todos-replaced
+                         #"\{\{\[\[DONE\]\]\}\}"
+                         "<input type=\"checkbox\" checked disabled>")
+        youtubes-replaced (str-utils/replace
+                           dones-replaced
+                           #"\{\{youtube: .*?\}\}"
+                           #(get-youtube-vid-embed %))
+         double-brackets-replaced (replace-double-brackets block-ds-id youtubes-replaced conn)
+         hashtags-replaced (replace-hashtags block-ds-id double-brackets-replaced conn)
+         block-alias-links (str-utils/replace
+                            hashtags-replaced
+                            #"\[.*?\]\(\(\(.*?\)\)\)"
+                            #(str
+                              (re-find #"\[.*?\]" %)
+                              "(." (page-title->html-file-title
+                                    (remove-triple-delimiters
+                                     (re-find #"\(\(\(.*?\)\)\)" %))) ")"))
+         block-refs-transcluded (transclude-block-refs block-ds-id block-alias-links conn)
+         metadata-replaced (replace-metadata block-ds-id block-refs-transcluded conn)]
+     (if (or
+          (re-find #"\[\[.*?\]\]" metadata-replaced)
+          (re-find #"\#..*?(?=\s|$)" metadata-replaced)
+          (re-find #"\(\(.*?\)\)" metadata-replaced)
+          (re-find #"^.+?::" metadata-replaced))
+       (roam-web-elements block-ds-id metadata-replaced conn)
+       metadata-replaced)))
+  ([content conn]
+   (let [todos-replaced (str-utils/replace
                         content
                         #"\{\{\[\[TODO\]\]\}\}"
                         "<input type=\"checkbox\" disabled>")
@@ -488,8 +520,17 @@
                            dones-replaced
                            #"\{\{youtube: .*?\}\}"
                            #(get-youtube-vid-embed %))
-        double-brackets-replaced (replace-double-brackets block-ds-id youtubes-replaced conn)
-        hashtags-replaced (replace-hashtags block-ds-id double-brackets-replaced conn)
+        double-brackets-replaced (str-utils/replace
+                                  youtubes-replaced
+                                  #"\[\[.*?\]\]"
+                                  #(if (included? (remove-double-delimiters %) conn)
+                                     (str "[" (remove-double-delimiters %)
+                                          "](." (page-title->html-file-title % :case-sensitive) ")")
+                                     (remove-double-delimiters %)))
+        hashtags-replaced (str-utils/replace
+                           double-brackets-replaced
+                           #"\#..*?(?=\s|$)"
+                           #(str "[" (subs % 1) "](." (page-title->html-file-title % :case-sensitive) ")"))
         block-alias-links (str-utils/replace
                            hashtags-replaced
                            #"\[.*?\]\(\(\(.*?\)\)\)"
@@ -498,23 +539,37 @@
                              "(." (page-title->html-file-title
                                    (remove-triple-delimiters
                                     (re-find #"\(\(\(.*?\)\)\)" %))) ")"))
-        block-refs-transcluded (transclude-block-refs block-ds-id block-alias-links conn)
-        metadata-replaced (replace-metadata block-ds-id block-refs-transcluded conn)]
+        block-refs-transcluded (str-utils/replace
+                                block-alias-links
+                                #"\(\(.*?\)\)"
+                                #(str "[" (content-find (remove-double-delimiters %) conn)
+                                      "](." (page-title->html-file-title % :case-sensitive) ")"))
+        metadata-replaced (str-utils/replace
+                           block-refs-transcluded
+                           #"^.+?::"
+                           #(str
+                             "__[" (subs % 0 (- (count %) 2)) ":](."
+                             (page-title->html-file-title % :case-sensitive) ")__"))]
     (if (or
          (re-find #"\[\[.*?\]\]" metadata-replaced)
          (re-find #"\#..*?(?=\s|$)" metadata-replaced)
          (re-find #"\(\(.*?\)\)" metadata-replaced)
          (re-find #"^.+?::" metadata-replaced))
-      (roam-web-elements block-ds-id metadata-replaced conn)
-      metadata-replaced)))
+      (roam-web-elements metadata-replaced conn)
+      metadata-replaced))))
 
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
-  [block-ds-id content conn]
-  (->> content
-       (#(roam-web-elements block-ds-id % conn))
-       mdh/md->hiccup
-       mdh/component))
+  ([block-ds-id content conn]
+   (->> content
+        (#(roam-web-elements block-ds-id % conn))
+        mdh/md->hiccup
+        mdh/component))
+  ([content conn]
+   (->> content
+        (#(roam-web-elements % conn))
+        mdh/md->hiccup
+        mdh/component)))
 
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
@@ -562,7 +617,7 @@
 (defn- linked-references-template
   [references conn]
   (concat []
-          (map (fn [r] [:li r])
+          (map (fn [r] [:li (block-content->hiccup r conn)])
                (map first references))))
 
 (defn- linked-references
