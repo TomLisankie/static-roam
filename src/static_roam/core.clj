@@ -559,15 +559,23 @@
        ;; otherwise, evaluate to empty vector
        [:div]))])
 
+(defn- linked-references-template
+  [references conn]
+  (concat []
+          (map (fn [r] [:li r])
+               (map first references))))
+
 (defn- linked-references
   [block-ds-id conn]
-  [:div (ds/q '[:find ?blocks-content
-                :in $ ?block-ds-id
-                :where
-                [?block-ds-id :block/id ?block-id]
-                [?blocks-that-link-here :block/refers-to ?block-id]
-                [?blocks-that-link-here :block/content ?blocks-content]]
-         @conn block-ds-id)])
+  (linked-references-template
+   (ds/q '[:find ?blocks-content
+           :in $ ?block-ds-id
+           :where
+           [?block-ds-id :block/id ?block-id]
+           [?blocks-that-link-here :block/refers-to ?block-id]
+           [?blocks-that-link-here :block/content ?blocks-content]]
+         @conn block-ds-id)
+   conn))
 
 (defn new-block-page-template
   [block-content conn]
