@@ -10,7 +10,7 @@
             [datascript.core :as ds])
   (:import (java.util.zip ZipFile)))
 
-; 1) GET PAGES TO INCLUDE ON SITE
+                                        ; 1) GET PAGES TO INCLUDE ON SITE
 
 (defn unzip-roam-json-archive
   "Takes the path to a zipfile `source` and unzips it to target-dir, returning the path of the target file"
@@ -134,12 +134,14 @@
 (defn page-title->html-file-title
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   ([string]
+   {:pre [(string? string)]}
    (->> string
         (str-utils/lower-case)
         (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
         (#(str-utils/replace % #"\s" "-"))
         (#(str "/" % ".html"))))
   ([string case-sensitive?]
+   {:pre [(string? string)]}
    (->> string
         (#(if case-sensitive?
             %
@@ -166,9 +168,9 @@
                         #"\{\{\[\[TODO\]\]\}\}"
                         "<input type=\"checkbox\" disabled>")
         dones-replaced (str-utils/replace
-                         todos-replaced
-                         #"\{\{\[\[DONE\]\]\}\}"
-                         "<input type=\"checkbox\" checked disabled>")
+                        todos-replaced
+                        #"\{\{\[\[DONE\]\]\}\}"
+                        "<input type=\"checkbox\" checked disabled>")
         youtubes-replaced (str-utils/replace
                            dones-replaced
                            #"\{\{youtube: .*?\}\}"
@@ -242,17 +244,17 @@
                                              "none"))
                                :onclick "bulletClicked()"}
                               (if (:heading (first children))
-                                    [(cond (= (:heading (first children)) 1) :h1
-                                           (= (:heading (first children)) 2) :h2
-                                           (= (:heading (first children)) 3) :h3)
-                                     (roam-md->hiccup
-                                      (:string (first children))
-                                      block-id-content-map
-                                      titles-of-included-pages)]
-                                    (roam-md->hiccup
-                                     (:string (first children))
-                                     block-id-content-map
-                                     titles-of-included-pages))]]
+                                [(cond (= (:heading (first children)) 1) :h1
+                                       (= (:heading (first children)) 2) :h2
+                                       (= (:heading (first children)) 3) :h3)
+                                 (roam-md->hiccup
+                                  (:string (first children))
+                                  block-id-content-map
+                                  titles-of-included-pages)]
+                                (roam-md->hiccup
+                                 (:string (first children))
+                                 block-id-content-map
+                                 titles-of-included-pages))]]
                             (children-list-template
                              (first children)
                              (inc indent-level)
@@ -266,17 +268,17 @@
                                            "none"))
                              :onclick "bulletClicked()"}
                             (if (:heading (first children))
-                                  [(cond (= (:heading (first children)) 1) :h1
-                                         (= (:heading (first children)) 2) :h2
-                                         (= (:heading (first children)) 3) :h3)
-                                   (roam-md->hiccup
-                                    (:string (first children))
-                                    block-id-content-map
-                                    titles-of-included-pages)]
-                                  (roam-md->hiccup
-                                   (:string (first children))
-                                   block-id-content-map
-                                   titles-of-included-pages))]]))
+                              [(cond (= (:heading (first children)) 1) :h1
+                                     (= (:heading (first children)) 2) :h2
+                                     (= (:heading (first children)) 3) :h3)
+                               (roam-md->hiccup
+                                (:string (first children))
+                                block-id-content-map
+                                titles-of-included-pages)]
+                              (roam-md->hiccup
+                               (:string (first children))
+                               block-id-content-map
+                               titles-of-included-pages))]]))
              (rest children)))))
 
 (defn page-template
@@ -306,14 +308,14 @@
 
 (defn- page-link-from-title
   "Given a page and a directory for the page to go in, create Hiccup that contains the link to the HTML of that page"
-  ([dir page]
-   [:a {:href (str dir (page-title->html-file-title (:title page)))} (:title page)])
-  ([page]
-   [:a {:href (page-title->html-file-title (:title page))} (:title page)])
-  ([dir page link-class]
+  ([dir block-content]
+   [:a {:href (str dir (page-title->html-file-title block-content :case-sensitive))} block-content])
+  ([block-content]
+   [:a {:href (page-title->html-file-title block-content :case-sensitive)} block-content])
+  ([dir block-content link-class]
    [:a {:class link-class
-        :href (str dir (page-title->html-file-title (:title page)))}
-    (:title page)]))
+        :href (str dir (page-title->html-file-title block-content :case-sensitive))}
+    block-content]))
 
 (defn- list-of-page-links
   "Generate a Hiccup unordered list of links to pages"
@@ -366,81 +368,446 @@
 ;; Block A comes across the fact that it references block B. Block A says "okay, I'm going to add block B to the list of blocks I reference and tell block B that I'm referencing so it knows and can tell the user which pages / blocks reference it."
 ;; So I need to find the function where block A is going through its children-blocks to find which ones it references.
 
-(defn -main
-  [path-to-zip]
-  (let [json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
+;; (defn -main
+;;   [path-to-zip]
+;;   (let [json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
+;;         roam-json (json/read-str (slurp json-path) :key-fn keyword)
+;;         pages-as-rl-json (map to-rl-json roam-json)
+;;         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
+;;         entry-points (filter #(true? (:entry-point %)) pages-as-rl-json)
+;;         included-pages-to-mentioned-pages-map (zipmap
+;;                                                (map #(:title %) entry-points)
+;;                                                (map
+;;                                                 #(pages-mentioned-by-children
+;;                                                   % title-to-content-map)
+;;                                                 (map #(:title %) entry-points)))
+;;         titles-of-included-pages (find-all-included-pages
+;;                                   (map #(:title %) entry-points)
+;;                                   3 title-to-content-map)
+;;         included-title-to-content-map (zipmap
+;;                                        titles-of-included-pages
+;;                                        (map
+;;                                         #(get title-to-content-map %)
+;;                                         titles-of-included-pages))
+;;         block-id-to-content-map (into {}
+;;                                       (map child-block-ids-content-map pages-as-rl-json))
+;;         mentioned-block-id-to-content-map (into {}
+;;                                                 (map
+;;                                                  child-block-ids-content-map
+;;                                                  (vals included-title-to-content-map)))]
+;;     (stasis/export-pages
+;;      (zipmap (html-file-titles (keys included-title-to-content-map))
+;;              (map #(hiccup/html (page-hiccup %))
+;;                   (map
+;;                    #(page-template % block-id-to-content-map titles-of-included-pages)
+;;                    (vals included-title-to-content-map))))
+;;      "./pages")
+;;     (stasis/export-pages
+;;      (zipmap (html-file-titles (keys mentioned-block-id-to-content-map) :case-sensitive)
+;;              (map #(hiccup/html (page-hiccup %))
+;;                   (map
+;;                    #(block-page-template % block-id-to-content-map titles-of-included-pages)
+;;                    (vals mentioned-block-id-to-content-map))))
+;;      "./pages")
+;;     (stasis/export-pages
+;;      {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
+;;      "./pages")
+;;     (stasis/export-pages
+;;      {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "entry-point-link") (filter #(:entry-point %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
+;;      ".")
+;;     block-id-to-content-map))
+
+(defn included?
+  [id-passed conn]
+  (true? (:block/included (ds/entity @conn [:block/id id-passed]))))
+
+(defn excluded?
+  [block-id conn]
+  (not (included? block-id conn)))
+
+(defn content-find
+  [id-passed conn]
+  (:block/content (ds/entity @conn [:block/id id-passed])))
+
+(defn- replace-double-brackets
+  [block-ds-id content conn]
+  ;; find all pages it mentions and add transact them to db
+  (let [tx (for [reference (map remove-double-delimiters (re-seq #"\[\[.*?\]\]" content))]
+             [:db/add block-ds-id :block/refers-to reference])]
+    (ds/transact! conn tx))
+  ;; then replace them with links
+  (str-utils/replace
+   content
+   #"\[\[.*?\]\]"
+   #(if (included? (remove-double-delimiters %) conn)
+      (str "[" (remove-double-delimiters %)
+           "](." (page-title->html-file-title % :case-sensitive) ")")
+      (remove-double-delimiters %))))
+
+(defn- replace-hashtags
+  [block-ds-id content conn]
+  ;; find all hashtags (pages) mentioned and transact them to db
+  ;; (let [tx (for [reference (map remove-double-delimiters (re-seq #"\#..*?(?=\s|$)" content))]
+  ;;            [:db/add block-ds-id :block/refers-to reference])]
+  ;;   (ds/transact! conn tx))
+  ;; then replace them with links
+  (str-utils/replace
+   content
+   #"\#..*?(?=\s|$)"
+   #(str "[" (subs % 1) "](." (page-title->html-file-title % :case-sensitive) ")")))
+
+(defn- transclude-block-refs
+  [block-ds-id content conn]
+  ;; find block references and transact to db
+  (let [tx (for [reference (map remove-double-delimiters (re-seq #"\(\(.*?\)\)" content))]
+             [:db/add block-ds-id :block/refers-to reference])]
+    (ds/transact! conn tx))
+  ;; then replace with links
+  (str-utils/replace
+   content
+   #"\(\(.*?\)\)"
+   #(str "[" (content-find (remove-double-delimiters %) conn)
+         "](." (page-title->html-file-title % :case-sensitive) ")")))
+
+(defn- replace-metadata
+  [block-ds-id content conn]
+  ;; find metadata tags and transact to db
+  (let [tx (for [reference (map remove-double-delimiters (re-seq #"^.+?::" content))]
+             [:db/add block-ds-id :block/refers-to reference])]
+    (ds/transact! conn tx))
+  ;; then replace with links
+  (str-utils/replace
+   content
+   #"^.+?::"
+   #(str
+     "__[" (subs % 0 (- (count %) 2)) ":](."
+     (page-title->html-file-title % :case-sensitive) ")__")))
+
+(defn roam-web-elements
+  ([block-ds-id content conn]
+   (let [todos-replaced (str-utils/replace
+                         content
+                         #"\{\{\[\[TODO\]\]\}\}"
+                         "<input type=\"checkbox\" disabled>")
+         dones-replaced (str-utils/replace
+                         todos-replaced
+                         #"\{\{\[\[DONE\]\]\}\}"
+                         "<input type=\"checkbox\" checked disabled>")
+        youtubes-replaced (str-utils/replace
+                           dones-replaced
+                           #"\{\{youtube: .*?\}\}"
+                           #(get-youtube-vid-embed %))
+         double-brackets-replaced (replace-double-brackets block-ds-id youtubes-replaced conn)
+         hashtags-replaced (replace-hashtags block-ds-id double-brackets-replaced conn)
+         block-alias-links (str-utils/replace
+                            hashtags-replaced
+                            #"\[.*?\]\(\(\(.*?\)\)\)"
+                            #(str
+                              (re-find #"\[.*?\]" %)
+                              "(." (page-title->html-file-title
+                                    (remove-triple-delimiters
+                                     (re-find #"\(\(\(.*?\)\)\)" %))) ")"))
+         block-refs-transcluded (transclude-block-refs block-ds-id block-alias-links conn)
+         metadata-replaced (replace-metadata block-ds-id block-refs-transcluded conn)]
+     (if (or
+          (re-find #"\[\[.*?\]\]" metadata-replaced)
+          (re-find #"\#..*?(?=\s|$)" metadata-replaced)
+          (re-find #"\(\(.*?\)\)" metadata-replaced)
+          (re-find #"^.+?::" metadata-replaced))
+       (roam-web-elements block-ds-id metadata-replaced conn)
+       metadata-replaced)))
+  ([content conn]
+   (let [todos-replaced (str-utils/replace
+                        content
+                        #"\{\{\[\[TODO\]\]\}\}"
+                        "<input type=\"checkbox\" disabled>")
+        dones-replaced (str-utils/replace
+                        todos-replaced
+                        #"\{\{\[\[DONE\]\]\}\}"
+                        "<input type=\"checkbox\" checked disabled>")
+        youtubes-replaced (str-utils/replace
+                           dones-replaced
+                           #"\{\{youtube: .*?\}\}"
+                           #(get-youtube-vid-embed %))
+        double-brackets-replaced (str-utils/replace
+                                  youtubes-replaced
+                                  #"\[\[.*?\]\]"
+                                  #(if (included? (remove-double-delimiters %) conn)
+                                     (str "[" (remove-double-delimiters %)
+                                          "](." (page-title->html-file-title % :case-sensitive) ")")
+                                     (remove-double-delimiters %)))
+        hashtags-replaced (str-utils/replace
+                           double-brackets-replaced
+                           #"\#..*?(?=\s|$)"
+                           #(str "[" (subs % 1) "](." (page-title->html-file-title % :case-sensitive) ")"))
+        block-alias-links (str-utils/replace
+                           hashtags-replaced
+                           #"\[.*?\]\(\(\(.*?\)\)\)"
+                           #(str
+                             (re-find #"\[.*?\]" %)
+                             "(." (page-title->html-file-title
+                                   (remove-triple-delimiters
+                                    (re-find #"\(\(\(.*?\)\)\)" %))) ")"))
+        block-refs-transcluded (str-utils/replace
+                                block-alias-links
+                                #"\(\(.*?\)\)"
+                                #(str "[" (content-find (remove-double-delimiters %) conn)
+                                      "](." (page-title->html-file-title % :case-sensitive) ")"))
+        metadata-replaced (str-utils/replace
+                           block-refs-transcluded
+                           #"^.+?::"
+                           #(str
+                             "__[" (subs % 0 (- (count %) 2)) ":](."
+                             (page-title->html-file-title % :case-sensitive) ")__"))]
+    (if (or
+         (re-find #"\[\[.*?\]\]" metadata-replaced)
+         (re-find #"\#..*?(?=\s|$)" metadata-replaced)
+         (re-find #"\(\(.*?\)\)" metadata-replaced)
+         (re-find #"^.+?::" metadata-replaced))
+      (roam-web-elements metadata-replaced conn)
+      metadata-replaced))))
+
+(defn block-content->hiccup
+  "Convert Roam markup to Hiccup"
+  ([block-ds-id content conn]
+   (->> content
+        (#(roam-web-elements block-ds-id % conn))
+        mdh/md->hiccup
+        mdh/component))
+  ([content conn]
+   (->> content
+        (#(roam-web-elements % conn))
+        mdh/md->hiccup
+        mdh/component)))
+
+(defn populate-db!
+  "Populate database with relevant properties of pages and blocks"
+  [roam-json db-conn]
+  (doseq [block roam-json]
+    (ds/transact! db-conn [{:block/id (if (:title block)
+                                        (:title block)
+                                        (:uid block))
+                            :block/children (map :uid (:children block))
+                            :block/content (:string block (:title block))
+                            :block/heading (:heading block -1)
+                            :block/text-align (:text-align block "")
+                            :block/entry-point (entry-point? block)
+                            :block/page (if (:title block)
+                                          true
+                                          false)
+                            :block/refers-to []}])
+    (populate-db! (:children block) db-conn)))
+
+(defn new-html-file-titles
+  [page-titles]
+  (let [page-titles-vec (vec page-titles)]
+    (map #(page-title->html-file-title % :case-sensitive) (map second page-titles-vec))))
+
+(defn new-page-hiccup ;; TODO I think this gets replaced with the user-defined HTML template later
+  [body-hiccup css-path js-path]
+  [:html
+   [:head
+    [:meta {:charset "utf-8"}]
+    [:link {:rel "stylesheet" :href css-path}]
+    [:script {:src js-path}]]
+   [:body body-hiccup]])
+
+(defn children-of-block-template
+  [block-id conn]
+  [:ul
+   [:li (:block/hiccup (ds/entity @conn [:block/id block-id]))]
+   (let [children (:block/children (ds/entity @conn [:block/id block-id]))]
+     (if (not= 0 (count children))
+       ;; recurse on each of the children
+       (map #(children-of-block-template % conn) children)
+       ;; otherwise, evaluate to empty vector
+       [:div]))])
+
+(defn- linked-references-template
+  [references conn]
+  (concat []
+          (map (fn [r] [:li [:a {:href (str "." (page-title->html-file-title (:block/id (ds/entity @conn (first r))) :case-sensitive))} (second r)]])
+               references)))
+
+(defn- linked-references
+  [block-ds-id conn]
+  (linked-references-template
+   (ds/q '[:find ?blocks-that-link-here ?blocks-content
+           :in $ ?block-ds-id
+           :where
+           [?block-ds-id :block/id ?block-id]
+           [?blocks-that-link-here :block/refers-to ?block-id]
+           [?blocks-that-link-here :block/content ?blocks-content]]
+         @conn block-ds-id)
+   conn))
+
+(defn- context
+  [block-ds-id conn]
+  (let [parent-ds-id (ds/q '[:find ?parent-ds-id
+                             :in $ ?block-ds-id
+                             :where
+                             [?block-ds-id :block/id ?block-id]
+                             [?parent-ds-id :block/children ?block-id]
+                             ]
+                           @conn block-ds-id)]
+    [:a {:href (str "." (page-title->html-file-title "RL-Blog-Post" :case-sensitive))}
+     (:block/hiccup (ds/entity @conn [:block/id (first (first parent-ds-id))]))
+     parent-ds-id]))
+
+;; (:block/children (ds/entity @conn [:block/id "PdRmB6PI9"]))
+
+;; (ds/q '[:find ?parent-ds-id
+;;         :where
+;;         [?parent-ds-id :block/children "9kWTLSWpg"]]
+;;       @conn)
+
+(defn new-block-page-template
+  [block-content conn]
+  (let [block-content-text (second block-content)
+        block-ds-id (first block-content)]
+    [:div
+     ;; [:div
+     ;;  [:h3 (context block-ds-id conn)]]
+     [:div
+      [:h2 (block-content->hiccup block-ds-id block-content-text conn)]
+      (children-of-block-template (:block/id (ds/entity @conn block-ds-id)) conn)]
+     [:div {:style "background-color:lightblue;"}
+      [:h3 "Linked References"]
+      (linked-references block-ds-id conn)]]))
+
+(defn new-page-index-hiccup
+  [link-list css-path js-path]
+  [:html
+   [:head
+    [:meta {:charset "utf-8"}]
+    [:link {:rel "stylesheet" :href css-path}]
+    [:script {:src js-path}]]
+   [:body link-list]])
+
+(defn new-home-page-hiccup
+  [link-list title css-path js-path]
+  [:html
+   [:head
+    [:meta {:charset "utf-8"}]
+    [:title title]
+    [:link {:rel "stylesheet" :href css-path}]
+    [:script {:src js-path}]]
+   [:body
+    [:header.site-header {:role "banner"}
+     [:div.wrapper
+      [:a.site-title {:rel "author" :href "."} title]]]
+    [:main.page-content {:aria-label="Content"}
+     [:div.wrapper
+      [:div.home
+       [:h2.post-list-heading "Entry Points"]
+       link-list]]]]])
+
+(defn- new-list-of-page-links
+  "Generate a Hiccup unordered list of links to pages"
+  ([page-titles]
+   (let [page-titles-vals (map first page-titles)
+         page-links (map page-link-from-title page-titles-vals)]
+     (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
+  ([page-titles dir]
+   (let [page-titles-vals (map first page-titles)
+         page-links (map #(page-link-from-title dir %) page-titles-vals)]
+     (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
+  ([page-titles dir link-class]
+   (let [page-titles-vals (map first page-titles)
+         page-links (map #(page-link-from-title dir % link-class) page-titles-vals)]
+     (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links)))))
+
+(defn- degree-explore!
+  [current-level max-level conn]
+  (if (= current-level 0)
+    (let [entry-points (map first (vec (ds/q '[:find ?entry-point-id
+                                               :where
+                                               [?id :block/entry-point true]
+                                               [?id :block/id ?entry-point-id]]
+                                             @conn)))]
+      (doseq [block-id entry-points]
+        (ds/transact! conn [{:block/id block-id
+                             :block/included true}]))
+      (doseq [children (map :block/children (map #(ds/entity @conn [:block/id %]) entry-points))]
+        ;; now for each of these sequences I gotta mark them for inclusion and then explore them
+        (doseq [child children]
+          (ds/transact! [{:block/id (first child)
+                          :block/included true}]))))
+    (if (>= max-level current-level)
+      nil
+      nil)))
+
+(defn- mark-blocks-for-inclusion!
+  [degree conn]
+  (if (and (int? degree) (>= degree 0))
+    (degree-explore! 0 degree conn)
+    (doseq [block-ds-id (vec (ds/q '[:find ?block-id
+                                     :where
+                                     [_ :block/id ?block-id]]
+                                   @conn))]
+      (ds/transact! conn [{:block/id (first block-ds-id)
+                           :block/included true}]))))
+
+(defn -main [path-to-zip degree]
+  (let [path-to-zip path-to-zip
+        json-path (unzip-roam-json-archive
+                   path-to-zip
+                   (->> path-to-zip
+                        (#(str-utils/split % #"/"))
+                        drop-last
+                        (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-        pages-as-rl-json (map to-rl-json roam-json)
-        title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
-        entry-points (filter #(true? (:entry-point %)) pages-as-rl-json)
-        included-pages-to-mentioned-pages-map (zipmap
-                                               (map #(:title %) entry-points)
-                                               (map
-                                                #(pages-mentioned-by-children
-                                                  % title-to-content-map)
-                                                (map #(:title %) entry-points)))
-        titles-of-included-pages (find-all-included-pages
-                                  (map #(:title %) entry-points)
-                                  3 title-to-content-map)
-        included-title-to-content-map (zipmap
-                                       titles-of-included-pages
-                                       (map
-                                        #(get title-to-content-map %)
-                                        titles-of-included-pages))
-        block-id-to-content-map (into {}
-                                      (map child-block-ids-content-map pages-as-rl-json))
-        mentioned-block-id-to-content-map (into {}
-                                                (map
-                                                 child-block-ids-content-map
-                                                 (vals included-title-to-content-map)))]
+        schema {:block/id {:db/unique :db.unique/identity}}
+        conn (ds/create-conn schema)]
+    (populate-db! roam-json conn)
+    (mark-blocks-for-inclusion! degree conn)
+    (let [db @conn
+          id+content (ds/q '[:find ?id ?content
+                             :where [?id :block/included true]
+                             [?id :block/content ?content]]
+                           db)
+          tx (for [[id content] id+content]
+               [:db/add id :block/hiccup (block-content->hiccup id content conn)])]
+      (ds/transact! conn tx))
     (stasis/export-pages
-     (zipmap (html-file-titles (keys included-title-to-content-map))
-             (map #(hiccup/html (page-hiccup %))
-                  (map
-                   #(page-template % block-id-to-content-map titles-of-included-pages)
-                   (vals included-title-to-content-map))))
+     (zipmap (new-html-file-titles (sort-by
+                                    #(first %)
+                                    (ds/q '[:find ?included-id ?block-title
+                                            :where
+                                            [?included-id :block/included true]
+                                            [?included-id :block/id ?block-title]]
+                                          @conn)))
+             (map #(hiccup/html (new-page-hiccup % "../assets/css/main.css" "../assets/js/extra.js"))
+                  (map #(new-block-page-template % conn)
+                       (sort-by
+                        #(first %)
+                        (ds/q '[:find ?included-id ?content
+                                :where
+                                [?included-id :block/included true]
+                                [?included-id :block/content ?content]]
+                              @conn)))))
      "./pages")
     (stasis/export-pages
-     (zipmap (html-file-titles (keys mentioned-block-id-to-content-map) :case-sensitive)
-             (map #(hiccup/html (page-hiccup %))
-                  (map
-                   #(block-page-template % block-id-to-content-map titles-of-included-pages)
-                   (vals mentioned-block-id-to-content-map))))
+     {"/index.html" (hiccup/html (new-page-index-hiccup (new-list-of-page-links (sort (ds/q '[:find ?included-page-title
+                                                                                              :where
+                                                                                              [?id :block/page true]
+                                                                                              [?id :block/included true]
+                                                                                              [?id :block/id ?included-page-title]]
+                                                                                            @conn)) ".") "../assets/css/main.css" "../assets/js/extra.js"))}
      "./pages")
     (stasis/export-pages
-     {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
-     "./pages")
-    (stasis/export-pages
-     {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "entry-point-link") (filter #(:entry-point %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
+     {"/index.html" (hiccup/html (new-home-page-hiccup (new-list-of-page-links (sort (ds/q '[:find ?entry-point-content
+                                                                                             :where
+                                                                                             [?id :block/included true]
+                                                                                             [?id :block/entry-point true]
+                                                                                             [?id :block/content ?entry-point-content]]
+                                                                                           @conn)) "pages" "entry-point-link") "Part of My Second Brain" "./assets/css/main.css" "./assets/js/extra.js"))}
      ".")
-    block-id-to-content-map))
+    conn))
 
-(let [path-to-zip "/home/thomas/Desktop/RoamExports/roam-test-export.zip"
-      json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
-      roam-json (json/read-str (slurp json-path) :key-fn keyword)
-      example-page (nth roam-json 4)
-      schema {:block/title {:db/type :db.type/string}
-              :block/entry-point {:db/type :db.type/boolean}
-              :block/children {:db/cardinality :db.cardinality/one}
-              :block/links-to {:db/cardinality :db.cardinality/many}}
-      conn (ds/create-conn schema)]
-  (doseq [page roam-json]
-    (ds/transact! conn [{:block/id (:title page)
-                         :block/entry-point (entry-point? page)
-                         :block/children (map :uid (:children page))
-                         :block/links-to []}]))
-  (ds/q '[:find ?children
-          :where [?e :block/entry-point true]
-          [?e :block/children ?children]]
-        @conn)
-  ;; example-page
-  )
+;; (def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" :all))
 
-
-
-
-
-
-
-
-
+;; (ds/q '[:find ?content
+;;         :where
+;;         [13502 :block/content ?content]]
+;;       @conn)
