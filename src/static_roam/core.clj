@@ -447,6 +447,9 @@
 (defn- replace-hashtags
   [block-ds-id content conn]
   ;; find all hashtags (pages) mentioned and transact them to db
+  ;; (let [tx (for [reference (map remove-double-delimiters (re-seq #"\#..*?(?=\s|$)" content))]
+  ;;            [:db/add block-ds-id :block/refers-to reference])]
+  ;;   (ds/transact! conn tx))
   ;; then replace them with links
   (str-utils/replace
    content
@@ -456,6 +459,9 @@
 (defn- transclude-block-refs
   [block-ds-id content conn]
   ;; find block references and transact to db
+  (let [tx (for [reference (map remove-double-delimiters (re-seq #"\(\(.*?\)\)" content))]
+             [:db/add block-ds-id :block/refers-to reference])]
+    (ds/transact! conn tx))
   ;; then replace with links
   (str-utils/replace
    content
@@ -466,6 +472,9 @@
 (defn- replace-metadata
   [block-ds-id content conn]
   ;; find metadata tags and transact to db
+  (let [tx (for [reference (map remove-double-delimiters (re-seq #"^.+?::" content))]
+             [:db/add block-ds-id :block/refers-to reference])]
+    (ds/transact! conn tx))
   ;; then replace with links
   (str-utils/replace
    content
