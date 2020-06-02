@@ -368,54 +368,54 @@
 ;; Block A comes across the fact that it references block B. Block A says "okay, I'm going to add block B to the list of blocks I reference and tell block B that I'm referencing so it knows and can tell the user which pages / blocks reference it."
 ;; So I need to find the function where block A is going through its children-blocks to find which ones it references.
 
-(defn -main
-  [path-to-zip]
-  (let [json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
-        roam-json (json/read-str (slurp json-path) :key-fn keyword)
-        pages-as-rl-json (map to-rl-json roam-json)
-        title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
-        entry-points (filter #(true? (:entry-point %)) pages-as-rl-json)
-        included-pages-to-mentioned-pages-map (zipmap
-                                               (map #(:title %) entry-points)
-                                               (map
-                                                #(pages-mentioned-by-children
-                                                  % title-to-content-map)
-                                                (map #(:title %) entry-points)))
-        titles-of-included-pages (find-all-included-pages
-                                  (map #(:title %) entry-points)
-                                  3 title-to-content-map)
-        included-title-to-content-map (zipmap
-                                       titles-of-included-pages
-                                       (map
-                                        #(get title-to-content-map %)
-                                        titles-of-included-pages))
-        block-id-to-content-map (into {}
-                                      (map child-block-ids-content-map pages-as-rl-json))
-        mentioned-block-id-to-content-map (into {}
-                                                (map
-                                                 child-block-ids-content-map
-                                                 (vals included-title-to-content-map)))]
-    (stasis/export-pages
-     (zipmap (html-file-titles (keys included-title-to-content-map))
-             (map #(hiccup/html (page-hiccup %))
-                  (map
-                   #(page-template % block-id-to-content-map titles-of-included-pages)
-                   (vals included-title-to-content-map))))
-     "./pages")
-    (stasis/export-pages
-     (zipmap (html-file-titles (keys mentioned-block-id-to-content-map) :case-sensitive)
-             (map #(hiccup/html (page-hiccup %))
-                  (map
-                   #(block-page-template % block-id-to-content-map titles-of-included-pages)
-                   (vals mentioned-block-id-to-content-map))))
-     "./pages")
-    (stasis/export-pages
-     {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
-     "./pages")
-    (stasis/export-pages
-     {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "entry-point-link") (filter #(:entry-point %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
-     ".")
-    block-id-to-content-map))
+;; (defn -main
+;;   [path-to-zip]
+;;   (let [json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
+;;         roam-json (json/read-str (slurp json-path) :key-fn keyword)
+;;         pages-as-rl-json (map to-rl-json roam-json)
+;;         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
+;;         entry-points (filter #(true? (:entry-point %)) pages-as-rl-json)
+;;         included-pages-to-mentioned-pages-map (zipmap
+;;                                                (map #(:title %) entry-points)
+;;                                                (map
+;;                                                 #(pages-mentioned-by-children
+;;                                                   % title-to-content-map)
+;;                                                 (map #(:title %) entry-points)))
+;;         titles-of-included-pages (find-all-included-pages
+;;                                   (map #(:title %) entry-points)
+;;                                   3 title-to-content-map)
+;;         included-title-to-content-map (zipmap
+;;                                        titles-of-included-pages
+;;                                        (map
+;;                                         #(get title-to-content-map %)
+;;                                         titles-of-included-pages))
+;;         block-id-to-content-map (into {}
+;;                                       (map child-block-ids-content-map pages-as-rl-json))
+;;         mentioned-block-id-to-content-map (into {}
+;;                                                 (map
+;;                                                  child-block-ids-content-map
+;;                                                  (vals included-title-to-content-map)))]
+;;     (stasis/export-pages
+;;      (zipmap (html-file-titles (keys included-title-to-content-map))
+;;              (map #(hiccup/html (page-hiccup %))
+;;                   (map
+;;                    #(page-template % block-id-to-content-map titles-of-included-pages)
+;;                    (vals included-title-to-content-map))))
+;;      "./pages")
+;;     (stasis/export-pages
+;;      (zipmap (html-file-titles (keys mentioned-block-id-to-content-map) :case-sensitive)
+;;              (map #(hiccup/html (page-hiccup %))
+;;                   (map
+;;                    #(block-page-template % block-id-to-content-map titles-of-included-pages)
+;;                    (vals mentioned-block-id-to-content-map))))
+;;      "./pages")
+;;     (stasis/export-pages
+;;      {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
+;;      "./pages")
+;;     (stasis/export-pages
+;;      {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "entry-point-link") (filter #(:entry-point %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
+;;      ".")
+;;     block-id-to-content-map))
 
 (defn included?
   [id-passed conn]
@@ -626,13 +626,13 @@
 (defn- linked-references-template
   [references conn]
   (concat []
-          (map (fn [r] [:li (block-content->hiccup r conn)])
-               (map first references))))
+          (map (fn [r] [:li [:a {:href (str "." (page-title->html-file-title (:block/id (ds/entity @conn (first r))) :case-sensitive))} (second r)]])
+               references)))
 
 (defn- linked-references
   [block-ds-id conn]
   (linked-references-template
-   (ds/q '[:find ?blocks-content
+   (ds/q '[:find ?blocks-that-link-here ?blocks-content
            :in $ ?block-ds-id
            :where
            [?block-ds-id :block/id ?block-id]
@@ -641,11 +641,33 @@
          @conn block-ds-id)
    conn))
 
+(defn- context
+  [block-ds-id conn]
+  (let [parent-ds-id (ds/q '[:find ?parent-ds-id
+                             :in $ ?block-ds-id
+                             :where
+                             [?block-ds-id :block/id ?block-id]
+                             [?parent-ds-id :block/children ?block-id]
+                             ]
+                           @conn block-ds-id)]
+    [:a {:href (str "." (page-title->html-file-title "RL-Blog-Post" :case-sensitive))}
+     (:block/hiccup (ds/entity @conn [:block/id (first (first parent-ds-id))]))
+     parent-ds-id]))
+
+;; (:block/children (ds/entity @conn [:block/id "PdRmB6PI9"]))
+
+;; (ds/q '[:find ?parent-ds-id
+;;         :where
+;;         [?parent-ds-id :block/children "9kWTLSWpg"]]
+;;       @conn)
+
 (defn new-block-page-template
   [block-content conn]
   (let [block-content-text (second block-content)
         block-ds-id (first block-content)]
     [:div
+     ;; [:div
+     ;;  [:h3 (context block-ds-id conn)]]
      [:div
       [:h2 (block-content->hiccup block-ds-id block-content-text conn)]
       (children-of-block-template (:block/id (ds/entity @conn block-ds-id)) conn)]
@@ -695,7 +717,38 @@
          page-links (map #(page-link-from-title dir % link-class) page-titles-vals)]
      (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links)))))
 
-(defn new-main [path-to-zip]
+(defn- degree-explore!
+  [current-level max-level conn]
+  (if (= current-level 0)
+    (let [entry-points (map first (vec (ds/q '[:find ?entry-point-id
+                                               :where
+                                               [?id :block/entry-point true]
+                                               [?id :block/id ?entry-point-id]]
+                                             @conn)))]
+      (doseq [block-id entry-points]
+        (ds/transact! conn [{:block/id block-id
+                             :block/included true}]))
+      (doseq [children (map :block/children (map #(ds/entity @conn [:block/id %]) entry-points))]
+        ;; now for each of these sequences I gotta mark them for inclusion and then explore them
+        (doseq [child children]
+          (ds/transact! [{:block/id (first child)
+                          :block/included true}]))))
+    (if (>= max-level current-level)
+      nil
+      nil)))
+
+(defn- mark-blocks-for-inclusion!
+  [degree conn]
+  (if (and (int? degree) (>= degree 0))
+    (degree-explore! 0 degree conn)
+    (doseq [block-ds-id (vec (ds/q '[:find ?block-id
+                                     :where
+                                     [_ :block/id ?block-id]]
+                                   @conn))]
+      (ds/transact! conn [{:block/id (first block-ds-id)
+                           :block/included true}]))))
+
+(defn -main [path-to-zip degree]
   (let [path-to-zip path-to-zip
         json-path (unzip-roam-json-archive
                    path-to-zip
@@ -704,31 +757,10 @@
                         drop-last
                         (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-        schema {
-                :block/id {:db/unique :db.unique/identity}
-                ;; :block/children {:db/valueType :db.type/string
-                ;;                  :db/cardinality :db.cardinality/many}
-                ;; :block/content {:db/valueType :db.type/string
-                ;;                 :db/cardinality :db.cardinality/one}
-                ;; :block/heading {:db/valueType :db.type/bigint
-                ;;                 :db/cardinality :db.cardinality/one}
-                ;; :block/text-align {:db/valueType :db.type/string
-                ;;                    :db/cardinality :db.cardinality/one}
-                ;; :block/entry-point {:db/valueType :db.type/boolean
-                ;;                     :db/cardinality :db.cardinality/one}
-                ;; :block/page {:db/valueType :db.type/boolean
-                ;;              :db/cardinality :db.cardinality/one}
-                ;; :block/included {:db/valueType :db.type/boolean
-                ;;                  :db/cardinality :db.cardinality/one}
-                }
+        schema {:block/id {:db/unique :db.unique/identity}}
         conn (ds/create-conn schema)]
     (populate-db! roam-json conn)
-    (doseq [block-ds-id (vec (ds/q '[:find ?block-id
-                                     :where
-                                     [_ :block/id ?block-id]]
-                                   @conn))]
-      (ds/transact! conn [{:block/id (first block-ds-id)
-                           :block/included true}]))
+    (mark-blocks-for-inclusion! degree conn)
     (let [db @conn
           id+content (ds/q '[:find ?id ?content
                              :where [?id :block/included true]
@@ -773,9 +805,9 @@
      ".")
     conn))
 
-(def conn (new-main "/home/thomas/Desktop/RoamExports/roam-test-export.zip"))
+;; (def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" :all))
 
-(ds/q '[:find ?content
-        :where
-        [13502 :block/content ?content]]
-      @conn)
+;; (ds/q '[:find ?content
+;;         :where
+;;         [13502 :block/content ?content]]
+;;       @conn)
