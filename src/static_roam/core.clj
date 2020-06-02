@@ -748,7 +748,7 @@
       (ds/transact! conn [{:block/id (first block-ds-id)
                            :block/included true}]))))
 
-(defn -main [path-to-zip degree]
+(defn -main [path-to-zip output-dir degree]
   (let [path-to-zip path-to-zip
         json-path (unzip-roam-json-archive
                    path-to-zip
@@ -786,7 +786,7 @@
                                 [?included-id :block/included true]
                                 [?included-id :block/content ?content]]
                               @conn)))))
-     "./pages")
+     (str output-dir "/pages"))
     (stasis/export-pages
      {"/index.html" (hiccup/html (new-page-index-hiccup (new-list-of-page-links (sort (ds/q '[:find ?included-page-title
                                                                                               :where
@@ -794,7 +794,7 @@
                                                                                               [?id :block/included true]
                                                                                               [?id :block/id ?included-page-title]]
                                                                                             @conn)) ".") "../assets/css/main.css" "../assets/js/extra.js"))}
-     "./pages")
+     (str output-dir "/pages"))
     (stasis/export-pages
      {"/index.html" (hiccup/html (new-home-page-hiccup (new-list-of-page-links (sort (ds/q '[:find ?entry-point-content
                                                                                              :where
@@ -802,7 +802,7 @@
                                                                                              [?id :block/entry-point true]
                                                                                              [?id :block/content ?entry-point-content]]
                                                                                            @conn)) "pages" "entry-point-link") "Part of My Second Brain" "./assets/css/main.css" "./assets/js/extra.js"))}
-     ".")
+     output-dir)
     conn))
 
 ;; (def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" :all))
