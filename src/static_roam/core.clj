@@ -748,6 +748,21 @@
       (ds/transact! conn [{:block/id (first block-ds-id)
                            :block/included true}]))))
 
+(defn- metadata-properties
+  [metadata]
+  (into (hash-map) (filter #(= 2 (count %)) (map #(str-utils/split % #":: ") metadata))))
+
+(defn- site-metadata
+  [conn]
+  (let [properties (first (first (ds/q '[:find ?children
+                                         :where
+                                         [?id :block/id "SR Metadata"]
+                                         [?id :block/children ?children]]
+                                       @conn)))
+        metadata (map #(:block/content (ds/entity @conn [:block/id %])) properties)
+        prop-val-dict (metadata-properties metadata)]
+    prop-val-dict))
+
 (defn -main [path-to-zip output-dir degree]
   (let [path-to-zip path-to-zip
         json-path (unzip-roam-json-archive
@@ -801,13 +816,8 @@
                                                                                              [?id :block/included true]
                                                                                              [?id :block/entry-point true]
                                                                                              [?id :block/content ?entry-point-content]]
-                                                                                           @conn)) "pages" "entry-point-link") "Part of My Second Brain" "./assets/css/main.css" "./assets/js/extra.js"))}
+                                                                                           @conn)) "pages" "entry-point-link") (get (site-metadata conn) "Title") "./assets/css/main.css" "./assets/js/extra.js"))}
      output-dir)
     conn))
 
-;; (def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" :all))
-
-;; (ds/q '[:find ?content
-;;         :where
-;;         [13502 :block/content ?content]]
-;;       @conn)
+;; (def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" "." :all))
