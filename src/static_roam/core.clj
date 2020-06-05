@@ -650,24 +650,18 @@
                              [?parent-ds-id :block/children ?block-id]
                              ]
                            @conn block-ds-id)]
-    [:a {:href (str "." (page-title->html-file-title "RL-Blog-Post" :case-sensitive))}
-     (:block/hiccup (ds/entity @conn [:block/id (first (first parent-ds-id))]))
-     parent-ds-id]))
-
-;; (:block/children (ds/entity @conn [:block/id "PdRmB6PI9"]))
-
-;; (ds/q '[:find ?parent-ds-id
-;;         :where
-;;         [?parent-ds-id :block/children "9kWTLSWpg"]]
-;;       @conn)
+    (if (not (empty? parent-ds-id))
+      [:a {:href (str "." (page-title->html-file-title (:block/id (ds/entity @conn (first (first parent-ds-id)))) :case-sensitive))}
+       (:block/hiccup (ds/entity @conn (first (first parent-ds-id))))]
+      [:div])))
 
 (defn new-block-page-template
   [block-content conn]
   (let [block-content-text (second block-content)
         block-ds-id (first block-content)]
     [:div
-     ;; [:div
-     ;;  [:h3 (context block-ds-id conn)]]
+     [:div
+      [:h3 (context block-ds-id conn)]]
      [:div
       [:h2 (block-content->hiccup block-ds-id block-content-text conn)]
       (children-of-block-template (:block/id (ds/entity @conn block-ds-id)) conn)]
@@ -754,11 +748,11 @@
 
 (defn- site-metadata
   [conn]
-  (let [properties (first (first (ds/q '[:find ?children
+  (let [properties (first (ds/q '[:find ?children
                                          :where
                                          [?id :block/id "SR Metadata"]
                                          [?id :block/children ?children]]
-                                       @conn)))
+                                       @conn))
         metadata (map #(:block/content (ds/entity @conn [:block/id %])) properties)
         prop-val-dict (metadata-properties metadata)]
     prop-val-dict))
@@ -772,7 +766,8 @@
                         drop-last
                         (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-        schema {:block/id {:db/unique :db.unique/identity}}
+        schema {:block/id {:db/unique :db.unique/identity}
+                :block/children {:db/cardinality :db.cardinality/many}}
         conn (ds/create-conn schema)]
     (populate-db! roam-json conn)
     (mark-blocks-for-inclusion! degree conn)
