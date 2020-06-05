@@ -647,24 +647,13 @@
                              :in $ ?block-ds-id
                              :where
                              [?block-ds-id :block/id ?block-id]
-                             [?parent-ds-id :block/children #{?block-id}]
+                             [?parent-ds-id :block/children ?block-id]
                              ]
                            @conn block-ds-id)]
-    ;; parent-ds-id
-    [:a {:href (str "." (page-title->html-file-title (:block/content (ds/entity @conn [:block/id (first (first parent-ds-id))])) :case-sensitive))}
-     (:block/hiccup (ds/entity @conn [:block/id (first (first parent-ds-id))]))
-     parent-ds-id]
-    ))
-
-(context 1 conn)
-(:block/id (ds/entity @conn 1099))
-(ds/q '[:find ?parent-ds-id
-        :where
-        [1100 :block/id ?block-id]
-        [?parent-ds-id :block/children ?block-id]
-        ]
-      @conn)
-(:block/children (ds/entity @conn [:block/id "LWweRc1Ce"]))
+    (if (not (empty? parent-ds-id))
+      [:a {:href (str "." (page-title->html-file-title (:block/id (ds/entity @conn (first (first parent-ds-id)))) :case-sensitive))}
+       (:block/hiccup (ds/entity @conn (first (first parent-ds-id))))]
+      [:div])))
 
 (defn new-block-page-template
   [block-content conn]
@@ -768,8 +757,6 @@
         prop-val-dict (metadata-properties metadata)]
     prop-val-dict))
 
-(site-metadata conn)
-
 (defn -main [path-to-zip output-dir degree]
   (let [path-to-zip path-to-zip
         json-path (unzip-roam-json-archive
@@ -828,4 +815,4 @@
      output-dir)
     conn))
 
-(def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" "." :all))
+;; (def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" "." :all))
