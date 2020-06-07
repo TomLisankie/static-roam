@@ -13,7 +13,7 @@
    block = ( syntax-in-block / any-char )*
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
 
-   <syntax-in-block> = (page-link | block-ref | hashtag | url-link | bold)
+   <syntax-in-block> = (page-link | block-ref | hashtag | url-link | bold | italic | highlight | strikethrough)
 
    page-link = <'[['> any-chars <']]'>
 
@@ -33,6 +33,9 @@
    <backslash-escaped-paren> = <'\\\\'> ('(' | ')')
 
    bold = <'**'> any-chars <'**'>
+   italic = <'__'> any-chars <'__'>
+   highlight = <'^^'> any-chars <'^^'>
+   strikethrough = <'~~'> any-chars <'~~'>
 
    (* It’s useful to extract this rule because its transform joins the individual characters everywhere it’s used. *)
    (* However, I think in many cases a more specific rule can be used. So we will migrate away from uses of this rule. *)
@@ -80,6 +83,6 @@
   [string]
   (transform-to-ast (block-parser string)))
 
-(parse-to-ast "[[Physics]] #Static-Roam")
+(parse-to-ast "~~^^Hello^^~~")
 
 
