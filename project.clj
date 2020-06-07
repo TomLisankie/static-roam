@@ -9,5 +9,6 @@
                  [hiccup "1.0.5"]
                  [stasis "2.5.0"]
                  [markdown-to-hiccup "0.6.2"]
-                 [datascript "0.18.11"]]
+                 [datascript "0.18.11"]
+                 [instaparse "1.4.10"]]
   :main static-roam.core)
