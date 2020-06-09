@@ -216,15 +216,6 @@
       (double-brackets->links metadata-replaced block-id-content-map titles-of-included-pages)
       metadata-replaced)))
 
-(defn roam-md->hiccup
-  "Convert Roam markup to Hiccup"
-  [string block-id-content-map titles-of-included-pages]
-  (->>
-   string
-   (#(double-brackets->links % block-id-content-map titles-of-included-pages))
-   mdh/md->hiccup
-   mdh/component))
-
 (defn children-list-template
   "Hiccup template for list of a page or block's children"
   [blockish indent-level block-id-content-map titles-of-included-pages]
@@ -361,61 +352,6 @@
     [:script {:src "../assets/js/tree-collapse.js"}]]
    [:body
     link-list]])
-
-;; okay so I basically need some way of adding a block's list of pages-that-point-to-it to the block.
-;; this happens as a page / block is seeing which pages it references
-;; There's block A and block B. As A is seeing which pages it references, it informs each page that it's referencing it.
-;; Block A comes across the fact that it references block B. Block A says "okay, I'm going to add block B to the list of blocks I reference and tell block B that I'm referencing so it knows and can tell the user which pages / blocks reference it."
-;; So I need to find the function where block A is going through its children-blocks to find which ones it references.
-
-;; (defn -main
-;;   [path-to-zip]
-;;   (let [json-path (unzip-roam-json-archive path-to-zip (->> path-to-zip (#(str-utils/split % #"/")) drop-last (str-utils/join "/") (#(str % "/"))))
-;;         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-;;         pages-as-rl-json (map to-rl-json roam-json)
-;;         title-to-content-map (zipmap (map #(:title %) pages-as-rl-json) pages-as-rl-json)
-;;         entry-points (filter #(true? (:entry-point %)) pages-as-rl-json)
-;;         included-pages-to-mentioned-pages-map (zipmap
-;;                                                (map #(:title %) entry-points)
-;;                                                (map
-;;                                                 #(pages-mentioned-by-children
-;;                                                   % title-to-content-map)
-;;                                                 (map #(:title %) entry-points)))
-;;         titles-of-included-pages (find-all-included-pages
-;;                                   (map #(:title %) entry-points)
-;;                                   3 title-to-content-map)
-;;         included-title-to-content-map (zipmap
-;;                                        titles-of-included-pages
-;;                                        (map
-;;                                         #(get title-to-content-map %)
-;;                                         titles-of-included-pages))
-;;         block-id-to-content-map (into {}
-;;                                       (map child-block-ids-content-map pages-as-rl-json))
-;;         mentioned-block-id-to-content-map (into {}
-;;                                                 (map
-;;                                                  child-block-ids-content-map
-;;                                                  (vals included-title-to-content-map)))]
-;;     (stasis/export-pages
-;;      (zipmap (html-file-titles (keys included-title-to-content-map))
-;;              (map #(hiccup/html (page-hiccup %))
-;;                   (map
-;;                    #(page-template % block-id-to-content-map titles-of-included-pages)
-;;                    (vals included-title-to-content-map))))
-;;      "./pages")
-;;     (stasis/export-pages
-;;      (zipmap (html-file-titles (keys mentioned-block-id-to-content-map) :case-sensitive)
-;;              (map #(hiccup/html (page-hiccup %))
-;;                   (map
-;;                    #(block-page-template % block-id-to-content-map titles-of-included-pages)
-;;                    (vals mentioned-block-id-to-content-map))))
-;;      "./pages")
-;;     (stasis/export-pages
-;;      {"/index.html" (hiccup/html (page-index-hiccup (list-of-page-links (map #(page-link-from-title "." %) (filter #(not= nil %) (vals included-title-to-content-map))))))}
-;;      "./pages")
-;;     (stasis/export-pages
-;;      {"/index.html" (hiccup/html (home-page-hiccup (list-of-page-links (map #(page-link-from-title "pages" % "entry-point-link") (filter #(:entry-point %) (vals included-title-to-content-map)))) "Part Of My Second Brain"))}
-;;      ".")
-;;     block-id-to-content-map))
 
 (defn included?
   [id-passed conn]
@@ -567,18 +503,44 @@
       (roam-web-elements metadata-replaced conn)
       metadata-replaced))))
 
+(defn hiccup-of-ele
+  [block-ds-id ast-ele conn]
+  (let [ele-content (second ast-ele)]
+    (case (first ast-ele)
+      :page-link (if (included? (remove-double-delimiters ele-content) conn)
+                   [:a {:href (page-title->html-file-title (remove-double-delimiters ele-content) :case-sensitive)}
+                    (remove-double-delimiters ele-content)]
+                   (remove-double-delimiters ele-content))
+      :block-ref (if (included? ele-content conn)
+                   [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+                    (content-find ele-content conn)]
+                   "REDACTED")
+      :metadata-tag (if (included? ele-content conn)
+                      [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+                       (str ele-content ":")]
+                      (str ele-content ":")))))
+
+(defn ast-ele->hiccup
+  [block-ds-id ast-ele conn]
+  (cond
+    (string? ast-ele) ast-ele
+    (= ast-ele :block) :div
+    (vector? ast-ele) (hiccup-of-ele block-ds-id ast-ele conn)
+    :else ast-ele))
+
+(defn ast->hiccup
+  [block-ds-id ast conn]
+  (map #(ast-ele->hiccup block-ds-id % conn) ast))
+
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
-  ([block-ds-id content conn]
-   (->> content
-        (#(roam-web-elements block-ds-id % conn))
-        mdh/md->hiccup
-        mdh/component))
-  ([content conn]
-   (->> content
-        (#(roam-web-elements % conn))
-        mdh/md->hiccup
-        mdh/component)))
+  [block-ds-id content conn]
+  (->> content
+       parser/parse-to-ast
+       (#(ast->hiccup block-ds-id % conn))))
+
+(block-content->hiccup 1 "Hello this is dog::" nil)
+(parser/parse-to-ast "Hello:: ")
 
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
