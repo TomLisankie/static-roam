@@ -2,7 +2,7 @@
    block = ( syntax-in-block / any-char )*
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
 
-   <syntax-in-block> = (special-action | code-line | metadata-tag | page-link | block-ref | hashtag | url-link | bold | italic | highlight | strikethrough)
+   <syntax-in-block> = (page-link | block-ref | hashtag | special-action | code-line | metadata-tag | url-link | bold | italic | highlight | strikethrough)
 
    page-link = <'[['> any-chars <']]'>
 
@@ -12,9 +12,11 @@
 
    code-line = <'`'> any-chars <'`'>
 
-   special-action = (query | youtube-embed | word-count) (* <'{{'> any-chars <'}}'> *)
+   <special-action> = (query | youtube-embed | word-count) (* <'{{'> any-chars <'}}'> *)
 
    query = <'{{query: '> any-chars <'}}'>
+   youtube-embed = <'{{youtube: '> any-chars <'}}'>
+   word-count = <'{{word-count}}'>
 
    hashtag = hashtag-bare | hashtag-delimited
    <hashtag-bare> = <'#'> #'[\\p{L}\\p{M}\\p{N}_]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
@@ -38,4 +40,4 @@
    (* However, I think in many cases a more specific rule can be used. So we will migrate away from uses of this rule. *)
    any-chars = any-char+
 
-   <any-char> = #'\\w|\\W'
+   <any-char> = #'\w|\W'
