@@ -6,7 +6,6 @@
             [clojure.set :as set-fns]
             [hiccup.core :as hiccup]
             [stasis.core :as stasis]
-            [markdown-to-hiccup.core :as mdh]
             [datascript.core :as ds]
             [static-roam.parser :as parser])
   (:import (java.util.zip ZipFile)))
