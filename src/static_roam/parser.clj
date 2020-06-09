@@ -13,11 +13,17 @@
    block = ( syntax-in-block / any-char )*
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
 
-   <syntax-in-block> = (page-link | block-ref | hashtag | url-link | bold | italic | highlight | strikethrough)
+   <syntax-in-block> = (special-action | code-line | metadata-tag | page-link | block-ref | hashtag | url-link | bold | italic | highlight | strikethrough)
 
    page-link = <'[['> any-chars <']]'>
 
    block-ref = <'(('> #'[a-zA-Z0-9_\\-]+' <'))'>
+
+   metadata-tag = any-chars <'::'>
+
+   code-line = <'`'> any-chars <'`'>
+
+   special-action = <'{{'> any-chars <'}}'>
 
    hashtag = hashtag-bare | hashtag-delimited
    <hashtag-bare> = <'#'> #'[\\p{L}\\p{M}\\p{N}_]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
@@ -83,6 +89,4 @@
   [string]
   (transform-to-ast (block-parser string)))
 
-(parse-to-ast "~~^^Hello^^~~")
-
-
+(parse-to-ast "{{query: {and: [[hex]] [[Static-Roam]]}}}")
