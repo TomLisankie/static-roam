@@ -23,7 +23,11 @@
 
    code-line = <'`'> any-chars <'`'>
 
-   special-action = <'{{'> any-chars <'}}'>
+   <special-action> = (query | youtube-embed | word-count) (* <'{{'> any-chars <'}}'> *)
+
+   query = <'{{query: '> any-chars <'}}'>
+   youtube-embed = <'{{youtube: '> any-chars <'}}'>
+   word-count = <'{{word-count}}'>
 
    hashtag = hashtag-bare | hashtag-delimited
    <hashtag-bare> = <'#'> #'[\\p{L}\\p{M}\\p{N}_]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
@@ -89,4 +93,4 @@
   [string]
   (transform-to-ast (block-parser string)))
 
-(parse-to-ast "{{query: {and: [[hex]] [[Static-Roam]]}}}")
+(parse-to-ast "{{youtube: https://youtu.be/5iI_0wnwIpU}}")

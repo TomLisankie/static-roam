@@ -14,7 +14,7 @@
 
    special-action = (query | youtube-embed | word-count) (* <'{{'> any-chars <'}}'> *)
 
-   query = 
+   query = <'{{query: '> any-chars <'}}'>
 
    hashtag = hashtag-bare | hashtag-delimited
    <hashtag-bare> = <'#'> #'[\\p{L}\\p{M}\\p{N}_]+'  (* Unicode: L = letters, M = combining marks, N = numbers *)
