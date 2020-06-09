@@ -1,16 +1,11 @@
 (ns static-roam.parser
   (:require [instaparse.core :as insta :refer [defparser]]))
 
-;;Modified from Athens: https://github.com/athensresearch/athens/blob/master/src/cljc/athens/parser.cljc
+;; Modified from Athens: https://github.com/athensresearch/athens/blob/master/src/cljc/athens/parser.cljc
 
 (declare block-parser)
 
-
 ;; Instaparse docs: https://github.com/Engelberg/instaparse#readme
-
-(defparser block-parser
-  (slurp "src/static_roam/parser.ebnf"))
-
 
 (defn- combine-adjacent-strings
   "In a sequence of strings mixed with other values, returns the same sequence with adjacent strings concatenated.
@@ -44,10 +39,12 @@
                                (clojure.string/join chars))}
     tree))
 
+(defparser block-parser
+  (slurp "src/static_roam/parser.ebnf"))
 
 (defn parse-to-ast
-  "Converts a string of block syntax to an abstract syntax tree for Athens markup."
+  "Converts a string of block syntax to an abstract syntax tree for SR markup."
   [block-content]
   (transform-to-ast (block-parser block-content)))
 
-(parse-to-ast "[[asdfasdf]] [[assd]]")
+(parse-to-ast "According to [[BJ Fogg]], we have [[motivation waves]].  Tie that in with the [[Fogg Behavior Model]] and you find that when people have high motivation, you should ask them to do something big and impactful, because if people are motivated to do more than the task that we ask them to do, it would be a waste for us not to prompt them to do so.  On the flip side, if people aren't particularly motivated, we shouldn't ask them to do something hard. This is similar to the premise of #[[difficulty matching]]")

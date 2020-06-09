@@ -2,9 +2,9 @@
    block = ( syntax-in-block / any-char )*
    (* `/` ordered alternation is used to, for example, try to interpret a string beginning with '[[' as a page-link before interpreting it as raw characters. *)
 
-   <syntax-in-block> = (page-link | block-ref | hashtag | special-action | code-line | metadata-tag | url-link | bold | italic | highlight | strikethrough)
+   <syntax-in-block> = (hashtag | page-link | block-ref | special-action | code-line | metadata-tag | url-link | bold | italic | highlight | strikethrough)
 
-   page-link = <'[['> any-chars <']]'>
+   page-link = <'[['>* #"\[\[.*?\]\]" <']]'>* (* <'[['> any-chars <']]'>* *)
 
    block-ref = <'(('> #'[a-zA-Z0-9_\\-]+' <'))'>
 
