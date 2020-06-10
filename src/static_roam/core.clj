@@ -153,12 +153,16 @@
 (defn get-youtube-vid-embed
   "Returns an iframe for a YouTube embedding"
   [string]
-  (str "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube-nocookie.com/embed/"
-       (cond
-         (re-find #"youtube\.com" string) (subs string 43 (- (count string) 2))
-         (re-find #"youtu\.be" string) (subs string 28 (- (count string) 2))
-         :else "NO VALID ID FOUND")
-       "\" frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>"))
+  [:iframe {:width "560"
+            :height "315"
+            :src (str "https://www.youtube-nocookie.com/embed/"
+                      (cond
+                        (re-find #"youtube\.com" string) (subs string 32)
+                        (re-find #"youtu\.be" string) (subs string 17)
+                        :else "NO VALID ID FOUND"))
+            :frameborder "0"
+            :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+            :allowfullscreen ""}])
 
 (defn double-brackets->links
   "Convert Roam markup to web links"
@@ -281,14 +285,6 @@
      [:title (:title page)]
      [:h1 (:title page)]]
     (children-list-template page 0 block-id-content-map titles-of-included-pages))))
-
-(defn block-page-template
-  "Hiccup template for a block being shown as a page"
-  [block-string block-id-content-map titles-of-included-pages] ;; each indent level is a new ul. Each element in an indent level is a new li
-  (vec
-   (concat
-    [:div
-     [:h3 (roam-md->hiccup block-string block-id-content-map titles-of-included-pages)]])))
 
 (defn html-file-titles
   "Get a sequence of all given page titles as file names for their corresponding HTML"
@@ -503,6 +499,16 @@
       (roam-web-elements metadata-replaced conn)
       metadata-replaced))))
 
+(defn query
+  [query-string]
+  ;; TODO write this function
+  query-string)
+
+(defn word-count
+  [block-ds-id conn]
+  ;; TODO Implement this function
+  "0")
+
 (defn hiccup-of-ele
   [block-ds-id ast-ele conn]
   (let [ele-content (second ast-ele)]
@@ -518,7 +524,17 @@
       :metadata-tag (if (included? ele-content conn)
                       [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
                        (str ele-content ":")]
-                      (str ele-content ":")))))
+                      (str ele-content ":"))
+      :code-line [:code ele-content]
+      :query (query ele-content)
+      :youtube-embed (get-youtube-vid-embed ele-content)
+      :word-count [:p (word-count block-ds-id conn)]
+      :hashtag []
+      :url-link []
+      :bold [:b ele-content]
+      :italic [:i ele-content]
+      :highlight [:mark ele-content]
+      :strikethrough [:s ele-content])))
 
 (defn ast-ele->hiccup
   [block-ds-id ast-ele conn]
@@ -537,10 +553,11 @@
   [block-ds-id content conn]
   (->> content
        parser/parse-to-ast
-       (#(ast->hiccup block-ds-id % conn))))
+       (#(ast->hiccup block-ds-id % conn))
+       vec))
 
-(block-content->hiccup 1 "Hello this is dog::" nil)
-(parser/parse-to-ast "Hello:: ")
+(block-content->hiccup 1 "~~askfakjdsfj~~ ^^kfskjd^^" nil)
+(parser/parse-to-ast "{{youtube: https://youtu.be/5iI_0wnwIpU}}")
 
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
