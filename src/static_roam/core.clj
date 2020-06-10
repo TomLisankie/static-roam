@@ -164,128 +164,6 @@
             :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
             :allowfullscreen ""}])
 
-(defn double-brackets->links
-  "Convert Roam markup to web links"
-  [string block-id-content-map titles-of-included-pages]
-  (let [todos-replaced (str-utils/replace
-                        string
-                        #"\{\{\[\[TODO\]\]\}\}"
-                        "<input type=\"checkbox\" disabled>")
-        dones-replaced (str-utils/replace
-                        todos-replaced
-                        #"\{\{\[\[DONE\]\]\}\}"
-                        "<input type=\"checkbox\" checked disabled>")
-        youtubes-replaced (str-utils/replace
-                           dones-replaced
-                           #"\{\{youtube: .*?\}\}"
-                           #(get-youtube-vid-embed %))
-        double-brackets-replaced (str-utils/replace
-                                  youtubes-replaced
-                                  #"\[\[.*?\]\]"
-                                  #(if (get titles-of-included-pages (remove-double-delimiters %))
-                                     (str "[" (remove-double-delimiters %)
-                                          "](." (page-title->html-file-title %) ")")
-                                     (remove-double-delimiters %)))
-        hashtags-replaced (str-utils/replace
-                           double-brackets-replaced
-                           #"\#..*?(?=\s|$)"
-                           #(str "[" (subs % 1) "](." (page-title->html-file-title %) ")"))
-        block-alias-links (str-utils/replace
-                           hashtags-replaced
-                           #"\[.*?\]\(\(\(.*?\)\)\)"
-                           #(str
-                             (re-find #"\[.*?\]" %)
-                             "(." (page-title->html-file-title
-                                   (remove-triple-delimiters
-                                    (re-find #"\(\(\(.*?\)\)\)" %))) ")"))
-        block-refs-transcluded (str-utils/replace
-                                block-alias-links
-                                #"\(\(.*?\)\)"
-                                #(str
-                                  (get block-id-content-map
-                                       (remove-double-delimiters %) "BLOCK NOT FOUND")
-                                  "  [Block Link](."
-                                  (page-title->html-file-title % :case-sensitive) ")"))
-        metadata-replaced (str-utils/replace
-                           block-refs-transcluded
-                           #"^.+?::"
-                           #(str
-                             "__[" (subs % 0 (- (count %) 2)) ":](."
-                             (page-title->html-file-title %) ")__"))]
-    (if (or
-         (re-find #"\[\[.*?\]\]" metadata-replaced)
-         (re-find #"\#..*?(?=\s|$)" metadata-replaced)
-         (re-find #"\(\(.*?\)\)" metadata-replaced)
-         (re-find #"^.+?::" metadata-replaced))
-      (double-brackets->links metadata-replaced block-id-content-map titles-of-included-pages)
-      metadata-replaced)))
-
-(defn children-list-template
-  "Hiccup template for list of a page or block's children"
-  [blockish indent-level block-id-content-map titles-of-included-pages]
-  (loop [html []
-         children (:children blockish)]
-    (if (= (count children) 0)
-      html
-      (recur (conj html (if (:children (first children))
-                          (vec
-                           (concat
-                            [:ul
-                             {:style "list-style-type: none"}
-                             [:li
-                              {:style (str "text-align:"
-                                           (if (:text-align (first children))
-                                             (:text-align (first children))
-                                             "none"))
-                               :onclick "bulletClicked()"}
-                              (if (:heading (first children))
-                                [(cond (= (:heading (first children)) 1) :h1
-                                       (= (:heading (first children)) 2) :h2
-                                       (= (:heading (first children)) 3) :h3)
-                                 (roam-md->hiccup
-                                  (:string (first children))
-                                  block-id-content-map
-                                  titles-of-included-pages)]
-                                (roam-md->hiccup
-                                 (:string (first children))
-                                 block-id-content-map
-                                 titles-of-included-pages))]]
-                            (children-list-template
-                             (first children)
-                             (inc indent-level)
-                             block-id-content-map
-                             titles-of-included-pages)))
-                          [:ul
-                           [:li
-                            {:style (str "text-align:"
-                                         (if (:text-align (first children))
-                                           (:text-align (first children))
-                                           "none"))
-                             :onclick "bulletClicked()"}
-                            (if (:heading (first children))
-                              [(cond (= (:heading (first children)) 1) :h1
-                                     (= (:heading (first children)) 2) :h2
-                                     (= (:heading (first children)) 3) :h3)
-                               (roam-md->hiccup
-                                (:string (first children))
-                                block-id-content-map
-                                titles-of-included-pages)]
-                              (roam-md->hiccup
-                               (:string (first children))
-                               block-id-content-map
-                               titles-of-included-pages))]]))
-             (rest children)))))
-
-(defn page-template
-  "Hiccup template for the content of a Static-Roam page"
-  [page block-id-content-map titles-of-included-pages] ;; each indent level is a new ul. Each element in an indent level is a new li
-  (vec
-   (concat
-    [:div
-     [:title (:title page)]
-     [:h1 (:title page)]]
-    (children-list-template page 0 block-id-content-map titles-of-included-pages))))
-
 (defn html-file-titles
   "Get a sequence of all given page titles as file names for their corresponding HTML"
   ([page-titles]
@@ -303,51 +181,6 @@
    [:a {:class link-class
         :href (str dir (page-title->html-file-title block-content :case-sensitive))}
     block-content]))
-
-(defn- list-of-page-links
-  "Generate a Hiccup unordered list of links to pages"
-  [links]
-  (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) links)))
-
-(defn home-page-hiccup
-  "Hiccup template for the homepage of the Static-Roam site"
-  [link-list title]
-  [:html
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:title title]
-    [:link {:rel "stylesheet" :href "./assets/css/main.css"}]]
-   [:body
-    [:header.site-header {:role "banner"}
-     [:div.wrapper
-      [:a.site-title {:rel "author" :href "."} title]]]
-    [:main.page-content {:aria-label="Content"}
-     [:div.wrapper
-      [:div.home
-       [:h2.post-list-heading "Entry Points"]
-       link-list]]]]])
-
-(defn page-index-hiccup
-  "Hiccup template for an index of all pages in the Static-Roam"
-  [link-list]
-  [:html
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:link {:rel "stylesheet" :href "../assets/css/main.css"}]]
-   [:body
-    link-list]])
-
-(defn page-hiccup
-  "Hiccup for a Static-Roam page"
-  [link-list]
-  [:html
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:link {:rel "stylesheet" :href "../assets/css/main.css"}]
-    [:script {:src "../assets/js/jquery-3.5.1.min.js"}]
-    [:script {:src "../assets/js/tree-collapse.js"}]]
-   [:body
-    link-list]])
 
 (defn included?
   [id-passed conn]
@@ -556,7 +389,6 @@
        (#(ast->hiccup block-ds-id % conn))
        vec))
 
-(block-content->hiccup 1 "~~askfakjdsfj~~ ^^kfskjd^^" nil)
 (parser/parse-to-ast "{{youtube: https://youtu.be/5iI_0wnwIpU}}")
 
 (defn populate-db!
