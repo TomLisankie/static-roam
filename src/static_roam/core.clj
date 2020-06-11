@@ -161,8 +161,7 @@
                         (re-find #"youtu\.be" string) (subs string 17)
                         :else "NO VALID ID FOUND"))
             :frameborder "0"
-            :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-            :allowfullscreen ""}])
+            :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"}])
 
 (defn html-file-titles
   "Get a sequence of all given page titles as file names for their corresponding HTML"
@@ -464,7 +463,7 @@
     (if (not (empty? parent-ds-id))
       [:a {:href (str "." (page-title->html-file-title (:block/id (ds/entity @conn (first (first parent-ds-id)))) :case-sensitive))}
        (:block/hiccup (ds/entity @conn (first (first parent-ds-id))))]
-      [:div])))
+      [:div ""])))
 
 (defn new-block-page-template
   [block-content conn]
@@ -581,7 +580,9 @@
                 :block/children {:db/cardinality :db.cardinality/many}}
         conn (ds/create-conn schema)]
     (populate-db! roam-json conn)
+    (println "Populated db")
     (mark-blocks-for-inclusion! degree conn)
+    (println "Marked blocks for inclusion")
     (let [db @conn
           id+content (ds/q '[:find ?id ?content
                              :where [?id :block/included true]
@@ -589,7 +590,9 @@
                            db)
           tx (for [[id content] id+content]
                [:db/add id :block/hiccup (block-content->hiccup id content conn)])]
+      (println "Not transacted yet")
       (ds/transact! conn tx))
+    (println "Hiccup created and transacted")
     (stasis/export-pages
      (zipmap (new-html-file-titles (sort-by
                                     #(first %)
