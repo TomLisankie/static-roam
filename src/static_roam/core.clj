@@ -589,7 +589,7 @@
                              [?id :block/content ?content]]
                            db)
           tx (for [[id content] id+content]
-               [:db/add id :block/hiccup (block-content->hiccup id content conn)])]
+               [:db/add id :block/hiccup (parser/block-content->hiccup id content conn)])]
       (println "Not transacted yet")
       (ds/transact! conn tx))
     (println "Hiccup created and transacted")
