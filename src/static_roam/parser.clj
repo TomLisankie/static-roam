@@ -49,7 +49,9 @@
   (let [parser-time (println "--- Parser time: ")
         parsed (time (block-parser block-content))
         transform-time (println "--- AST Transform Time: ")
-        transformed (time (transform-to-ast parsed))])
+        transformed (time (transform-to-ast parsed))]
+    (println "--- RESULT: ")
+    (println transformed))
   (transform-to-ast (block-parser block-content)))
 
 (parse-to-ast "According to [[BJ Fogg]], we have [[motivation waves]].  Tie that in with the [[Fogg Behavior Model]] and you find that when people have high motivation, you should ask them to do something big and impactful, because if people are motivated to do more than the task that we ask them to do, it would be a waste for us not to prompt them to do so.  On the flip side, if people aren't particularly motivated, we shouldn't ask them to do something hard. This is similar to the premise of #[[difficulty matching]]")

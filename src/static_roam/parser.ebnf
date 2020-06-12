@@ -4,9 +4,9 @@
 
    <syntax-in-block> = (hashtag | page-link | block-ref | special-action | code-line | metadata-tag | url-link | bold | italic | highlight | strikethrough)
 
-   page-link = <'[['>* #"\[\[.*?\]\]" <']]'>* (* <'[['> any-chars <']]'>* *)
+   page-link = #"\[\[.*?\]\]" (* <'[['> any-chars <']]'>* *)
 
-   block-ref = <'(('> #'[a-zA-Z0-9_\\-]+' <'))'>
+   block-ref = #'\(\(.*?\)\)'
 
    metadata-tag = any-chars <'::'>
 
