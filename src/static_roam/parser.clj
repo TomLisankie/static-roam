@@ -1,6 +1,6 @@
-(ns static-roam.parser)
-
-;; Raw content comes in, parsed tree should come out
+(ns static-roam.parser
+  (:require [clojure.string :as str-utils]
+            [static-roam.core :as core]))
 
 (defn- string-replace
   [data f]
@@ -8,19 +8,57 @@
     (f data)
     data))
 
+(defn- replace-ele-in-string
+  [string ele-regex replacements]
+  (let [string-vec (str-utils/split string ele-regex)]
+    (loop [index 0
+           string-vec string-vec
+           final-vec []
+           replacements replacements]
+      (if (= (count string-vec) 0)
+        (if (empty? replacements)
+          final-vec
+          (conj final-vec (first replacements)))
+        (recur (inc index)
+               (if (odd? index)
+                 string-vec
+                 (rest string-vec))
+               (if (odd? index)
+                 (conj final-vec (first replacements))
+                 (conj final-vec (first string-vec)))
+               (if (odd? index)
+                 (rest replacements)
+                 replacements))))))
+
 (defn- todo-replace
   [string]
   ;; needs to replace the {{[[TODO]]}} in a string
   ;; will need to split the string if it finds it and replace with a vec I guess?
-  )
+  (replace-ele-in-string string #"\{\{\[\[TODO\]\]\}\}" (repeat (count (re-seq #"\{\{\[\[TODO\]\]\}\}" string)) [:todo])))
+
+(repeat (count (re-seq #"\{\{\[\[TODO\]\]\}\}" "Here's a block with a sample {{[[TODO]]}} in its contents. And here are two more of them. {{[[TODO]]}} {{[[TODO]]}}. That's it")) [:todo])
+
+(defn- page-link-replace
+  [string]
+  (replace-ele-in-string string #"\[\[.*?\]\]" (map (fn [regex-match] [:page-link (core/remove-double-delimiters regex-match)]) (re-seq #"\[\[.*?\]\]" string))))
+
+(map (fn [regex-match] [:page-link (core/remove-double-delimiters regex-match)]) (re-seq #"\[\[.*?\]\]" "What is a [[Parser]] for the context of [[Static-Roam]]? [[hello]]"))
+
+(concat [:block] (todo-replace "Here's a block with a sample {{[[TODO]]}} in its contents. And here are two more of them. {{[[TODO]]}} {{[[TODO]]}}. That's it"))
+(concat [:block] (todo-replace "{{[[TODO]]}} Be able to specify which page is SR metadata so that you can have multiple [[Digital Garden]]s come from the same Roam graph"))
+
+(page-link-replace "What is a [[Parser]] for the context of [[Static-Roam]]? [[hello]][[yes]]")
 
 (defn- content->ast
   [content]
   ;; This is analogous to the role of `roam-web-elements` in `core.clj`
   ;; At each step it maps on all of the strings it can find in the sequence and transforms them according to the rule at that step
-  (let [og-seq [:block content]
-        todos (map #(string-replace % todo-replace) og-seq)])
-  )
+  (let [og-seq [:block]
+        todos (concat og-seq (string-replace content todo-replace))
+        page-links ()]
+    page-links))
+
+(content->ast "{{[[TODO]]}} Be able to specify which page is SR metadata so that you can have multiple [[Digital Garden]]s come from the same Roam graph")
 
 (defn- get-youtube-vid-embed
   "Returns an iframe for a YouTube embedding"
@@ -82,7 +120,7 @@
 
 (defn- ast->hiccup
   [block-ds-id content conn]
-  (map #(ast-ele->hiccup block-ds-id % conn) ast))
+  (map #(ast-ele->hiccup block-ds-id % conn) content))
 
 (defn block-content->hiccup
   [block-ds-id content conn]
@@ -91,4 +129,8 @@
        (#(ast->hiccup block-ds-id % conn))
        vec))
 
-(content->ast "According to [[BJ Fogg]], we have [[motivation waves]].  Tie that in with the [[Fogg Behavior Model]] and you find that when people have high motivation, you should ask them to do something big and impactful, because if people are motivated to do more than the task that we ask them to do, it would be a waste for us not to prompt them to do so.  On the flip side, if people aren't particularly motivated, we shouldn't ask them to do something hard. This is similar to the premise of #[[difficulty matching]]")
+(content->ast "Here's a block with a sample {{[[TODO]]}} in its contents.") ;; -> [:block "Here's a block with a sample " [:todo] " in its contents."]
+;; splits at recognized element
+;; so I'm going to split
+;; then run a function where if the current index is even it appends next element. If odd, append [:todo]
+
