@@ -87,16 +87,16 @@
   [block-ds-id ast-ele conn]
   (let [ele-content (second ast-ele)]
     (case (first ast-ele)
-      :page-link (if (included? (remove-double-delimiters ele-content) conn)
-                   [:a {:href (page-title->html-file-title (remove-double-delimiters ele-content) :case-sensitive)}
-                    (remove-double-delimiters ele-content)]
-                   (remove-double-delimiters ele-content))
-      :block-ref (if (included? ele-content conn)
-                   [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
-                    (content-find ele-content conn)]
+      :page-link (if (core/included? (core/remove-double-delimiters ele-content) conn)
+                   [:a {:href (core/page-title->html-file-title (core/remove-double-delimiters ele-content) :case-sensitive)}
+                    (core/remove-double-delimiters ele-content)]
+                   (core/remove-double-delimiters ele-content))
+      :block-ref (if (core/included? ele-content conn)
+                   [:a {:href (core/page-title->html-file-title ele-content :case-sensitive)}
+                    (core/content-find ele-content conn)]
                    "REDACTED")
-      :metadata-tag (if (included? ele-content conn)
-                      [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+      :metadata-tag (if (core/included? ele-content conn)
+                      [:a {:href (core/page-title->html-file-title ele-content :case-sensitive)}
                        (str ele-content ":")]
                       (str ele-content ":"))
       :code-line [:code ele-content]
