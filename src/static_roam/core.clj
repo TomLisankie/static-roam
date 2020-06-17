@@ -150,6 +150,20 @@
         (#(str-utils/replace % #"\s" "-"))
         (#(str "/" % ".html")))))
 
+(defn get-youtube-vid-embed
+  "Returns an iframe for a YouTube embedding"
+  [string]
+  [:iframe {:width "560"
+            :height "315"
+            :src (str "https://www.youtube-nocookie.com/embed/"
+                      (cond
+                        (re-find #"youtube\.com" string) (subs string 32)
+                        (re-find #"youtu\.be" string) (subs string 17)
+                        :else "NO VALID ID FOUND"))
+            :frameborder "0"
+            :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+            :allowfullscreen ""}])
+
 (defn html-file-titles
   "Get a sequence of all given page titles as file names for their corresponding HTML"
   ([page-titles]
@@ -318,6 +332,65 @@
       (roam-web-elements metadata-replaced conn)
       metadata-replaced))))
 
+(defn query
+  [query-string]
+  ;; TODO write this function
+  query-string)
+
+(defn word-count
+  [block-ds-id conn]
+  ;; TODO Implement this function
+  "0")
+
+(defn hiccup-of-ele
+  [block-ds-id ast-ele conn]
+  (let [ele-content (second ast-ele)]
+    (case (first ast-ele)
+      :page-link (if (included? (remove-double-delimiters ele-content) conn)
+                   [:a {:href (page-title->html-file-title (remove-double-delimiters ele-content) :case-sensitive)}
+                    (remove-double-delimiters ele-content)]
+                   (remove-double-delimiters ele-content))
+      :block-ref (if (included? ele-content conn)
+                   [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+                    (content-find ele-content conn)]
+                   "REDACTED")
+      :metadata-tag (if (included? ele-content conn)
+                      [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+                       (str ele-content ":")]
+                      (str ele-content ":"))
+      :code-line [:code ele-content]
+      :query (query ele-content)
+      :youtube-embed (get-youtube-vid-embed ele-content)
+      :word-count [:p (word-count block-ds-id conn)]
+      :hashtag []
+      :url-link []
+      :bold [:b ele-content]
+      :italic [:i ele-content]
+      :highlight [:mark ele-content]
+      :strikethrough [:s ele-content])))
+
+(defn ast-ele->hiccup
+  [block-ds-id ast-ele conn]
+  (cond
+    (string? ast-ele) ast-ele
+    (= ast-ele :block) :div
+    (vector? ast-ele) (hiccup-of-ele block-ds-id ast-ele conn)
+    :else ast-ele))
+
+(defn ast->hiccup
+  [block-ds-id ast conn]
+  (map #(ast-ele->hiccup block-ds-id % conn) ast))
+
+(defn block-content->hiccup
+  "Convert Roam markup to Hiccup"
+  [block-ds-id content conn]
+  (->> content
+       parser/parse-to-ast
+       (#(ast->hiccup block-ds-id % conn))
+       vec))
+
+(parser/parse-to-ast "{{youtube: https://youtu.be/5iI_0wnwIpU}}")
+
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
   [roam-json db-conn]
@@ -391,7 +464,7 @@
     (if (not (empty? parent-ds-id))
       [:a {:href (str "." (page-title->html-file-title (:block/id (ds/entity @conn (first (first parent-ds-id)))) :case-sensitive))}
        (:block/hiccup (ds/entity @conn (first (first parent-ds-id))))]
-      [:div ""])))
+      [:div])))
 
 (defn new-block-page-template
   [block-content conn]
@@ -508,19 +581,15 @@
                 :block/children {:db/cardinality :db.cardinality/many}}
         conn (ds/create-conn schema)]
     (populate-db! roam-json conn)
-    (println "Populated db")
     (mark-blocks-for-inclusion! degree conn)
-    (println "Marked blocks for inclusion")
     (let [db @conn
           id+content (ds/q '[:find ?id ?content
                              :where [?id :block/included true]
                              [?id :block/content ?content]]
                            db)
           tx (for [[id content] id+content]
-               [:db/add id :block/hiccup (parser/block-content->hiccup id content conn)])]
-      (println "Not transacted yet")
+               [:db/add id :block/hiccup (block-content->hiccup id content conn)])]
       (ds/transact! conn tx))
-    (println "Hiccup created and transacted")
     (stasis/export-pages
      (zipmap (new-html-file-titles (sort-by
                                     #(first %)
