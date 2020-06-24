@@ -1,13 +1,19 @@
 (* Parser for block content *)
 block = (syntax-in-block / any-char)*
 
-<syntax-in-block> = (hashtag | page-link | block-ref | metadata-tag | code-line | query)
+<syntax-in-block> = (alias | hashtag | page-link | block-ref | metadata-tag | code-line | youtube | bold | italic | strikethrough | highlight) (* add query later*)
+alias = #"^\[([\w\s\d]+)\]\(.*?\)$"
 page-link = #"\[\[.*?\]\]"
 hashtag = #"\#..*?(?=\s|$)" | #"#\[\[.*?\]\]"
-block-ref = #"\(\(.*?\)\)"
+block-ref = #"\(\(([\w\s\d]+)\)\)"
 metadata-tag = #"^.+?::"
 code-line = #"\`.*?\`"
-query = #"\{\{.*?:.*?\}\}"
+(* query = #"\{\{query: .*?:.*?\}\}" | #"\{\{[[query]]: .*?:.*?\}\}" *)
+youtube = #"\{\{youtube: .*?\}\}" | #"\{\{[[youtube]]: .*?:.*?\}\}"
+bold = #"\*\*.*?\*\*"
+italic = #"\_\_.*?\_\_"
+strikethrough = #"\~\~.*?\~\~"
+highlight = #"\^\^.*?\^\^"
 
 any-chars = #'\w+|\W+'
 <any-char> = #'\w|\W'
