@@ -1,5 +1,6 @@
 (ns static-roam.parser
-  (:require [instaparse.core :as insta :refer [defparser]]))
+  (:require [instaparse.core :as insta :refer [defparser]]
+            [clojure.string :as str-utils]))
 
 ;; Modified from Athens: https://github.com/athensresearch/athens/blob/master/src/cljc/athens/parser.cljc
 
@@ -47,6 +48,98 @@
   [block-content]
   (transform-to-ast (block-parser block-content)))
 
-(parse-to-ast "Metadata is here:: According to [[BJ Fogg]], we have [[motivation waves]].  Tie that in with the [[Fogg Behavior Model]] and you find that when people have high motivation, you should ask them to do something big and impactful, because if people are motivated to do more than the task that we ask them to do, it would be a waste for us not to prompt them to do so.  On the flip side, if people aren't particularly motivated, we shouldn't ask them to do something hard. ((j598fj6)) This is similar to the premise of #[[difficulty matching]] #yessereebob `this is a line of code` {{query: {and: [[note]] [[January]] }}} {{youtube: https://youtu.be/5iI_0wnwIpU}} [fasfa]([[Hello page]]) **IMPORTANT** __emphasis__ ^^pop out^^ ~~old news~~")
+(def parsed (parse-to-ast "Metadata is here:: According to [[BJ Fogg]], we have [[motivation waves]].  Tie that in with the [[Fogg Behavior Model]] and you find that when people have high motivation, you should ask them to do something big and impactful, because if people are motivated to do more than the task that we ask them to do, it would be a waste for us not to prompt them to do so.  On the flip side, if people aren't particularly motivated, we shouldn't ask them to do something hard. ((j598fj6)) This is similar to the premise of #[[difficulty matching]] #yessereebob `this is a line of code` {{query: {and: [[note]] [[January]] }}} {{youtube: https://youtu.be/5iI_0wnwIpU}} [fasfa]([[Hello page]]) **IMPORTANT** __emphasis__ ^^pop out^^ ~~old news~~"))
 
 (parse-to-ast "(((hello)))")
+
+(parse-to-ast "[hello]([[Hello]])")
+
+(defn remove-n-surrounding-delimiters
+  "Removes n surrounding characters from both the beginning and end of a string"
+  [n string]
+  (subs string n (- (count string) n)))
+
+(defn remove-double-delimiters
+  "Removes 2 surrounding characters from both the beginning and end of a string"
+  [string]
+  (remove-n-surrounding-delimiters 2 string))
+
+(defn- strip-chars
+  "Removes every character of a given set from a string"
+  [chars collection]
+  (reduce str (remove #((set chars) %) collection)))
+
+(defn page-title->html-file-title
+  "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
+  ([string]
+   {:pre [(string? string)]}
+   (->> string
+        (str-utils/lower-case)
+        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
+        (#(str-utils/replace % #"\s" "-"))
+        (#(str "/" % ".html"))))
+  ([string case-sensitive?]
+   {:pre [(string? string)]}
+   (->> string
+        (#(if case-sensitive?
+            %
+            (str-utils/lower-case %)))
+        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
+        (#(str-utils/replace % #"\s" "-"))
+        (#(str "/" % ".html")))))
+
+(defn- format-hashtag
+  [hashtag]
+  (if (= \[ (second hashtag))
+    (remove-double-delimiters (subs hashtag 1))
+    (subs hashtag 1)))
+
+(defn- format-alias ;; TODO: Implement
+  [alias-content]
+  alias-content)
+
+(defn get-youtube-vid-embed
+  "Returns an iframe for a YouTube embedding"
+  [string]
+  [:iframe {:width "560"
+            :height "315"
+            :src (str "https://www.youtube-nocookie.com/embed/"
+                      (cond
+                        (re-find #"youtube\.com" string) (subs string 43 (- (count string) 2))
+                        (re-find #"youtu\.be" string) (subs string 28 (- (count string) 2))
+                        :else "NO VALID ID FOUND"))
+            :frameborder "0"
+            :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+            :allowfullscreen ""}])
+
+(defn element-vec->hiccup ;; TODO: have code to change behavior if page/block is not included
+  [ast-ele]
+  (let [ele-content (second ast-ele)]
+    (case (first ast-ele)
+      :metadata-tag [:b [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+                         (subs ele-content 0 (dec (count ele-content)))]]
+      :page-link [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+                  (remove-double-delimiters ele-content)]
+      :block-ref [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+                  (remove-double-delimiters ele-content)]
+      :hashtag [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+                (format-hashtag ele-content)]
+      :strikethrough [:s (remove-double-delimiters ele-content)]
+      :highlight [:mark (remove-double-delimiters ele-content)]
+      :italic [:i (remove-double-delimiters ele-content)]
+      :bold [:b (remove-double-delimiters ele-content)]
+      :alias (format-alias ele-content)
+      :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
+      :youtube (get-youtube-vid-embed ele-content)
+      ast-ele)))
+
+(defn ele->hiccup
+  [ele]
+  (cond
+    (string? ele) ele
+    (= ele :block) :div
+    (vector? ele) (element-vec->hiccup ele)))
+
+(vec (map ele->hiccup parsed))
+
+parsed
