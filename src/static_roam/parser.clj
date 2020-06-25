@@ -40,7 +40,7 @@
     tree))
 
 (defparser block-parser
-  (slurp "src/static_roam/new-parser.ebnf"))
+  (slurp "src/static_roam/parser.ebnf"))
 
 (defn parse-to-ast
   "Converts a string of block syntax to an abstract syntax tree for SR markup."
