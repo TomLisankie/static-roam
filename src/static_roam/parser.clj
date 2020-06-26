@@ -89,7 +89,7 @@
             (str-utils/lower-case %)))
         (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
         (#(str-utils/replace % #"\s" "-"))
-        (#(str "/" % ".html")))))
+        (#(str "./" % ".html")))))
 
 (defn- format-hashtag
   [hashtag]
