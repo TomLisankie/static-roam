@@ -384,10 +384,7 @@
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
   [block-ds-id content conn]
-  (->> content
-       parser/parse-to-ast
-       (#(ast->hiccup block-ds-id % conn))
-       vec))
+  (vec (map parser/ele->hiccup (parser/parse-to-ast content))))
 
 (parser/parse-to-ast "{{youtube: https://youtu.be/5iI_0wnwIpU}}")
 
@@ -474,7 +471,7 @@
      [:div
       [:h3 (context block-ds-id conn)]]
      [:div
-      [:h2 (block-content->hiccup block-ds-id block-content-text conn)]
+      [:h2 (map parser/ele->hiccup (parser/parse-to-ast block-content))] ;; (block-content->hiccup block-ds-id block-content-text conn)
       (children-of-block-template (:block/id (ds/entity @conn block-ds-id)) conn)]
      [:div {:style "background-color:lightblue;"}
       [:h3 "Linked References"]
@@ -626,4 +623,4 @@
      output-dir)
     conn))
 
-;; (def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" "." :all))
+(def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" "." :all))
