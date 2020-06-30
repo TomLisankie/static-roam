@@ -1,8 +1,9 @@
 (* Parser for block content *)
 block = (syntax-in-block / any-char)*
 
-<syntax-in-block> = (alias | hashtag | page-link | block-ref | metadata-tag | code-line | youtube | bold | italic | strikethrough | highlight) (* add query later*)
-alias = #"^\[([\w\s\d]+)\]\(.*?\)$"
+<syntax-in-block> = (image | alias | hashtag | page-link | block-ref | metadata-tag | code-line | youtube | bold | italic | strikethrough | highlight) (* add query later*)
+alias = #"\[([\w\s\d]+)\]\(.*?\)"
+image = #"!\[(.*?)\]\(.*?\)"
 page-link = #"\[\[.*?\]\]"
 hashtag = #"\#..*?(?=\s|$)" | #"#\[\[.*?\]\]"
 block-ref = #"\(\(([\w\s\d]+)\)\)"

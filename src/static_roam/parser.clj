@@ -60,7 +60,9 @@
 (defn remove-n-surrounding-delimiters
   "Removes n surrounding characters from both the beginning and end of a string"
   [n string]
-  (subs string n (- (count string) n)))
+  (if (<= (count string) (* 2 n))
+    string
+    (subs string n (- (count string) n))))
 
 (defn remove-double-delimiters
   "Removes 2 surrounding characters from both the beginning and end of a string"
@@ -97,9 +99,20 @@
     (remove-double-delimiters (subs hashtag 1))
     (subs hashtag 1)))
 
-(defn- format-alias ;; TODO: Implement
+(defn- format-alias
   [alias-content]
-  alias-content)
+  (let [alias-text (remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" alias-content))
+        alias-dest (remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" alias-content))
+        alias-link (if (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
+                     (page-title->html-file-title alias-dest :case-sensitive)
+                     alias-dest)]
+    [:a {:href alias-link} alias-text]))
+
+(defn- format-image
+  [image-ref-content]
+  (let [alt-text (remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" image-ref-content))
+        image-source (remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" image-ref-content))]
+    [:img {:src image-source :alt alt-text}]))
 
 (defn get-youtube-vid-embed
   "Returns an iframe for a YouTube embedding"
@@ -132,6 +145,7 @@
       :italic [:i (remove-double-delimiters ele-content)]
       :bold [:b (remove-double-delimiters ele-content)]
       :alias (format-alias ele-content)
+      :image (format-image ele-content)
       :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
       :youtube (get-youtube-vid-embed ele-content)
       ast-ele)))
