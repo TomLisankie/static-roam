@@ -57,6 +57,8 @@
 
 (parse-to-ast "[hello]([[Hello]])")
 
+(parse-to-ast "I hope to combine my expertise in behavioral science and gamification to help users improve their lives through products. Your users hire you to help them achieve some goal, but loving your product is a result of your teamwork with the user.[++]([[The role of the user and the role of the app]]) Both players need to play.")
+
 (defn remove-n-surrounding-delimiters
   "Removes n surrounding characters from both the beginning and end of a string"
   [n string]
@@ -146,6 +148,8 @@
       :bold [:b (remove-double-delimiters ele-content)]
       :alias (format-alias ele-content)
       :image (format-image ele-content)
+      :todo [:input {:type "checkbox" :disabled "disabled"}]
+      :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
       :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
       :youtube (get-youtube-vid-embed ele-content)
       ast-ele)))
