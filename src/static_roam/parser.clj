@@ -1,6 +1,7 @@
 (ns static-roam.parser
   (:require [instaparse.core :as insta :refer [defparser]]
-            [clojure.string :as str-utils]))
+            [clojure.string :as str-utils]
+            [static-roam.utils :as utils]))
 
 ;; Modified from Athens: https://github.com/athensresearch/athens/blob/master/src/cljc/athens/parser.cljc
 
@@ -76,25 +77,6 @@
   [chars collection]
   (reduce str (remove #((set chars) %) collection)))
 
-(defn page-title->html-file-title
-  "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
-  ([string]
-   {:pre [(string? string)]}
-   (->> string
-        (str-utils/lower-case)
-        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
-        (#(str-utils/replace % #"\s" "-"))
-        (#(str "/" % ".html"))))
-  ([string case-sensitive?]
-   {:pre [(string? string)]}
-   (->> string
-        (#(if case-sensitive?
-            %
-            (str-utils/lower-case %)))
-        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
-        (#(str-utils/replace % #"\s" "-"))
-        (#(str "./" % ".html")))))
-
 (defn- format-hashtag
   [hashtag]
   (if (= \[ (second hashtag))
@@ -106,7 +88,7 @@
   (let [alias-text (remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" alias-content))
         alias-dest (remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" alias-content))
         alias-link (if (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
-                     (page-title->html-file-title alias-dest :case-sensitive)
+                     (utils/page-title->html-file-title alias-dest :case-sensitive)
                      alias-dest)]
     [:a {:href alias-link} alias-text]))
 
@@ -134,13 +116,13 @@
   [ast-ele]
   (let [ele-content (second ast-ele)]
     (case (first ast-ele)
-      :metadata-tag [:b [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+      :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                          (subs ele-content 0 (dec (count ele-content)))]]
-      :page-link [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+      :page-link [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                   (remove-double-delimiters ele-content)]
-      :block-ref [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+      :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                   (remove-double-delimiters ele-content)]
-      :hashtag [:a {:href (page-title->html-file-title ele-content :case-sensitive)}
+      :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                 (format-hashtag ele-content)]
       :strikethrough [:s (remove-double-delimiters ele-content)]
       :highlight [:mark (remove-double-delimiters ele-content)]
