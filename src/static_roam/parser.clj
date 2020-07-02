@@ -145,4 +145,20 @@
 
 (vec (map ele->hiccup parsed))
 
+(defn entry-point?
+  "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
+  [page]
+  (if (= (count (:children page)) 0)
+    false
+    (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children page))))
+             (str-utils/includes?
+              (:string (first (:children page))) "#EntryPoint"))
+      true
+      false)))
+
+(defn block-content->hiccup
+  "Convert Roam markup to Hiccup"
+  [block-ds-id content conn]
+  (vec (map ele->hiccup (parse-to-ast content))))
+
 parsed
