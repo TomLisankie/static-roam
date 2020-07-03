@@ -69,5 +69,5 @@
    [:a {:href (page-title->html-file-title block-content :case-sensitive)} block-content])
   ([dir block-content link-class]
    [:a {:class link-class
-        :href (str dir (page-title->html-file-title block-content :case-sensitive))}
+        :href (str dir (subs (page-title->html-file-title block-content :case-sensitive) 1))}
     block-content]))

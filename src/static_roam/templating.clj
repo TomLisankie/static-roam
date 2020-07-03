@@ -98,7 +98,7 @@
      (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
   ([page-titles dir]
    (let [page-titles-vals (map first page-titles)
-         page-links (map #(utils/page-link-from-title dir %) page-titles-vals)]
+         page-links (map #(utils/page-link-from-title %) page-titles-vals)]
      (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
   ([page-titles dir link-class]
    (let [page-titles-vals (map first page-titles)
