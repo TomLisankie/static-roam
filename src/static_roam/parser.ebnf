@@ -1,0 +1,22 @@
+(* Parser for block content *)
+block = (syntax-in-block / any-char)*
+
+<syntax-in-block> = (todo | done |image | alias | hashtag | page-link | block-ref | metadata-tag | code-line | youtube | bold | italic | strikethrough | highlight) (* add query later*)
+alias = #"\[(.*?)\]\(.*?\)"
+image = #"!\[(.*?)\]\(.*?\)"
+page-link = #"\[\[.*?\]\]"
+hashtag = #"\#..*?(?=\s|$)" | #"#\[\[.*?\]\]"
+block-ref = #"\(\(([\w\s\d]+)\)\)"
+metadata-tag = #"^.+?::"
+code-line = #"\`.*?\`"
+(* query = #"\{\{query: .*?:.*?\}\}" | #"\{\{[[query]]: .*?:.*?\}\}" *)
+youtube = #"\{\{youtube: .*?\}\}" | #"\{\{[[youtube]]: .*?:.*?\}\}"
+bold = #"\*\*.*?\*\*"
+italic = #"\_\_.*?\_\_"
+strikethrough = #"\~\~.*?\~\~"
+highlight = #"\^\^.*?\^\^"
+todo = #"\{\{\[\[TODO\]\]\}\}"
+done = #"\{\{\[\[DONE\]\]\}\}"
+
+any-chars = #'\w+|\W+'
+<any-char> = #'\w|\W'
