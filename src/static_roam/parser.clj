@@ -47,7 +47,6 @@
 (defn parse-to-ast
   "Converts a string of block syntax to an abstract syntax tree for SR markup."
   [block-content]
-  (println block-content)
   (transform-to-ast (try
                       (block-parser block-content)
                       (catch Exception e (str "Exception when parsing content: " block-content)))))
