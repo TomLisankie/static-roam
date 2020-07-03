@@ -27,7 +27,12 @@
 (defn linked-references-template
   [references conn]
   (concat []
-          (map (fn [r] [:li [:a {:href (str "." (utils/page-title->html-file-title (:block/id (ds/entity @conn (first r))) :case-sensitive))} (second r)]])
+          (map
+           (fn [r] [:li
+                    [:a {:href (str "." (utils/page-title->html-file-title
+                                         (:block/id (ds/entity @conn (first r)))
+                                         :case-sensitive))}
+                     (second r)]])
                references)))
 
 (defn context

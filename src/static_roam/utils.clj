@@ -54,7 +54,7 @@
             (str-utils/lower-case %)))
         (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
         (#(str-utils/replace % #"\s" "-"))
-        (#(str "./" % ".html")))))
+        (#(str "/" % ".html")))))
 
 (defn html-file-titles
   [page-titles]

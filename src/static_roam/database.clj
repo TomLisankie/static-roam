@@ -28,8 +28,7 @@
            [?block-ds-id :block/id ?block-id]
            [?blocks-that-link-here :block/refers-to ?block-id]
            [?blocks-that-link-here :block/content ?blocks-content]]
-         @conn block-ds-id)
-   conn)
+         @conn block-ds-id))
 
 (defn degree-explore!
   [current-level max-level conn]
