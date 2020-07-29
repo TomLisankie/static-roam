@@ -5,7 +5,7 @@
   (:import (java.util.zip ZipFile)))
 
 (defn unzip-roam-json-archive
-  "Takes the path to a zipfile `source` and unzips it to target-dir, returning the path of the target file"
+  "Takes the path to a zipfile `source` and unzips it to `target-dir`, returning the path of the target file"
   [source target-dir]
   (str target-dir (with-open [zip (ZipFile. (fs/file source))]
                     (let [entries (enumeration-seq (.entries zip))

@@ -24,26 +24,31 @@
         prop-val-dict (metadata-properties metadata)]
     prop-val-dict))
 
-(defn -main [path-to-zip output-dir degree]
-  (let [path-to-zip path-to-zip
-        json-path (utils/unzip-roam-json-archive
+(defn generate-static-roam!
+  "Takes a ZIP file (`path-to-zip`) of Roam export JSON as input, explores the
+   Roam JSON from the entry point pages up through the `degree` specified (see
+   the 'How It Works' doc for more info), transforms the included pages and
+   blocks to HTML with the specified Hiccup template and CSS, and outputs the
+   resulting HTML to `degree`."
+  [path-to-zip output-dir degree]
+  (let [json-path (utils/unzip-roam-json-archive
                    path-to-zip
                    (->> path-to-zip
                         (#(str-utils/split % #"/"))
                         drop-last
                         (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-        schema {:block/id {:db/unique :db.unique/identity}
-                :block/children {:db/cardinality :db.cardinality/many}}
-        conn (ds/create-conn schema)]
+        schema    {:block/id       {:db/unique :db.unique/identity}
+                   :block/children {:db/cardinality :db.cardinality/many}}
+        conn      (ds/create-conn schema)]
     (database/populate-db! roam-json conn)
     (database/mark-blocks-for-inclusion! degree conn)
-    (let [db @conn
+    (let [db         @conn
           id+content (ds/q '[:find ?id ?content
                              :where [?id :block/included true]
                              [?id :block/content ?content]]
                            db)
-          tx (for [[id content] id+content]
+          tx         (for [[id content] id+content]
                [:db/add id :block/hiccup (parser/block-content->hiccup id content conn)])]
       (ds/transact! conn tx))
     (stasis/export-pages
@@ -65,21 +70,36 @@
                               @conn)))))
      (str output-dir "/pages"))
     (stasis/export-pages
-     {"/index.html" (hiccup/html (templating/page-index-hiccup (templating/list-of-page-links (sort (ds/q '[:find ?included-page-title
-                                                                                              :where
-                                                                                              [?id :block/page true]
-                                                                                              [?id :block/included true]
-                                                                                              [?id :block/id ?included-page-title]]
-                                                                                            @conn)) ".") "../assets/css/main.css" "../assets/js/extra.js"))}
+     {"/index.html" (hiccup/html
+                     (templating/page-index-hiccup
+                      (templating/list-of-page-links
+                       (sort (ds/q '[:find ?included-page-title
+                                     :where
+                                     [?id :block/page true]
+                                     [?id :block/included true]
+                                     [?id :block/id ?included-page-title]]
+                                   @conn)) ".")
+                      "../assets/css/main.css"
+                      "../assets/js/extra.js"))}
      (str output-dir "/pages"))
     (stasis/export-pages
-     {"/index.html" (hiccup/html (templating/home-page-hiccup (templating/list-of-page-links (sort (ds/q '[:find ?entry-point-content
-                                                                                             :where
-                                                                                             [?id :block/included true]
-                                                                                             [?id :block/entry-point true]
-                                                                                             [?id :block/content ?entry-point-content]]
-                                                                                           @conn)) "pages" "entry-point-link") (get (site-metadata conn) "Title") "./assets/css/main.css" "./assets/js/extra.js"))}
+     {"/index.html" (hiccup/html
+                     (templating/home-page-hiccup
+                      (templating/list-of-page-links
+                       (sort (ds/q '[:find ?entry-point-content
+                                     :where
+                                     [?id :block/included true]
+                                     [?id :block/entry-point true]
+                                     [?id :block/content ?entry-point-content]]
+                                   @conn)) "pages" "entry-point-link")
+                      (get (site-metadata conn) "Title")
+                      "./assets/css/main.css"
+                      "./assets/js/extra.js"))}
      output-dir)
     conn))
+
+(defn -main
+  [path-to-zip output-dir degree]
+  (generate-static-roam! path-to-zip output-dir degree))
 
 ;; (def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" "." :all))
