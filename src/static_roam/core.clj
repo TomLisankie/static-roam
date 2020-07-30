@@ -7,7 +7,8 @@
             [static-roam.utils :as utils]
             [static-roam.parser :as parser]
             [static-roam.database :as database]
-            [static-roam.templating :as templating]))
+            [static-roam.templating :as templating]
+            [clojure.pprint :as pprint]))
 
 (defn- metadata-properties
   [metadata]
@@ -96,10 +97,8 @@
                       "./assets/css/main.css"
                       "./assets/js/extra.js"))}
      output-dir)
-    conn))
+    (pprint/pprint conn)))
 
 (defn -main
   [path-to-zip output-dir degree]
   (generate-static-roam! path-to-zip output-dir degree))
-
-;; (def conn (-main "/home/thomas/Desktop/RoamExports/robert-public-roam.zip" "." :all))

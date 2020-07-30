@@ -17,18 +17,8 @@
                             :block/page (if (:title block)
                                           true
                                           false)
-                            :block/refers-to []}])
+                            :block/linked-by []}])
     (populate-db! (:children block) db-conn)))
-
-(defn linked-references
-  [block-ds-id conn]
-   (ds/q '[:find ?blocks-that-link-here ?blocks-content
-           :in $ ?block-ds-id
-           :where
-           [?block-ds-id :block/id ?block-id]
-           [?blocks-that-link-here :block/refers-to ?block-id]
-           [?blocks-that-link-here :block/content ?blocks-content]]
-         @conn block-ds-id))
 
 (defn degree-explore!
   [current-level max-level conn]
