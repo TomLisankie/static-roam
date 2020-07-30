@@ -20,6 +20,13 @@
                             :block/linked-by []}])
     (populate-db! (:children block) db-conn)))
 
+(defn link-blocks!
+  [db-conn]
+  ;; go through every block's content
+  ;; find all references to other blocks in the content
+  ;; for each of those references, change the `linked-by` property of the referenced block to include the entity ID of the referencing block
+  )
+
 (defn degree-explore!
   [current-level max-level conn]
   (if (= current-level 0)

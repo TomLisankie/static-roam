@@ -43,6 +43,7 @@
                    :block/children {:db/cardinality :db.cardinality/many}}
         conn      (ds/create-conn schema)]
     (database/populate-db! roam-json conn)
+    (database/link-blocks! conn)
     (database/mark-blocks-for-inclusion! degree conn)
     (let [db         @conn
           id+content (ds/q '[:find ?id ?content
