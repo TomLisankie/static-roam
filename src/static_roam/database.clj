@@ -1,6 +1,9 @@
 (ns static-roam.database
   (:require [datascript.core :as ds]
-            [static-roam.parser :as parser]))
+            [static-roam.parser :as parser]
+            [static-roam.utils :as utils]
+            [clojure.string :as str-utils]
+            [clojure.pprint :as pprint]))
 
 (defn populate-db!
   "Populate database with relevant properties of pages and blocks"
@@ -22,10 +25,27 @@
 
 (defn link-blocks!
   [db-conn]
-  ;; go through every block's content
-  ;; find all references to other blocks in the content
-  ;; for each of those references, change the `linked-by` property of the referenced block to include the entity ID of the referencing block
+  (let [;; find every entity id and its content
+        entity-id-content-pairs (ds/q
+                                 '[:find ?entity-id ?content
+                                   :where
+                                   [?entity-id :block/content ?content]]
+                                 @db-conn)
+        page-and-block-references-fn (fn [string]
+                                       (let [matches (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string)
+                                             beginning-parens-with-no-match-removed (map #(if (= "(((" (subs % 0 3)) (subs % 1) %) matches)
+                                             page-and-block-names (map utils/remove-double-delimiters beginning-parens-with-no-match-removed)]
+                                         page-and-block-names))
+        ;; find all references to other blocks in the content `\[\[.*?\]\]`, `\(\(.*?\)\)` (and then if it matches 3 parens in beginning, pop first one off)
+        entity-id-reference-pairs (map (fn [pair] [(first pair) (page-and-block-references-fn (second pair))]) entity-id-content-pairs)
+        straggling-bracket-instances-removed (map (fn [pair] [(first pair) (filter #(not (str-utils/includes? % "[")) (second pair))]) entity-id-reference-pairs) ;; TODO: Fix so this is unnecessary
+        ;; for each of those references, change the `linked-by` property of the referenced block to include the entity ID of the referencing block
+        ]
+    (pprint/pprint (sort-by first straggling-bracket-instances-removed)))
   )
+
+(defn linked-references
+  [block-ds-id conn])
 
 (defn degree-explore!
   [current-level max-level conn]

@@ -98,7 +98,7 @@
                       "./assets/css/main.css"
                       "./assets/js/extra.js"))}
      output-dir)
-    (pprint/pprint conn)))
+    conn))
 
 (defn -main
   [path-to-zip output-dir degree]
