@@ -39,28 +39,16 @@
                         drop-last
                         (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
-        schema    {:block/id       {:db/unique :db.unique/identity}
-                   :block/children {:db/cardinality :db.cardinality/many}}
-        conn      (ds/create-conn schema)]
-    (database/populate-db! roam-json conn)
-    (database/link-blocks! conn)
-    (database/mark-blocks-for-inclusion! degree conn)
-    (let [db         @conn
-          id+content (ds/q '[:find ?id ?content
-                             :where [?id :block/included true]
-                             [?id :block/content ?content]]
-                           db)
-          tx         (for [[id content] id+content]
-               [:db/add id :block/hiccup (parser/block-content->hiccup id content conn)])]
-      (ds/transact! conn tx))
+        database-connection (database/setup-roam-db)]
     (stasis/export-pages
-     (zipmap (utils/html-file-titles (sort-by
-                                    #(first %)
-                                    (ds/q '[:find ?included-id ?block-title
-                                            :where
-                                            [?included-id :block/included true]
-                                            [?included-id :block/id ?block-title]]
-                                          @conn)))
+     (zipmap (utils/html-file-titles
+              (sort-by
+               #(first %)
+               (ds/q '[:find ?included-id ?block-title
+                       :where
+                       [?included-id :block/included true]
+                       [?included-id :block/id ?block-title]]
+                     @conn)))
              (map #(hiccup/html (templating/page-hiccup % "../assets/css/main.css" "../assets/js/extra.js"))
                   (map #(templating/block-page-template % conn)
                        (sort-by
@@ -98,7 +86,7 @@
                       "./assets/css/main.css"
                       "./assets/js/extra.js"))}
      output-dir)
-    conn))
+    database-connection))
 
 (defn -main
   [path-to-zip output-dir degree]

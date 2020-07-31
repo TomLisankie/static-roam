@@ -26,59 +26,61 @@
 (defn link-blocks!
   [db-conn]
   (let
-    [entity-id-content-pairs
+    [entity-id-and-content-entities ; "Content entities" are a good term to encapsulate both blocks and pages
      (ds/q
       '[:find ?entity-id ?content
         :where
-           [?entity-id :block/content ?content]]
+        [?entity-id :block/content ?content]]
       @db-conn)
 
-     clean-page-and-block-refs
+     find-content-entities-in-string
      (fn [string]
-       (let [matches
-                (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string)
+       (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string))
+
+     remove-heading-parens
+     (fn [strings]
+       (map
+        #(if (= "(((" (subs % 0 3))
+           (subs % 1)
+           %)
+        strings))
+
+     clean-content-entities
+     (fn [string]
+       (let [content-entities-found
+             (find-content-entities string)
              extra-paren-removed
-             (map
-              #(if (= "(((" (subs % 0 3))
-                 (subs % 1)
-                 %)
-              matches)
-             page-and-block-names
+             (remove-heading-params content-entities-found)
+             cleaned-content-entities
              (map utils/remove-double-delimiters extra-paren-removed)]
          page-and-block-names))
 
+     clean-pair
+     (fn
+       [pair]
+       [(first pair)
+        (clean-content-entities (second pair))])
+
      cleaned-references
      (map
-      (fn
-        [pair]
-           [(first pair)
-            (clean-page-and-block-refs (second pair))])
-      entity-id-content-pairs)
+      clean-pair
+      entity-id-and-content-entities)
+
+     filter-broken-references
+     (fn
+       [pair]
+       [(first pair)
+        (filter
+         #(not (str-utils/includes? % "["))
+         (second pair))])
 
      broken-references-removed
+     ;; sometimes people put references to other page titles inside of the title of another page. So pairs of brackets inside of other brackets when they reference them. This breaks things currently, so I'm removing all those instances here TODO: Fix so this is unnecessary
      (map
-      (fn
-        [pair]
-        [(first pair)
-         (filter
-          #(not (str-utils/includes? % "["))
-          (second pair))])
-      cleaned-references) ;; TODO: Fix so this is unnecessary
+      filter-broken-references
+      cleaned-references)
 
-     transact-links
-     (fn [pair]
-       (let [referrer-eid (first pair)
-             refers-to (second pair)
-             linked-eid (ds/q
-                         '[:find ?eid
-                           :where
-                           [?eid :block/id the-id]] ;; TODO replace `the-id` with the actual id
-                         @db-conn)]
-         (doseq [reference refers-to]
-           (ds/transact!
-            db-conn
-            {:db/id linked-eid
-             :block/linked-by (conj () )}))))]
+     ]
     (pprint/pprint
      (ds/q
       '[:find ?linked-by
@@ -123,3 +125,24 @@
                                    @conn))]
       (ds/transact! conn [{:block/id (first block-ds-id)
                            :block/included true}]))))
+
+(defn generate-hiccup
+  [conn]
+  (let [id+content (ds/q '[:find ?id ?content
+                           :where [?id :block/included true]
+                           [?id :block/content ?content]]
+                         @conn)
+        transactions (for [[id content] id+content]
+                       [:db/add id :block/hiccup (parser/block-content->hiccup id content conn)])]
+    (ds/transact! conn transactions)))
+
+(defn setup-roam-db
+  [roam-json]
+  (let [schema {:block/id       {:db/unique :db.unique/identity}
+                :block/children {:db/cardinality :db.cardinality/many}}
+        conn (ds/create-conn schema)]
+    (populate-db! roam-json conn)
+    (link-blocks! conn)
+    (mark-blocks-for-inclusion! degree conn)
+    (generate-hiccup conn)
+    conn))
