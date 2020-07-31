@@ -137,7 +137,7 @@
     (ds/transact! conn transactions)))
 
 (defn setup-roam-db
-  [roam-json]
+  [roam-json degree]
   (let [schema {:block/id       {:db/unique :db.unique/identity}
                 :block/children {:db/cardinality :db.cardinality/many}}
         conn (ds/create-conn schema)]

@@ -71,3 +71,14 @@
    [:a {:class link-class
         :href (str dir (subs (page-title->html-file-title block-content :case-sensitive) 1))}
     block-content]))
+
+(defn read-roam-json-from-zip
+  [path-to-zip]
+  (let [json-path (unzip-roam-json-archive
+                   path-to-zip
+                   (->> path-to-zip
+                        (#(str-utils/split % #"/"))
+                        drop-last
+                        (str-utils/join "/") (#(str % "/"))))
+        roam-json (json/read-str (slurp json-path) :key-fn keyword)]
+    roam-json))
