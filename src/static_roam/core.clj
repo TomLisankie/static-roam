@@ -25,6 +25,28 @@
         prop-val-dict (metadata-properties metadata)]
     prop-val-dict))
 
+(defn generate-html
+  [conn output-dir template-fn]
+  (stasis/export-pages
+   (zipmap (utils/html-file-titles
+            (sort-by
+             #(first %)
+             (ds/q '[:find ?included-id ?block-title
+                     :where
+                     [?included-id :block/included true]
+                     [?included-id :block/id ?block-title]]
+                   @conn)))
+           (map #(hiccup/html (template-fn % "../assets/css/main.css" "../assets/js/extra.js"))
+                (map #(templating/block-page-template % conn)
+                     (sort-by
+                      #(first %)
+                      (ds/q '[:find ?included-id ?content
+                              :where
+                              [?included-id :block/included true]
+                              [?included-id :block/content ?content]]
+                            @conn)))))
+   (str output-dir "/pages")))
+
 (defn generate-static-roam!
   "Takes a ZIP file (`path-to-zip`) of Roam export JSON as input, explores the
    Roam JSON from the entry point pages up through the `degree` specified (see
@@ -40,6 +62,7 @@
                         (str-utils/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)
         database-connection (database/setup-roam-db)]
+    (generate-html conn (str output-dir "/pages") templating/page-hiccup)
     (stasis/export-pages
      (zipmap (utils/html-file-titles
               (sort-by
