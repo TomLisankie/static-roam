@@ -4,7 +4,7 @@
             [clojure.string :as str-utils])
   (:import (java.util.zip ZipFile)))
 
-(defn unzip-roam-json-archive
+(defn unzip-roam-json
   "Takes the path to a zipfile `source` and unzips it to `target-dir`, returning the path of the target file"
   [source target-dir]
   (str target-dir (with-open [zip (ZipFile. (fs/file source))]
@@ -16,6 +16,17 @@
                         (fs/mkdirs (fs/parent f))
                         (io/copy (.getInputStream zip entry) f))
                       database-file-name))))
+
+(defn read-roam-json-from-zip
+  [path-to-zip]
+  (let [json-path (unzip-roam-json
+                   path-to-zip
+                   (->> path-to-zip
+                        (#(str-utils/split % #"/"))
+                        drop-last
+                        (str-utils/join "/") (#(str % "/"))))
+        roam-json (json/read-str (slurp json-path) :key-fn keyword)]
+    roam-json))
 
 (defn remove-n-surrounding-delimiters
   "Removes n surrounding characters from both the beginning and end of a string"
@@ -72,13 +83,14 @@
         :href (str dir (subs (page-title->html-file-title block-content :case-sensitive) 1))}
     block-content]))
 
-(defn read-roam-json-from-zip
-  [path-to-zip]
-  (let [json-path (unzip-roam-json-archive
-                   path-to-zip
-                   (->> path-to-zip
-                        (#(str-utils/split % #"/"))
-                        drop-last
-                        (str-utils/join "/") (#(str % "/"))))
-        roam-json (json/read-str (slurp json-path) :key-fn keyword)]
-    roam-json))
+(defn find-content-entities-in-string
+  [string]
+  (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string))
+
+(defn remove-heading-parens
+  [strings]
+  (map
+   #(if (= "(((" (subs % 0 3))
+      (subs % 1)
+      %)
+   strings))

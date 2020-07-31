@@ -33,24 +33,12 @@
         [?entity-id :block/content ?content]]
       @db-conn)
 
-     find-content-entities-in-string
-     (fn [string]
-       (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string))
-
-     remove-heading-parens
-     (fn [strings]
-       (map
-        #(if (= "(((" (subs % 0 3))
-           (subs % 1)
-           %)
-        strings))
-
      clean-content-entities
      (fn [string]
        (let [content-entities-found
-             (find-content-entities string)
+             (utils/find-content-entities-in-string string)
              extra-paren-removed
-             (remove-heading-params content-entities-found)
+             (utils/remove-heading-params content-entities-found)
              cleaned-content-entities
              (map utils/remove-double-delimiters extra-paren-removed)]
          page-and-block-names))
@@ -140,9 +128,9 @@
   [roam-json degree]
   (let [schema {:block/id       {:db/unique :db.unique/identity}
                 :block/children {:db/cardinality :db.cardinality/many}}
-        conn (ds/create-conn schema)]
-    (populate-db! roam-json conn)
-    (link-blocks! conn)
-    (mark-blocks-for-inclusion! degree conn)
-    (generate-hiccup conn)
-    conn))
+        db-conn (ds/create-conn schema)]
+    (populate-db! roam-json db-conn)
+    (link-blocks! db-conn)
+    (mark-blocks-for-inclusion! degree db-conn)
+    (generate-hiccup db-conn)
+    db-conn))
