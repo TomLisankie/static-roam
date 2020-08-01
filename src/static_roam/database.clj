@@ -54,12 +54,21 @@
   [(first pair)
    (clean-content-entities (second pair))])
 
+(defn- generate-transactions-for-linking-blocks
+  [references])
+
+(defn- transact-linked-blocks!
+  [db-conn references]
+  (let [transactions (generate-transactions-for-linking-blocks references)]
+    (ds/transact! db-conn transactions)))
+
 (defn link-blocks!
   [db-conn]
   (let
     [entity-id-and-content-entities (get-entity-id-content-pairs db-conn)
      cleaned-references (map clean-pair entity-id-and-content-entities)
-     broken-references-removed (map filter-broken-references cleaned-references)]))
+     broken-references-removed (map filter-broken-references cleaned-references)]
+    (transact-linked-blocks! db-conn broken-references-removed)))
 
 (defn linked-references
   [block-ds-id conn])
