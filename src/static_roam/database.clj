@@ -23,62 +23,43 @@
                             :block/linked-by []}])
     (populate-db! (:children block) db-conn)))
 
+(defn- get-entity-id-content-pairs
+  [db-conn]
+  (ds/q
+   '[:find ?entity-id ?content
+     :where
+     [?entity-id :block/content ?content]]
+   @db-conn))
+
+(defn- clean-content-entities
+  [string]
+  (let [content-entities-found
+        (utils/find-content-entities-in-string string)
+        extra-paren-removed
+        (utils/remove-heading-parens content-entities-found)
+        cleaned-content-entities
+        (map utils/remove-double-delimiters extra-paren-removed)]
+    cleaned-content-entities))
+
+;; sometimes people put references to other page titles inside of the title of another page. So pairs of brackets inside of other brackets when they reference them. This breaks things currently, so I'm removing all those instances here TODO: Fix so this is unnecessary
+(defn- filter-broken-references
+  [pair]
+  [(first pair)
+   (filter
+    #(not (str-utils/includes? % "["))
+    (second pair))])
+
+(defn- clean-pair
+  [pair]
+  [(first pair)
+   (clean-content-entities (second pair))])
+
 (defn link-blocks!
   [db-conn]
   (let
-    [entity-id-and-content-entities ; "Content entities" are a good term to encapsulate both blocks and pages
-     (ds/q
-      '[:find ?entity-id ?content
-        :where
-        [?entity-id :block/content ?content]]
-      @db-conn)
-
-     clean-content-entities
-     (fn [string]
-       (let [content-entities-found
-             (utils/find-content-entities-in-string string)
-             extra-paren-removed
-             (utils/remove-heading-params content-entities-found)
-             cleaned-content-entities
-             (map utils/remove-double-delimiters extra-paren-removed)]
-         page-and-block-names))
-
-     clean-pair
-     (fn
-       [pair]
-       [(first pair)
-        (clean-content-entities (second pair))])
-
-     cleaned-references
-     (map
-      clean-pair
-      entity-id-and-content-entities)
-
-     filter-broken-references
-     (fn
-       [pair]
-       [(first pair)
-        (filter
-         #(not (str-utils/includes? % "["))
-         (second pair))])
-
-     broken-references-removed
-     ;; sometimes people put references to other page titles inside of the title of another page. So pairs of brackets inside of other brackets when they reference them. This breaks things currently, so I'm removing all those instances here TODO: Fix so this is unnecessary
-     (map
-      filter-broken-references
-      cleaned-references)
-
-     ]
-    (pprint/pprint
-     (ds/q
-      '[:find ?linked-by
-        :where
-        [?id :block/linked-by ?linked-by]]
-      @db-conn))
-    (map transact-links broken-references-removed)
-    ;; (pprint/pprint (sort-by first broken-references-removed))
-    )
-  )
+    [entity-id-and-content-entities (get-entity-id-content-pairs db-conn)
+     cleaned-references (map clean-pair entity-id-and-content-entities)
+     broken-references-removed (map filter-broken-references cleaned-references)]))
 
 (defn linked-references
   [block-ds-id conn])
@@ -103,7 +84,7 @@
       nil
       nil)))
 
-(defn mark-blocks-for-inclusion!
+(defn mark-content-entities-for-inclusion!
   [degree conn]
   (if (and (int? degree) (>= degree 0))
     (degree-explore! 0 degree conn)
@@ -124,13 +105,17 @@
                        [:db/add id :block/hiccup (parser/block-content->hiccup id content conn)])]
     (ds/transact! conn transactions)))
 
-(defn setup-roam-db
+(defn replicate-roam-db!
+  [roam-json db-conn]
+  (populate-db! roam-json db-conn)
+  (link-blocks! db-conn))
+
+(defn setup-static-roam-db
   [roam-json degree]
   (let [schema {:block/id       {:db/unique :db.unique/identity}
                 :block/children {:db/cardinality :db.cardinality/many}}
         db-conn (ds/create-conn schema)]
-    (populate-db! roam-json db-conn)
-    (link-blocks! db-conn)
-    (mark-blocks-for-inclusion! degree db-conn)
+    (replicate-roam-db! roam-json db-conn)
+    (mark-content-entities-for-inclusion! degree db-conn)
     (generate-hiccup db-conn)
     db-conn))

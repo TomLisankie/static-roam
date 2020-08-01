@@ -1,4 +1,10 @@
-(ns static-roam.html-generation)
+(ns static-roam.html-generation
+  (:require [clojure.string :as str-utils]
+            [datascript.core :as ds]
+            [static-roam.utils :as utils]
+            [hiccup.core :as hiccup]
+            [static-roam.templating :as templating]
+            [stasis.core :as stasis]))
 
 (defn- metadata-properties
   [metadata]
@@ -82,6 +88,6 @@
 
 (defn generate-static-roam-html
   [conn output-dir]
-  (generate-pages-html database-connection (str output-dir "/pages"))
-  (generate-index-of-pages-html database-connection (str output-dir "/pages"))
-  (generate-home-page-html database-connection output-dir))
+  (generate-pages-html conn (str output-dir "/pages"))
+  (generate-index-of-pages-html conn (str output-dir "/pages"))
+  (generate-home-page-html conn output-dir))

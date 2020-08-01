@@ -1,7 +1,8 @@
 (ns static-roam.utils
   (:require [me.raynes.fs :as fs]
             [clojure.java.io :as io]
-            [clojure.string :as str-utils])
+            [clojure.string :as str-utils]
+            [clojure.data.json :as json])
   (:import (java.util.zip ZipFile)))
 
 (defn unzip-roam-json
