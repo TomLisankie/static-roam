@@ -54,24 +54,56 @@
   [(first pair)
    (clean-content-entities (second pair))])
 
-(defn- generate-transactions-for-linking-blocks
-  [references])
+(defn- block-id-to-entity-id
+  [block-id conn]
+  (ds/q
+   '[:find ?entity-id
+     :in $ ?block-id
+     :where
+     [?entity-id :block/id ?block-id]]
+   @conn))
 
-(defn- transact-linked-blocks!
+(defn- block-ids-to-entity-ids
+  [block-ids conn]
+  (map (block-id-to-entity-id % conn) block-ids))
+
+(defn- convert-block-ids-to-entity-ids
+  [reference-pairs conn]
+  (map (fn [pair] [(first pair) (block-ids-to-entity-ids (second pair))]) reference-pairs))
+
+(defn- generate-block-linking-transaction
+  [referer-eid reference-eid]
+  {:db/id reference-eid
+   :block/linked-by referer-eid})
+
+(defn- generate-block-linking-transactions-for-entity-reference-pair
+  [entity-id-reference-pair]
+  (let [referer-eid (first entity-id-reference-pair)
+        reference-eids (second entity-id-reference-pair)]
+    (map #(generate-block-linking-transaction referer-eid %) reference-eids)))
+
+(defn- generate-transactions-for-linking-blocks
+  [entity-id-reference-pairs]
+  (let [entity-id-reference-entity-pairs (convert-block-ids-to-entity-ids entity-id-reference-pairs db-conn)]
+    (map generate-block-linking-transactions-for-entity-reference-pair entity-id-reference-entity-pairs)))
+
+(defn- link-blocks!
   [db-conn references]
-  (let [transactions (generate-transactions-for-linking-blocks references)]
+  (let [transactions (generate-transactions-for-linking-blocks references db-conn)]
     (ds/transact! db-conn transactions)))
 
-(defn link-blocks!
+(defn generate-linked-references!
   [db-conn]
   (let
-    [entity-id-and-content-entities (get-entity-id-content-pairs db-conn)
-     cleaned-references (map clean-pair entity-id-and-content-entities)
+    [entity-id-and-reference-ids (get-entity-id-content-pairs db-conn)
+     cleaned-references (map clean-pair entity-id-and-reference-ids)
      broken-references-removed (map filter-broken-references cleaned-references)]
-    (transact-linked-blocks! db-conn broken-references-removed)))
+    (link-blocks! db-conn broken-references-removed)))
 
 (defn linked-references
-  [block-ds-id conn])
+  [block-ds-id conn]
+  ;; TODO: implement
+  )
 
 (defn degree-explore!
   [current-level max-level conn]
@@ -117,12 +149,14 @@
 (defn replicate-roam-db!
   [roam-json db-conn]
   (populate-db! roam-json db-conn)
-  (link-blocks! db-conn))
+  (generate-linked-references! db-conn))
 
 (defn setup-static-roam-db
   [roam-json degree]
   (let [schema {:block/id       {:db/unique :db.unique/identity}
-                :block/children {:db/cardinality :db.cardinality/many}}
+                :block/children {:db/cardinality :db.cardinality/many}
+                :block/linked-by {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref}}
         db-conn (ds/create-conn schema)]
     (replicate-roam-db! roam-json db-conn)
     (mark-content-entities-for-inclusion! degree db-conn)
