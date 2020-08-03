@@ -74,7 +74,7 @@
   (let [transactions (generate-transactions-for-linking-blocks references)]
     (ds/transact! db-conn (flatten transactions))))
 
-(defn generate-linked-references!
+(defn- generate-linked-references!
   [db-conn]
   (let
     [entity-id-and-reference-ids (get-entity-id-content-pairs db-conn)
@@ -84,7 +84,8 @@
 
 (defn linked-references
   [block-ds-id conn]
-  (let [the-linked-references (ds/q
+  (pprint/pprint block-ds-id)
+  (let [the-linked-references (ds/q ;; TODO: this query is wrong. Fix
                                '[:find ?linked-references
                                  :in $ ?block-ds-id
                                  :where
