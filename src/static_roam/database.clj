@@ -54,43 +54,25 @@
   [(first pair)
    (clean-content-entities (second pair))])
 
-(defn- block-id-to-entity-id
-  [block-id conn]
-  (ds/q
-   '[:find ?entity-id
-     :in $ ?block-id
-     :where
-     [?entity-id :block/id ?block-id]]
-   @conn))
-
-(defn- block-ids-to-entity-ids
-  [block-ids conn]
-  (map (block-id-to-entity-id % conn) block-ids))
-
-(defn- convert-block-ids-to-entity-ids
-  [reference-pairs conn]
-  (map (fn [pair] [(first pair) (block-ids-to-entity-ids (second pair))]) reference-pairs))
-
 (defn- generate-block-linking-transaction
-  [referer-eid reference-eid]
-  {:db/id reference-eid
+  [referer-eid reference-id]
+  {:block/id reference-id
    :block/linked-by referer-eid})
 
 (defn- generate-block-linking-transactions-for-entity-reference-pair
   [entity-id-reference-pair]
   (let [referer-eid (first entity-id-reference-pair)
-        reference-eids (second entity-id-reference-pair)]
-    (map #(generate-block-linking-transaction referer-eid %) reference-eids)))
+        reference-ids (second entity-id-reference-pair)]
+    (map #(generate-block-linking-transaction referer-eid %) reference-ids)))
 
 (defn- generate-transactions-for-linking-blocks
   [entity-id-reference-pairs]
-  (let [entity-id-reference-entity-pairs (convert-block-ids-to-entity-ids entity-id-reference-pairs db-conn)]
-    (map generate-block-linking-transactions-for-entity-reference-pair entity-id-reference-entity-pairs)))
+  (map generate-block-linking-transactions-for-entity-reference-pair entity-id-reference-pairs))
 
 (defn- link-blocks!
   [db-conn references]
-  (let [transactions (generate-transactions-for-linking-blocks references db-conn)]
-    (ds/transact! db-conn transactions)))
+  (let [transactions (generate-transactions-for-linking-blocks references)]
+    (ds/transact! db-conn (flatten transactions))))
 
 (defn generate-linked-references!
   [db-conn]
@@ -102,8 +84,13 @@
 
 (defn linked-references
   [block-ds-id conn]
-  ;; TODO: implement
-  )
+  (let [the-linked-references (ds/q
+                               '[:find ?linked-references
+                                 :in $ ?block-ds-id
+                                 :where
+                                 [?block-ds-id :block/linked-by ?linked-references]]
+                               @conn)]
+    the-linked-references))
 
 (defn degree-explore!
   [current-level max-level conn]
