@@ -10,6 +10,10 @@
     (:title block-json)
     (:uid block-json)))
 
+(defn get-properties-for-block-id
+  [block-id block-map]
+  (get block-map block-id))
+
 (defn- get-block-properties
   [block-json]
   {
@@ -140,7 +144,7 @@
         block-map-with-links (attach-links-to-block-map links block-map-no-links)]
     block-map-with-links))
 
-(defn linked-references
+(defn get-linked-references
   [block-id block-map]
   (let [block-props (get block-map block-id "BLOCK DOESN'T EXIST")
         linked-refs (:linked-by block-props)]

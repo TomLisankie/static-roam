@@ -71,7 +71,7 @@
 (defn html-file-titles
   [page-titles]
   (let [page-titles-vec (vec page-titles)]
-    (map #(subs (page-title->html-file-title % :case-sensitive) 1) (map second page-titles-vec))))
+    (map #(subs (page-title->html-file-title % :case-sensitive) 1) page-titles-vec)))
 
 (defn page-link-from-title
   "Given a page and a directory for the page to go in, create Hiccup that contains the link to the HTML of that page"

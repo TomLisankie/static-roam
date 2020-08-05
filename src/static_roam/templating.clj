@@ -1,8 +1,8 @@
 (ns static-roam.templating
   (:require [static-roam.utils :as utils]
             [static-roam.parser :as parser]
-            [datascript.core :as ds]
-            [static-roam.database :as database]))
+            [static-roam.database :as database]
+            [clojure.pprint :as pprint]))
 
 (defn page-hiccup ;; TODO I think this gets replaced with the user-defined HTML template later
   [body-hiccup css-path js-path]
@@ -14,54 +14,61 @@
    [:body body-hiccup]])
 
 (defn children-of-block-template
-  [block-id conn]
-  [:ul
-   [:li (:block/hiccup (ds/entity @conn [:block/id block-id]))]
-   (let [children (:block/children (ds/entity @conn [:block/id block-id]))]
-     (if (not= 0 (count children))
-       ;; recurse on each of the children
-       (map #(children-of-block-template % conn) children)
-       ;; otherwise, evaluate to empty vector
-       [:div]))])
+  [block-id block-map]
+  (let [properties (database/get-properties-for-block-id block-id block-map)]
+    [:ul
+     [:li (:hiccup properties)]
+     (let [children (:children properties)]
+       (if (not= 0 (count children))
+         ;; recurse on each of the children
+         (map #(children-of-block-template % block-map) children)
+         ;; otherwise, evaluate to empty div
+         [:div]))]))
 
 (defn linked-references-template
-  [references conn]
+  [references block-map]
   (concat []
           (map
-           (fn [r] [:li
-                    [:a {:href (str "." (utils/page-title->html-file-title
-                                         (:block/id (ds/entity @conn (first r)))
-                                         :case-sensitive))}
-                     (second r)]])
-               references)))
+           (fn
+             [r]
+             [:li
+              [:a
+               {:href
+                (str ""
+                     (utils/page-title->html-file-title
+                      r
+                      :case-sensitive))}
+               r]])
+           references)))
 
-(defn context
-  [block-ds-id conn]
-  (let [parent-ds-id (ds/q '[:find ?parent-ds-id
-                             :in $ ?block-ds-id
-                             :where
-                             [?block-ds-id :block/id ?block-id]
-                             [?parent-ds-id :block/children ?block-id]
-                             ]
-                           @conn block-ds-id)]
-    (if (not (empty? parent-ds-id))
-      [:a {:href (str "." (utils/page-title->html-file-title (:block/id (ds/entity @conn (first (first parent-ds-id)))) :case-sensitive))}
-       (:block/hiccup (ds/entity @conn (first (first parent-ds-id))))]
-      [:div])))
+(defn- is-parent
+  [block-id block-kv]
+  (if (some #(= block-id %) (:children (second block-kv)))
+    (first block-kv)
+    nil))
+
+(defn- find-parent
+  [block-id block-map]
+  (filter #(not (nil? %)) (map #(is-parent block-id %) block-map)))
+
+(defn- get-parent
+  [block-id block-map]
+  (let [parent-id (first (find-parent block-id block-map))]
+    (if (nil? parent-id)
+      ""
+      parent-id)))
 
 (defn block-page-template
-  [block-content conn]
-  (let [block-content-text (second block-content)
-        block-ds-id (first block-content)]
-    [:div
-     [:div
-      [:h3 (context block-ds-id conn)]]
-     [:div
-      [:h2 (map parser/ele->hiccup (parser/parse-to-ast block-content))] ;; (block-content->hiccup block-ds-id block-content-text conn)
-      (children-of-block-template (:block/id (ds/entity @conn block-ds-id)) conn)]
-     [:div {:style "background-color:lightblue;"}
-      [:h3 "Linked References"]
-      (linked-references-template (database/linked-references block-ds-id conn) conn)]]))
+  [block-id block-content block-map]
+  [:div
+   [:div
+    [:h3 (get-parent block-id block-map)]]
+   [:div
+    [:h2 (map parser/ele->hiccup (parser/parse-to-ast block-content))]
+    (children-of-block-template block-id block-map)]
+   [:div {:style "background-color:lightblue;"}
+    [:h3 "Linked References"]
+    (linked-references-template (database/get-linked-references block-id block-map) block-map)]])
 
 (defn page-index-hiccup
   [link-list css-path js-path]
@@ -93,14 +100,11 @@
 (defn list-of-page-links
   "Generate a Hiccup unordered list of links to pages"
   ([page-titles]
-   (let [page-titles-vals (map first page-titles)
-         page-links (map utils/page-link-from-title page-titles-vals)]
+   (let [page-links (map utils/page-link-from-title page-titles)]
      (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
   ([page-titles dir]
-   (let [page-titles-vals (map first page-titles)
-         page-links (map #(utils/page-link-from-title %) page-titles-vals)]
+   (let [page-links (map #(utils/page-link-from-title %) page-titles)]
      (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
   ([page-titles dir link-class]
-   (let [page-titles-vals (map first page-titles)
-         page-links (map #(utils/page-link-from-title dir % link-class) page-titles-vals)]
+   (let [page-links (map #(utils/page-link-from-title dir % link-class) page-titles)]
      (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links)))))
