@@ -1,6 +1,5 @@
 (ns static-roam.database
-  (:require [datascript.core :as ds]
-            [static-roam.parser :as parser]
+  (:require [static-roam.parser :as parser]
             [static-roam.utils :as utils]
             [clojure.string :as str-utils]
             [clojure.pprint :as pprint]))
@@ -83,11 +82,6 @@
   [entity-id-reference-pairs]
   (map generate-block-linking-transactions-for-entity-reference-pair entity-id-reference-pairs))
 
-(defn- link-blocks!
-  [db-conn references]
-  (let [transactions (generate-transactions-for-linking-blocks references)]
-    (ds/transact! db-conn (flatten transactions))))
-
 (defn- get-block-id-content-pair
   [pair]
   [(first pair) (:content (second pair))])
@@ -152,26 +146,6 @@
         linked-refs (:linked-by block-props)]
     linked-refs))
 
-(defn degree-explore!
-  [current-level max-level conn]
-  (if (= current-level 0)
-    (let [entry-points (map first (vec (ds/q '[:find ?entry-point-id
-                                               :where
-                                               [?id :block/entry-point true]
-                                               [?id :block/id ?entry-point-id]]
-                                             @conn)))]
-      (doseq [block-id entry-points]
-        (ds/transact! conn [{:block/id block-id
-                             :block/included true}]))
-      (doseq [children (map :block/children (map #(ds/entity @conn [:block/id %]) entry-points))]
-        ;; now for each of these sequences I gotta mark them for inclusion and then explore them
-        (doseq [child children]
-          (ds/transact! [{:block/id (first child)
-                          :block/included true}]))))
-    (if (>= max-level current-level)
-      nil
-      nil)))
-
 (defn- mark-as-included
   [block-kv]
   [(first block-kv) (assoc (second block-kv) :included true)])
@@ -179,8 +153,7 @@
 (defn- mark-content-entities-for-inclusion
   [degree block-map]
   (if (and (int? degree) (>= degree 0))
-    ;; (degree-explore! 0 degree conn)
-    (println "hello")
+    (println "hello") ;; TODO: do degree explore here instead of printing a line
     (into (hash-map) (map mark-as-included block-map))))
 
 (defn- generate-hiccup-if-block-is-included
