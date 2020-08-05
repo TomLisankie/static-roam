@@ -146,49 +146,9 @@
         block-map-with-links (attach-links-to-block-map links block-map-no-links)]
     block-map-with-links))
 
-(def example
-  (generate-linked-references {"the [[skill level]] of each user grows over time"
-                             {:children '(),
-                              :content "the [[skill level]] of each user grows over time",
-                              :heading -1,
-                              :text-align "",
-                              :entry-point false,
-                              :page true},
-                             "skill level"
-                             {:children '("MYOLydOF1" "5r3u0iI4O"),
-                              :content "skill level",
-                              :heading -1,
-                              :text-align "",
-                              :entry-point false,
-                              :page true},
-                             "MYOLydOF1"
-                             {:children '(),
-                              :content
-                              "There are [[[[individual difference]]s between people in prior [[skill level]]]] before they open up an app",
-                              :heading -1,
-                              :text-align "",
-                              :entry-point false,
-                              :page false},
-                             "5r3u0iI4O"
-                             {:children '(),
-                              :content "[[Problem Text]] [[skill level]]",
-                              :heading -1,
-                              :text-align "",
-                              :entry-point false,
-                              :page false},
-                             "Problem Text"
-                             {:children '(),
-                              :content "Problem Text",
-                              :heading -1,
-                              :text-align "",
-                              :entry-point false,
-                              :page true}}))
-
-(pprint/pprint example)
-
 (defn linked-references
   [block-id block-map]
-  (let [block-props (get block-map block-id)
+  (let [block-props (get block-map block-id "BLOCK DOESN'T EXIST")
         linked-refs (:linked-by block-props)]
     linked-refs))
 
@@ -212,16 +172,16 @@
       nil
       nil)))
 
+(defn- mark-as-included
+  [block-kv]
+  [(first block-kv) (assoc (second block-kv) :included true)])
+
 (defn mark-content-entities-for-inclusion
   [degree block-map]
   (if (and (int? degree) (>= degree 0))
-    (degree-explore! 0 degree conn)
-    (doseq [block-ds-id (vec (ds/q '[:find ?block-id
-                                     :where
-                                     [_ :block/id ?block-id]]
-                                   @conn))]
-      (ds/transact! conn [{:block/id (first block-ds-id)
-                           :block/included true}]))))
+    ;; (degree-explore! 0 degree conn)
+    (println "hello")
+    (into (hash-map) (map mark-as-included block-map))))
 
 (defn generate-hiccup
   [conn]
