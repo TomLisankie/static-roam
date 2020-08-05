@@ -176,25 +176,28 @@
   [block-kv]
   [(first block-kv) (assoc (second block-kv) :included true)])
 
-(defn mark-content-entities-for-inclusion
+(defn- mark-content-entities-for-inclusion
   [degree block-map]
   (if (and (int? degree) (>= degree 0))
     ;; (degree-explore! 0 degree conn)
     (println "hello")
     (into (hash-map) (map mark-as-included block-map))))
 
-(defn generate-hiccup
-  [conn]
-  (let [id+content (ds/q '[:find ?id ?content
-                           :where [?id :block/included true]
-                           [?id :block/content ?content]]
-                         @conn)
-        transactions (for [[id content] id+content]
-                       [:db/add id :block/hiccup (parser/block-content->hiccup id content conn)])]
-    (ds/transact! conn transactions)))
+(defn- generate-hiccup-if-block-is-included
+  [block-kv]
+  (let [block-id (first block-kv)
+        block-props (second block-kv)]
+    [block-id
+     (if (true? (:included block-props))
+       (assoc block-props :hiccup (parser/block-content->hiccup block-id (:content block-props)))
+       block-props)]))
+
+(defn generate-hiccup-for-included-blocks
+  [block-map]
+  (into (hash-map) (map generate-hiccup-if-block-is-included block-map)))
 
 (defn replicate-roam-db
-  [roam-json db-conn]
+  [roam-json]
   (let [block-map-no-links (create-block-map-no-links roam-json)
         block-map-with-linked-references (generate-linked-references block-map-no-links)]
     block-map-with-linked-references))
