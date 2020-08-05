@@ -14,3 +14,4 @@ pom.xml.asc
 output.json
 /assets
 output.txt
+sample-db.edn

@@ -187,15 +187,10 @@
 (pprint/pprint example)
 
 (defn linked-references
-  [block-ds-id conn]
-  (pprint/pprint block-ds-id)
-  (let [the-linked-references (ds/q ;; TODO: this query is wrong. Fix
-                               '[:find ?linked-references
-                                 :in $ ?block-ds-id
-                                 :where
-                                 [?block-ds-id :block/linked-by ?linked-references]]
-                               @conn)]
-    the-linked-references))
+  [block-id block-map]
+  (let [block-props (get block-map block-id)
+        linked-refs (:linked-by block-props)]
+    linked-refs))
 
 (defn degree-explore!
   [current-level max-level conn]
@@ -217,8 +212,8 @@
       nil
       nil)))
 
-(defn mark-content-entities-for-inclusion!
-  [degree conn]
+(defn mark-content-entities-for-inclusion
+  [degree block-map]
   (if (and (int? degree) (>= degree 0))
     (degree-explore! 0 degree conn)
     (doseq [block-ds-id (vec (ds/q '[:find ?block-id
@@ -247,6 +242,6 @@
 (defn setup-static-roam-block-map
   [roam-json degree]
   (let [replicated-roam-block-map (replicate-roam-db roam-json)
-        blocks-tagged-for-inclusion (mark-blocks-for-inclusion! degree replicated-roam-block-map)
+        blocks-tagged-for-inclusion (mark-content-entities-for-inclusion degree replicated-roam-block-map)
         hiccup-for-included-blocks (generate-hiccup-for-included-blocks blocks-tagged-for-inclusion)]
     hiccup-for-included-blocks))
