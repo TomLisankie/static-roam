@@ -5,31 +5,45 @@
             [clojure.string :as str-utils]
             [clojure.pprint :as pprint]))
 
-(defn populate-db!
-  "Populate database with relevant properties of pages and blocks"
-  [roam-json db-conn]
-  (doseq [block roam-json]
-    (ds/transact! db-conn [{:block/id (if (:title block)
-                                        (:title block)
-                                        (:uid block))
-                            :block/children (map :uid (:children block))
-                            :block/content (:string block (:title block))
-                            :block/heading (:heading block -1)
-                            :block/text-align (:text-align block "")
-                            :block/entry-point (parser/entry-point? block)
-                            :block/page (if (:title block)
-                                          true
-                                          false)
-                            :block/linked-by []}])
-    (populate-db! (:children block) db-conn)))
+(defn- get-block-id
+  [block-json]
+  (if (:title block-json)
+    (:title block-json)
+    (:uid block-json)))
 
-(defn- get-entity-id-content-pairs
-  [db-conn]
-  (ds/q
-   '[:find ?entity-id ?content
-     :where
-     [?entity-id :block/content ?content]]
-   @db-conn))
+(defn- get-block-properties
+  [block-json]
+  {
+   :children (map :uid (:children block-json))
+   :content (:string block-json (:title block-json))
+   :heading (:heading block-json -1)
+   :text-align (:text-align block-json "")
+   :entry-point (parser/entry-point? block-json)
+   :page (if (:title block-json)
+           true
+           false)
+   })
+
+(defn- create-id-properties-pair
+  [block-json]
+  [(get-block-id block-json) (get-block-properties block-json)])
+
+(defn- create-id-properties-pairs
+  [roam-json]
+  (map
+   vec
+   (partition
+    2
+    (flatten
+     (for [block-json roam-json]
+       (conj (create-id-properties-pairs (:children block-json)) (create-id-properties-pair block-json)))))))
+
+(defn- create-block-map-no-links
+  "Populate database with relevant properties of pages and blocks"
+  [roam-json]
+  ;; what I need to happen here is have it so if the block has children, it creates pairs for those as well
+  ;; forget what I already implemented, I optimized too early.
+  (into (hash-map) (create-id-properties-pairs roam-json)))
 
 (defn- clean-content-entities
   [string]
@@ -49,7 +63,7 @@
     #(not (str-utils/includes? % "["))
     (second pair))])
 
-(defn- clean-pair
+(defn- generate-block-id-reference-pair
   [pair]
   [(first pair)
    (clean-content-entities (second pair))])
@@ -74,24 +88,69 @@
   (let [transactions (generate-transactions-for-linking-blocks references)]
     (ds/transact! db-conn (flatten transactions))))
 
-(defn- generate-linked-references!
-  [db-conn]
-  (let
-    [entity-id-and-reference-ids (get-entity-id-content-pairs db-conn)
-     cleaned-references (map clean-pair entity-id-and-reference-ids)
-     broken-references-removed (map filter-broken-references cleaned-references)]
-    (link-blocks! db-conn broken-references-removed)))
+(defn- get-block-id-content-pair
+  [pair]
+  [(first pair) (:content (second pair))])
+
+(defn- get-block-id-content-pairs
+  [block-map]
+  (map get-block-id-content-pair block-map))
+
+(defn- add-linked-by-property
+  [pair]
+  [(first pair) (assoc (second pair) :linked-by '())])
+
+(defn- get-block-id-reference-pairs
+  [block-map]
+  (let [block-map-with-linked-by (map add-linked-by-property block-map)
+        block-id-content-pairs (get-block-id-content-pairs block-map)
+        block-id-reference-pairs (map generate-block-id-reference-pair block-id-content-pairs)]
+    block-id-reference-pairs))
+
+(defn- get-referenced-referer-pair
+  [referenced referer]
+  [referenced referer])
+
+(defn- get-referenced-referer-pairs
+  [referer-referenced-pairs]
+  (let [referer (first referer-referenced-pairs)
+        referenced (second referer-referenced-pairs)]
+    (map #(get-referenced-referer-pair % referer) referenced)))
+
+(defn- generate-links
+  [block-id-reference-pairs block-map-no-links]
+  (let [individual-referenced-referer-pairs (partition
+                                             2
+                                             (flatten
+                                              (map get-referenced-referer-pairs block-id-reference-pairs)))
+        grouped-by-referenced (group-by first individual-referenced-referer-pairs)
+        reference-names-stripped (map (fn [kv] [(first kv) (map second (second kv))]) grouped-by-referenced)
+        ]
+    (into (hash-map) reference-names-stripped)))
+
+(defn- attach-links-to-block
+  [links block]
+  (let [block-id (first block)
+        block-props (second block)]
+    [block-id (assoc block-props :linked-by (set (get links block-id '())))]))
+
+(defn- attach-links-to-block-map
+  [links block-map]
+  (map #(attach-links-to-block links %) block-map))
+
+(defn- generate-linked-references
+  [block-map-no-links]
+  (let [block-id-reference-pairs (get-block-id-reference-pairs block-map-no-links)
+        broken-references-removed (map filter-broken-references block-id-reference-pairs)
+        links (generate-links broken-references-removed block-map-no-links)
+        block-map-with-links (attach-links-to-block-map links block-map-no-links)]
+    block-map-with-links))
 
 (defn linked-references
-  [block-ds-id conn]
-  (pprint/pprint block-ds-id)
-  (let [the-linked-references (ds/q ;; TODO: this query is wrong. Fix
-                               '[:find ?linked-references
-                                 :in $ ?block-ds-id
-                                 :where
-                                 [?block-ds-id :block/linked-by ?linked-references]]
-                               @conn)]
-    the-linked-references))
+  [block-id block-map]
+  (let [block-props (get block-map block-id "BLOCK DOESN'T EXIST")
+        linked-refs (:linked-by block-props)]
+    linked-refs))
 
 (defn degree-explore!
   [current-level max-level conn]
@@ -113,40 +172,39 @@
       nil
       nil)))
 
-(defn mark-content-entities-for-inclusion!
-  [degree conn]
+(defn- mark-as-included
+  [block-kv]
+  [(first block-kv) (assoc (second block-kv) :included true)])
+
+(defn- mark-content-entities-for-inclusion
+  [degree block-map]
   (if (and (int? degree) (>= degree 0))
-    (degree-explore! 0 degree conn)
-    (doseq [block-ds-id (vec (ds/q '[:find ?block-id
-                                     :where
-                                     [_ :block/id ?block-id]]
-                                   @conn))]
-      (ds/transact! conn [{:block/id (first block-ds-id)
-                           :block/included true}]))))
+    ;; (degree-explore! 0 degree conn)
+    (println "hello")
+    (into (hash-map) (map mark-as-included block-map))))
 
-(defn generate-hiccup
-  [conn]
-  (let [id+content (ds/q '[:find ?id ?content
-                           :where [?id :block/included true]
-                           [?id :block/content ?content]]
-                         @conn)
-        transactions (for [[id content] id+content]
-                       [:db/add id :block/hiccup (parser/block-content->hiccup id content conn)])]
-    (ds/transact! conn transactions)))
+(defn- generate-hiccup-if-block-is-included
+  [block-kv]
+  (let [block-id (first block-kv)
+        block-props (second block-kv)]
+    [block-id
+     (if (true? (:included block-props))
+       (assoc block-props :hiccup (parser/block-content->hiccup block-id (:content block-props)))
+       block-props)]))
 
-(defn replicate-roam-db!
-  [roam-json db-conn]
-  (populate-db! roam-json db-conn)
-  (generate-linked-references! db-conn))
+(defn generate-hiccup-for-included-blocks
+  [block-map]
+  (into (hash-map) (map generate-hiccup-if-block-is-included block-map)))
 
-(defn setup-static-roam-db
+(defn replicate-roam-db
+  [roam-json]
+  (let [block-map-no-links (create-block-map-no-links roam-json)
+        block-map-with-linked-references (generate-linked-references block-map-no-links)]
+    block-map-with-linked-references))
+
+(defn setup-static-roam-block-map
   [roam-json degree]
-  (let [schema {:block/id       {:db/unique :db.unique/identity}
-                :block/children {:db/cardinality :db.cardinality/many}
-                :block/linked-by {:db/cardinality :db.cardinality/many
-                                  :db/valueType :db.type/ref}}
-        db-conn (ds/create-conn schema)]
-    (replicate-roam-db! roam-json db-conn)
-    (mark-content-entities-for-inclusion! degree db-conn)
-    (generate-hiccup db-conn)
-    db-conn))
+  (let [replicated-roam-block-map (replicate-roam-db roam-json)
+        blocks-tagged-for-inclusion (mark-content-entities-for-inclusion degree replicated-roam-block-map)
+        hiccup-for-included-blocks (generate-hiccup-for-included-blocks blocks-tagged-for-inclusion)]
+    hiccup-for-included-blocks))
