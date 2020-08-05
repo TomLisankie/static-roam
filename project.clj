@@ -8,6 +8,5 @@
                  [org.clojure/data.json "1.0.0"]
                  [hiccup "1.0.5"]
                  [stasis "2.5.0"]
-                 [datascript "0.18.11"]
                  [instaparse "1.4.10"]]
   :main static-roam.core)

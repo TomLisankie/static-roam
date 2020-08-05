@@ -157,7 +157,7 @@
 
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
-  [block-ds-id content conn]
+  [block-ds-id content]
   (vec (map ele->hiccup (parse-to-ast content))))
 
 parsed

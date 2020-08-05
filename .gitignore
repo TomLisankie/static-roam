@@ -13,3 +13,5 @@ pom.xml.asc
 *.html
 output.json
 /assets
+output.txt
+sample-db.edn
