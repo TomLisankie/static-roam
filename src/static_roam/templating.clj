@@ -63,9 +63,8 @@
   [:div
    [:div
     [:h3 (get-parent block-id block-map)]]
-   [:div
-    [:h2 (map parser/ele->hiccup (parser/parse-to-ast block-content))]
-    (children-of-block-template block-id block-map)]
+   [:h2 (vec (map parser/ele->hiccup (parser/parse-to-ast block-content)))]
+   [:div (children-of-block-template block-id block-map)]
    [:div {:style "background-color:lightblue;"}
     [:h3 "Linked References"]
     (linked-references-template (database/get-linked-references block-id block-map) block-map)]])
