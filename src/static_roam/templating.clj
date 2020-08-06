@@ -56,7 +56,11 @@
   (let [parent-id (first (find-parent block-id block-map))]
     (if (nil? parent-id)
       ""
-      parent-id)))
+      [:a {:href (str ""
+                      (utils/page-title->html-file-title
+                       parent-id
+                       :case-sensitive))}
+       (:content (get block-map parent-id))])))
 
 (defn block-page-template
   [block-id block-content block-map]
