@@ -112,7 +112,7 @@
             :allowfullscreen ""}])
 
 (defn element-vec->hiccup ;; TODO: have code to change behavior if page/block is not included
-  [ast-ele]
+  [ast-ele block-map]
   (let [ele-content (second ast-ele)]
     (case (first ast-ele)
       :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
@@ -120,7 +120,9 @@
       :page-link [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                   (remove-double-delimiters ele-content)]
       :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                  (remove-double-delimiters ele-content)]
+                  (:content
+                   (get block-map
+                    (remove-double-delimiters ele-content)))]
       :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                 (format-hashtag ele-content)]
       :strikethrough [:s (remove-double-delimiters ele-content)]
@@ -136,13 +138,11 @@
       ast-ele)))
 
 (defn ele->hiccup
-  [ele]
+  [ele block-map]
   (cond
     (string? ele) ele
     (= ele :block) :div
-    (vector? ele) (element-vec->hiccup ele)))
-
-(vec (map ele->hiccup parsed))
+    (vector? ele) (element-vec->hiccup ele block-map)))
 
 (defn entry-point?
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
@@ -157,7 +157,5 @@
 
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
-  [block-ds-id content]
-  (vec (map ele->hiccup (parse-to-ast content))))
-
-parsed
+  [content block-map]
+  (vec (map #(ele->hiccup % block-map) (parse-to-ast content))))

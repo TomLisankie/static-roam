@@ -161,17 +161,17 @@
     (into (hash-map) (map mark-as-included block-map))))
 
 (defn- generate-hiccup-if-block-is-included
-  [block-kv]
+  [block-kv block-map]
   (let [block-id (first block-kv)
         block-props (second block-kv)]
     [block-id
      (if (true? (:included block-props))
-       (assoc block-props :hiccup (parser/block-content->hiccup block-id (:content block-props)))
+       (assoc block-props :hiccup (parser/block-content->hiccup (:content block-props) block-map))
        block-props)]))
 
 (defn generate-hiccup-for-included-blocks
   [block-map]
-  (into (hash-map) (map generate-hiccup-if-block-is-included block-map)))
+  (into (hash-map) (map #(generate-hiccup-if-block-is-included % block-map) block-map)))
 
 (defn replicate-roam-db
   [roam-json]

@@ -38,7 +38,7 @@
                      (utils/page-title->html-file-title
                       r
                       :case-sensitive))}
-               r]])
+               (:content (get block-map r))]])
            references)))
 
 (defn- is-parent
@@ -63,7 +63,7 @@
   [:div
    [:div
     [:h3 (get-parent block-id block-map)]]
-   [:h2 (vec (map parser/ele->hiccup (parser/parse-to-ast block-content)))]
+   [:h2 (vec (map #(parser/ele->hiccup % block-map) (parser/parse-to-ast block-content)))]
    [:div (children-of-block-template block-id block-map)]
    [:div {:style "background-color:lightblue;"}
     [:h3 "Linked References"]
