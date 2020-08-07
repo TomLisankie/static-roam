@@ -27,6 +27,11 @@
            false)
    })
 
+(defn- generate-block-linking-transaction
+  [referer-eid reference-id]
+  {:block/id reference-id
+   :block/linked-by referer-eid})
+
 (defn- create-id-properties-pair
   [block-json]
   [(get-block-id block-json) (get-block-properties block-json)])
@@ -70,11 +75,6 @@
   [pair]
   [(first pair)
    (clean-content-entities (second pair))])
-
-(defn- generate-block-linking-transaction
-  [referer-eid reference-id]
-  {:block/id reference-id
-   :block/linked-by referer-eid})
 
 (defn- generate-block-linking-transactions-for-entity-reference-pair
   [entity-id-reference-pair]
@@ -126,23 +126,35 @@
         ]
     (into (hash-map) reference-names-stripped)))
 
-(defn- attach-links-to-block
-  [links block]
+(defn- attach-backlinks-to-block
+  [id-backlinks-map block]
   (let [block-id (first block)
         block-props (second block)]
-    [block-id (assoc block-props :linked-by (set (get links block-id '())))]))
+    [block-id (assoc block-props :linked-by (set (get id-backlinks-map block-id '())))]))
+
+(defn- attach-backlinks-to-block-map
+  [links block-map]
+  (map #(attach-backlinks-to-block links %) block-map))
+
+(defn- attach-links-to-block
+  [id-reference-map block-kv]
+  (let [block-id (first block-kv)
+        block-props (second block-kv)]
+    [block-id (assoc block-props :refers-to (set (get id-reference-map block-id '())))]))
 
 (defn- attach-links-to-block-map
-  [links block-map]
-  (map #(attach-links-to-block links %) block-map))
+  [block-id-reference-pairs block-map-no-links]
+  (let [id-reference-map (into (hash-map) block-id-reference-pairs)]
+    (into (hash-map) (map #(attach-links-to-block id-reference-map %) block-map-no-links))))
 
-(defn- generate-linked-references
+(defn- generate-links-and-backlinks
   [block-map-no-links]
   (let [block-id-reference-pairs (get-block-id-reference-pairs block-map-no-links)
         broken-references-removed (map filter-broken-references block-id-reference-pairs)
-        links (generate-links broken-references-removed block-map-no-links)
-        block-map-with-links (attach-links-to-block-map links block-map-no-links)]
-    block-map-with-links))
+        block-map-with-links (attach-links-to-block-map broken-references-removed block-map-no-links)
+        backlinks (generate-links broken-references-removed block-map-no-links)
+        block-map-with-backlinks (attach-backlinks-to-block-map backlinks block-map-with-links)]
+    block-map-with-backlinks))
 
 (defn get-linked-references
   [block-id block-map]
@@ -150,15 +162,162 @@
         linked-refs (:linked-by block-props)]
     linked-refs))
 
-(defn- mark-as-included
+(defn- mark-block-as-included
   [block-kv]
   [(first block-kv) (assoc (second block-kv) :included true)])
+
+(defn- entry-point?
+  [block-kv]
+  (true? (:entry-point (second block-kv))))
+
+(defn- get-entry-point-ids
+  [block-map]
+  (map first (filter entry-point? block-map)))
+
+(defn- get-children
+  [block-id block-map]
+  (let [block-props (get block-map block-id)]
+    (:children block-props)))
+
+(defn- merge-children
+  [children block-map]
+  (flatten (map #(get-children % block-map) children)))
+
+(defn- include-children
+  [children included current-degree max-degree block-map]
+  (if (> current-degree max-degree)
+    (into included children)
+    (include-children
+     (merge-children children block-map)
+     (into included children)
+     (inc current-degree)
+     max-degree
+     block-map)))
+
+(defn- get-content-entity-ids-to-include
+  [degree block-map]
+  (let [entry-point-ids (get-entry-point-ids block-map)
+        included-block-ids (into #{} entry-point-ids)
+        children-to-include (include-children
+                             (merge-children entry-point-ids block-map)
+                             #{}
+                             0
+                             degree
+                             block-map)
+        blocks-referenced-by-children ()]
+    (into included-block-ids
+          children-to-include)))
+
+(def example
+  {"the [[skill level]] of each user grows over time"
+   {:children '(),
+    :content "the [[skill level]] of each user grows over time",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page true,
+    :linked-by #{}},
+   "skill level"
+   {:children '("MYOLydOF1" "5r3u0iI4O"),
+    :content "skill level",
+    :heading -1,
+    :text-align "",
+    :entry-point true,
+    :page true,
+    :linked-by
+    #{"the [[skill level]] of each user grows over time" "5r3u0iI4O"
+      "MYOLydOF1"}},
+   "MYOLydOF1"
+   {:children '(),
+    :content
+    "There are [[[[individual difference]]s between people in prior [[skill level]]]] before they open up an app",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :linked-by #{}},
+   "5r3u0iI4O"
+   {:children '("98234nasdok" "0-kjf3jf"),
+    :content "[[Problem Text]] [[skill level]]",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :linked-by #{}},
+   "98234nasdok"
+   {
+    :children '("eeeq-87234refdu")
+    :content "uwerqehjvakdfsakds"
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :linked-by #{}
+    },
+   "eeeq-87234refdu"
+   {
+    :children '()
+    :content "[[Just Some Page]]"
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :linked-by #{}
+    },
+   "0-kjf3jf"
+   {
+    :children '()
+    :content "fhjdkfqweiurqwe"
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :linked-by #{}
+    },
+   "Problem Text"
+   {:children '(),
+    :content "Problem Text",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page true,
+    :linked-by #{"5r3u0iI4O"}}
+   "Just Some Page"
+   {:children '(),
+    :content "Just Some Page",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page true,
+    :linked-by #{"eeeq-87234refdu"}}})
+
+(get-content-entity-ids-to-include 2 example)
+
+(pprint/pprint (generate-links-and-backlinks example))
+
+(defn- block-id-included?
+  [block-id included-block-ids]
+  (contains? included-block-ids block-id))
+
+(defn- mark-block-if-included
+  [included-block-ids block-kv]
+  (let [block-id (first block-kv)
+        block-props (second block-kv)]
+    (if (block-id-included? block-id included-block-ids)
+      [block-id (assoc block-props :included true)]
+      block-kv)))
+
+(defn- mark-blocks-to-include-as-included
+  [included-block-ids block-map]
+  (map #(mark-block-if-included included-block-ids %) block-map))
 
 (defn- mark-content-entities-for-inclusion
   [degree block-map]
   (if (and (int? degree) (>= degree 0))
-    (println "hello") ;; TODO: do degree explore here instead of printing a line
-    (into (hash-map) (map mark-as-included block-map))))
+    (into (hash-map) (mark-blocks-to-include-as-included
+                      (get-content-entity-ids-to-include degree block-map)
+                      block-map))
+    (into (hash-map) (map mark-block-as-included block-map))))
 
 (defn- generate-hiccup-if-block-is-included
   [block-kv block-map]
@@ -176,8 +335,8 @@
 (defn replicate-roam-db
   [roam-json]
   (let [block-map-no-links (create-block-map-no-links roam-json)
-        block-map-with-linked-references (generate-linked-references block-map-no-links)]
-    block-map-with-linked-references))
+        block-map-linked-by-and-refers-to (generate-links-and-backlinks block-map-no-links)]
+    block-map-linked-by-and-refers-to))
 
 (defn setup-static-roam-block-map
   [roam-json degree]
