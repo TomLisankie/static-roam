@@ -12,4 +12,6 @@
 
 (defn -main
   [path-to-zip output-dir degree]
-  (generate-static-roam! path-to-zip output-dir (Integer. degree)))
+  (generate-static-roam! path-to-zip output-dir (if (nil? (re-find #"\d" degree))
+                                                  degree
+                                                  (Integer. degree))))

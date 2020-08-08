@@ -198,7 +198,7 @@
   [degree block-map]
   (loop [current-degree 0
          max-degree degree
-         included-block-ids (into #{} (get-entry-point-ids block-map))
+         included-block-ids (conj (into #{} (get-entry-point-ids block-map)) "SR Metadata" (get-children "SR Metadata" block-map))
          block-ids-to-examine (into #{} (get-entry-point-ids block-map))]
     (if (> current-degree max-degree)
       included-block-ids
