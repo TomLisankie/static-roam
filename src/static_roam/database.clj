@@ -179,34 +179,34 @@
   (let [block-props (get block-map block-id)]
     (:children block-props)))
 
-(defn- merge-children
-  [children block-map]
-  (flatten (map #(get-children % block-map) children)))
+(defn- get-all-children-of-blocks
+  [block-ids block-map]
+  (reduce into #{} (map #(get-children % block-map) block-ids)))
 
-(defn- include-children
-  [children included current-degree max-degree block-map]
-  (if (> current-degree max-degree)
-    (into included children)
-    (include-children
-     (merge-children children block-map)
-     (into included children)
-     (inc current-degree)
-     max-degree
-     block-map)))
+(defn- get-references-for-block
+  [block-id block-map]
+  (let [block-props (get block-map block-id)]
+    (:refers-to block-props)))
+
+(defn- get-references-for-blocks
+  [block-ids block-map]
+  (let [children (get-all-children-of-blocks block-ids block-map)
+        references (reduce into #{} (map #(get-references-for-block % block-map) children))]
+    (reduce into #{} [children references])))
 
 (defn- get-content-entity-ids-to-include
   [degree block-map]
-  (let [entry-point-ids (get-entry-point-ids block-map)
-        included-block-ids (into #{} entry-point-ids)
-        children-to-include (include-children
-                             (merge-children entry-point-ids block-map)
-                             #{}
-                             0
-                             degree
-                             block-map)
-        blocks-referenced-by-children ()]
-    (into included-block-ids
-          children-to-include)))
+  (loop [current-degree 0
+         max-degree degree
+         included-block-ids (get-entry-point-ids block-map)
+         block-ids-to-examine (get-entry-point-ids block-map)]
+    (if (> current-degree max-degree)
+      included-block-ids
+      (recur
+       (inc current-degree)
+       max-degree
+       (into included-block-ids (get-references-for-blocks block-ids-to-examine block-map))
+       (get-references-for-blocks included-block-ids block-map)))))
 
 (def example
   {"the [[skill level]] of each user grows over time"
@@ -216,6 +216,7 @@
     :text-align "",
     :entry-point false,
     :page true,
+    :refers-to #{"skill level"}
     :linked-by #{}},
    "skill level"
    {:children '("MYOLydOF1" "5r3u0iI4O"),
@@ -224,6 +225,7 @@
     :text-align "",
     :entry-point true,
     :page true,
+    :refers-to #{}
     :linked-by
     #{"the [[skill level]] of each user grows over time" "5r3u0iI4O"
       "MYOLydOF1"}},
@@ -235,6 +237,7 @@
     :text-align "",
     :entry-point false,
     :page false,
+    :refers-to #{"skill level" "individual difference"}
     :linked-by #{}},
    "5r3u0iI4O"
    {:children '("98234nasdok" "0-kjf3jf"),
@@ -243,6 +246,7 @@
     :text-align "",
     :entry-point false,
     :page false,
+    :refers-to #{"Problem Text" "skill level"}
     :linked-by #{}},
    "98234nasdok"
    {
@@ -252,6 +256,7 @@
     :text-align "",
     :entry-point false,
     :page false,
+    :refers-to #{}
     :linked-by #{}
     },
    "eeeq-87234refdu"
@@ -262,6 +267,7 @@
     :text-align "",
     :entry-point false,
     :page false,
+    :refers-to #{"Just Some Page"}
     :linked-by #{}
     },
    "0-kjf3jf"
@@ -272,6 +278,7 @@
     :text-align "",
     :entry-point false,
     :page false,
+    :refers-to #{}
     :linked-by #{}
     },
    "Problem Text"
@@ -281,6 +288,7 @@
     :text-align "",
     :entry-point false,
     :page true,
+    :refers-to #{}
     :linked-by #{"5r3u0iI4O"}}
    "Just Some Page"
    {:children '(),
@@ -289,11 +297,98 @@
     :text-align "",
     :entry-point false,
     :page true,
-    :linked-by #{"eeeq-87234refdu"}}})
+    :refers-to #{}
+    :linked-by #{"eeeq-87234refdu"}}
+   "test1"
+   {
+    :children '("1"),
+    :content "test1",
+    :heading -1,
+    :text-align "",
+    :entry-point true,
+    :page true,
+    :refers-to #{}
+    :linked-by #{}
+    }
+   "1"
+   {
+    :children '(),
+    :content "[[test2]]",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{"test2"}
+    :linked-by #{}
+    }
+   "test2"
+   {
+    :children '("2"),
+    :content "test2",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page true,
+    :refers-to #{}
+    :linked-by #{"1"}
+    }
+   "2"
+   {
+    :children '(),
+    :content "[[test3]]",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{"test3"}
+    :linked-by #{}
+    }
+   "test3"
+   {
+    :children '("3"),
+    :content "test3",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page true,
+    :refers-to #{}
+    :linked-by #{"2"}
+    }
+   "3"
+   {
+    :children '(),
+    :content "[[test4]]",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{"test4"}
+    :linked-by #{}
+    }
+   "test4"
+   {
+    :children '("4"),
+    :content "test4",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page true,
+    :refers-to #{}
+    :linked-by #{"3"}
+    }
+   "4"
+   {
+    :children '(),
+    :content "kjafkjasdkfjasdjasd",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{}
+    :linked-by #{}
+    }})
 
-(get-content-entity-ids-to-include 2 example)
-
-(pprint/pprint (generate-links-and-backlinks example))
+(into #{} (get-content-entity-ids-to-include 0 example))
 
 (defn- block-id-included?
   [block-id included-block-ids]
