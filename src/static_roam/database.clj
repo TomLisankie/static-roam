@@ -209,6 +209,18 @@
   [children-sets]
   (reduce into #{} children-sets))
 
+(defn- get-child-content-references
+  [children block-map]
+  (map #(get-references-for-block % block-map) children))
+
+(defn- aggregate-references
+  [reference-sets]
+  (reduce into #{} reference-sets))
+
+(defn- generate-included-entities
+  [included-entities children references]
+  (reduce into included-entities [children references]))
+
 (defn- get-content-entity-ids-to-include
   [degree block-map]
   (let [entry-point-ids (get-entry-point-ids block-map)]
@@ -220,10 +232,11 @@
            included-entities (generate-included-entities #{} all-children-of-examined all-references-of-children)
            current-degree 0
            max-degree degree]
+      (pprint/pprint included-entities)
       (if (> current-degree max-degree)
         included-entities
         (let [entities-to-examine all-references-of-children
-              children-for-each-entity (get-children-recursively entities-to-examine block-map)
+              children-for-each-entity (get-all-children-recursively entities-to-examine block-map)
               all-children-of-examined (aggregate-children children-for-each-entity)
               references-for-children (get-child-content-references all-children-of-examined block-map)
               all-references-of-children (aggregate-references references-for-children)
@@ -238,140 +251,6 @@
                  included-entities
                  current-degree
                  max-degree))))))
-
-(def example
-  {"test1"
-   {
-    :children '("1"),
-    :content "test1",
-    :heading -1,
-    :text-align "",
-    :entry-point true,
-    :page true,
-    :refers-to #{}
-    :linked-by #{}
-    }
-   "1"
-   {
-    :children '("1a" "1b"),
-    :content "[[test2]]",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page false,
-    :refers-to #{"test2"}
-    :linked-by #{}
-    }
-   "1a"
-   {
-    :children '("1aa"),
-    :content "Some example content",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page false,
-    :refers-to #{}
-    :linked-by #{}
-    }
-   "1aa"
-   {
-    :children '("1aaa"),
-    :content "Some example content",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page false,
-    :refers-to #{}
-    :linked-by #{}
-    }
-   "1aaa"
-   {
-    :children '(),
-    :content "Some example content",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page false,
-    :refers-to #{}
-    :linked-by #{}
-    }
-   "1b"
-   {
-    :children '(),
-    :content "Some example content",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page false,
-    :refers-to #{}
-    :linked-by #{}
-    }
-   "test2"
-   {
-    :children '("2"),
-    :content "test2",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page true,
-    :refers-to #{}
-    :linked-by #{"1"}
-    }
-   "2"
-   {
-    :children '(),
-    :content "[[test3]]",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page false,
-    :refers-to #{"test3"}
-    :linked-by #{}
-    }
-   "test3"
-   {
-    :children '("3"),
-    :content "test3",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page true,
-    :refers-to #{}
-    :linked-by #{"2"}
-    }
-   "3"
-   {
-    :children '(),
-    :content "[[test4]]",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page false,
-    :refers-to #{"test4"}
-    :linked-by #{}
-    }
-   "test4"
-   {
-    :children '("4"),
-    :content "test4",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page true,
-    :refers-to #{}
-    :linked-by #{"3"}
-    }
-   "4"
-   {
-    :children '(),
-    :content "kjafkjasdkfjasdjasd",
-    :heading -1,
-    :text-align "",
-    :entry-point false,
-    :page false,
-    :refers-to #{}
-    :linked-by #{}
-    }})
 
 (defn- block-id-included?
   [block-id included-block-ids]
