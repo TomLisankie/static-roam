@@ -286,7 +286,7 @@
 
 (defn generate-hiccup-for-included-blocks
   [block-map]
-  (into (hash-map) (map #(generate-hiccup-if-block-is-included % block-map) block-map)))
+  (into (hash-map) (filter #(not= nil (:content (second %))) (map #(generate-hiccup-if-block-is-included % block-map) block-map))))
 
 (defn replicate-roam-db
   [roam-json]

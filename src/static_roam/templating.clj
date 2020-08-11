@@ -17,7 +17,9 @@
   [block-id block-map]
   (let [properties (database/get-properties-for-block-id block-id block-map)]
     [:ul
-     [:li (:hiccup properties)]
+     (if (nil? (:hiccup properties))
+       ""
+       [:li (:hiccup properties)])
      (let [children (:children properties)]
        (if (not= 0 (count children))
          ;; recurse on each of the children
@@ -31,14 +33,16 @@
           (map
            (fn
              [r]
-             [:li
-              [:a
-               {:href
-                (str ""
-                     (utils/page-title->html-file-title
-                      r
-                      :case-sensitive))}
-               (:content (get block-map r))]])
+             (if (nil? (get block-map r))
+               ""
+               [:li
+                [:a
+                 {:href
+                  (str ""
+                       (utils/page-title->html-file-title
+                        r
+                        :case-sensitive))}
+                 (:content (get block-map r))]]))
            references)))
 
 (defn- is-parent
