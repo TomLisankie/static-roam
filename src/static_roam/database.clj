@@ -232,8 +232,6 @@
            included-entities (generate-included-entities entities-to-examine all-children-of-examined all-references-of-children)
            current-degree 0
            max-degree degree]
-      (pprint/pprint (str "Current Degree: " current-degree))
-      (pprint/pprint included-entities)
       (if (>= current-degree max-degree)
         included-entities
         (let [entities-to-examine all-references-of-children
