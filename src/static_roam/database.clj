@@ -229,7 +229,7 @@
            all-children-of-examined (aggregate-children children-for-each-entity)
            references-for-children (get-child-content-references all-children-of-examined block-map)
            all-references-of-children (aggregate-references references-for-children)
-           included-entities (generate-included-entities #{} all-children-of-examined all-references-of-children)
+           included-entities (generate-included-entities entities-to-examine all-children-of-examined all-references-of-children)
            current-degree 0
            max-degree degree]
       (if (> current-degree max-degree)
