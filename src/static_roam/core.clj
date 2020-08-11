@@ -1,7 +1,8 @@
 (ns static-roam.core
   (:require [static-roam.utils :as utils]
             [static-roam.database :as database]
-            [static-roam.html-generation :as html-gen]))
+            [static-roam.html-generation :as html-gen]
+            [clojure.pprint :as pprint]))
 
 (defn generate-static-roam!
   [path-to-zip output-dir degree]
@@ -11,4 +12,6 @@
 
 (defn -main
   [path-to-zip output-dir degree]
-  (generate-static-roam! path-to-zip output-dir degree))
+  (generate-static-roam! path-to-zip output-dir (if (nil? (re-find #"\d" degree))
+                                                  degree
+                                                  (Integer. degree))))
