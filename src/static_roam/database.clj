@@ -232,7 +232,6 @@
            included-entities (generate-included-entities #{} all-children-of-examined all-references-of-children)
            current-degree 0
            max-degree degree]
-      (pprint/pprint included-entities)
       (if (> current-degree max-degree)
         included-entities
         (let [entities-to-examine all-references-of-children
@@ -293,12 +292,11 @@
   [roam-json]
   (let [block-map-no-links (create-block-map-no-links roam-json)
         block-map-linked-by-and-refers-to (generate-links-and-backlinks block-map-no-links)]
-    block-map-linked-by-and-refers-to))
+    (into (hash-map) block-map-linked-by-and-refers-to)))
 
 (defn setup-static-roam-block-map
   [roam-json degree]
   (let [replicated-roam-block-map (replicate-roam-db roam-json)
         blocks-tagged-for-inclusion (mark-content-entities-for-inclusion degree replicated-roam-block-map)
         hiccup-for-included-blocks (generate-hiccup-for-included-blocks blocks-tagged-for-inclusion)]
-    (pprint/pprint (filter #(true? (:included (second %)))blocks-tagged-for-inclusion))
     hiccup-for-included-blocks))
