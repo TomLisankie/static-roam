@@ -172,16 +172,16 @@
 
 (defn- get-entry-point-ids
   [block-map]
-  (map first (filter entry-point? block-map)))
+  (into #{} (map first (filter entry-point? block-map))))
 
-(defn- get-children
+(defn- get-children-of-block
   [block-id block-map]
   (let [block-props (get block-map block-id)]
     (:children block-props)))
 
 (defn- get-all-children-of-blocks
   [block-ids block-map]
-  (reduce into #{} (map #(get-children % block-map) block-ids)))
+  (reduce into #{} (map #(get-children-of-block % block-map) block-ids)))
 
 (defn- get-references-for-block
   [block-id block-map]
@@ -194,19 +194,184 @@
         references (reduce into #{} (map #(get-references-for-block % block-map) children))]
     (reduce into #{} [children references])))
 
+(defn- get-children-recursively
+  [entity-id block-map]
+  (let [children (set (get-children-of-block entity-id block-map))]
+    (if (empty? (flatten (map #(get-children-of-block % block-map) children)))
+      children
+      (reduce into children (flatten (map #(get-children-recursively % block-map) children))))))
+
+(defn- get-all-children-recursively
+  [examining block-map]
+  (map #(get-children-recursively % block-map) examining))
+
+(defn- aggregate-children
+  [children-sets]
+  (reduce into #{} children-sets))
+
 (defn- get-content-entity-ids-to-include
   [degree block-map]
-  (loop [current-degree 0
-         max-degree degree
-         included-block-ids (conj (into #{} (get-entry-point-ids block-map)) "SR Metadata" (get-children "SR Metadata" block-map))
-         block-ids-to-examine (into #{} (get-entry-point-ids block-map))]
-    (if (> current-degree max-degree)
-      included-block-ids
-      (recur
-       (inc current-degree)
-       max-degree
-       (into included-block-ids (get-references-for-blocks block-ids-to-examine block-map))
-       (get-references-for-blocks included-block-ids block-map)))))
+  (let [entry-point-ids (get-entry-point-ids block-map)]
+    (loop [entities-to-examine entry-point-ids
+           children-for-each-entity (get-all-children-recursively entities-to-examine block-map)
+           all-children-of-examined (aggregate-children children-for-each-entity)
+           references-for-children (get-child-content-references all-children-of-examined block-map)
+           all-references-of-children (aggregate-references references-for-children)
+           included-entities (generate-included-entities #{} all-children-of-examined all-references-of-children)
+           current-degree 0
+           max-degree degree]
+      (if (> current-degree max-degree)
+        included-entities
+        (let [entities-to-examine all-references-of-children
+              children-for-each-entity (get-children-recursively entities-to-examine block-map)
+              all-children-of-examined (aggregate-children children-for-each-entity)
+              references-for-children (get-child-content-references all-children-of-examined block-map)
+              all-references-of-children (aggregate-references references-for-children)
+              included-entities (generate-included-entities included-entities all-children-of-examined all-references-of-children)
+              current-degree (inc current-degree)
+              max-degree max-degree]
+          (recur entities-to-examine
+                 children-for-each-entity
+                 all-children-of-examined
+                 references-for-children
+                 all-references-of-children
+                 included-entities
+                 current-degree
+                 max-degree))))))
+
+(def example
+  {"test1"
+   {
+    :children '("1"),
+    :content "test1",
+    :heading -1,
+    :text-align "",
+    :entry-point true,
+    :page true,
+    :refers-to #{}
+    :linked-by #{}
+    }
+   "1"
+   {
+    :children '("1a" "1b"),
+    :content "[[test2]]",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{"test2"}
+    :linked-by #{}
+    }
+   "1a"
+   {
+    :children '("1aa"),
+    :content "Some example content",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{}
+    :linked-by #{}
+    }
+   "1aa"
+   {
+    :children '("1aaa"),
+    :content "Some example content",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{}
+    :linked-by #{}
+    }
+   "1aaa"
+   {
+    :children '(),
+    :content "Some example content",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{}
+    :linked-by #{}
+    }
+   "1b"
+   {
+    :children '(),
+    :content "Some example content",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{}
+    :linked-by #{}
+    }
+   "test2"
+   {
+    :children '("2"),
+    :content "test2",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page true,
+    :refers-to #{}
+    :linked-by #{"1"}
+    }
+   "2"
+   {
+    :children '(),
+    :content "[[test3]]",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{"test3"}
+    :linked-by #{}
+    }
+   "test3"
+   {
+    :children '("3"),
+    :content "test3",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page true,
+    :refers-to #{}
+    :linked-by #{"2"}
+    }
+   "3"
+   {
+    :children '(),
+    :content "[[test4]]",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{"test4"}
+    :linked-by #{}
+    }
+   "test4"
+   {
+    :children '("4"),
+    :content "test4",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page true,
+    :refers-to #{}
+    :linked-by #{"3"}
+    }
+   "4"
+   {
+    :children '(),
+    :content "kjafkjasdkfjasdjasd",
+    :heading -1,
+    :text-align "",
+    :entry-point false,
+    :page false,
+    :refers-to #{}
+    :linked-by #{}
+    }})
 
 (defn- block-id-included?
   [block-id included-block-ids]
@@ -218,7 +383,7 @@
         block-props (second block-kv)]
     (if (block-id-included? block-id included-block-ids)
       [block-id (assoc block-props :included true)]
-      block-kv)))
+      [block-id (assoc block-props :included false)])))
 
 (defn- mark-blocks-to-include-as-included
   [included-block-ids block-map]
@@ -256,4 +421,5 @@
   (let [replicated-roam-block-map (replicate-roam-db roam-json)
         blocks-tagged-for-inclusion (mark-content-entities-for-inclusion degree replicated-roam-block-map)
         hiccup-for-included-blocks (generate-hiccup-for-included-blocks blocks-tagged-for-inclusion)]
+    (pprint/pprint (filter #(true? (:included (second %)))blocks-tagged-for-inclusion))
     hiccup-for-included-blocks))
