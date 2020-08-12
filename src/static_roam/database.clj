@@ -275,13 +275,23 @@
                       block-map))
     (into (hash-map) (map mark-block-as-included block-map))))
 
+(defn- give-header
+  [the-hiccup block-props]
+  [(keyword (str "h" (:heading block-props))) the-hiccup])
+
 (defn- generate-hiccup-if-block-is-included
   [block-kv block-map]
   (let [block-id (first block-kv)
         block-props (second block-kv)]
     [block-id
      (if (true? (:included block-props))
-       (assoc block-props :hiccup (parser/block-content->hiccup (:content block-props) block-map))
+       (assoc block-props
+              :hiccup
+              (let [heading (:heading block-props)
+                    the-hiccup (parser/block-content->hiccup (:content block-props) block-map)]
+                (if (> (:heading block-props) 0)
+                  (give-header the-hiccup block-props)
+                  the-hiccup)))
        block-props)]))
 
 (defn generate-hiccup-for-included-blocks
