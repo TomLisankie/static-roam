@@ -4,14 +4,21 @@
             [static-roam.database :as database]
             [clojure.pprint :as pprint]))
 
-(defn page-hiccup ;; TODO I think this gets replaced with the user-defined HTML template later
-  [body-hiccup css-path js-path]
+(defn page-hiccup
+  [body-hiccup site-title nav-bar-page-dict css-path js-path]
   [:html
    [:head
     [:meta {:charset "utf-8"}]
     [:link {:rel "stylesheet" :href css-path}]
     [:script {:src js-path}]]
-   [:body body-hiccup]])
+   [:body
+    [:header.site-header
+     [:div.wrapper
+      [:a.site-title {:rel "author" :href ".."} site-title]
+      (into
+       [:div.nav-links]
+       (map (fn [pair] [:a.nav-link {:href (first pair)} (second pair)]) nav-bar-page-dict))]]
+    body-hiccup]])
 
 (defn children-of-block-template
   [block-id block-map]
@@ -87,7 +94,7 @@
    [:body link-list]])
 
 (defn home-page-hiccup
-  [link-list title css-path js-path]
+  [link-list title nav-bar-page-dict css-path js-path]
   [:html
    [:head
     [:meta {:charset "utf-8"}]
@@ -98,10 +105,9 @@
     [:header.site-header
      [:div.wrapper
       [:a.site-title {:rel "author" :href "."} title]
-      [:div.nav-links
-       [:a.nav-link {:href "."} "Home"]
-       [:a.nav-link {:href "./pages/about.html"} "About"]
-       [:a.nav-link {:href "./pages/my-favorites.html"} "My Favorites"]]]]
+      (into
+       [:div.nav-links]
+       (map (fn [pair] [:a.nav-link {:href (str "./pages" (subs (first pair) 1))} (second pair)]) nav-bar-page-dict))]]
     [:main.page-content {:aria-label "Content"}
      [:div.wrapper
        [:h2.post-list-heading "Entry Points"]
