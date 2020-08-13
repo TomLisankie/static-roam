@@ -223,7 +223,7 @@
 
 (defn- get-content-entity-ids-to-include
   [degree block-map]
-  (let [entry-point-ids (get-entry-point-ids block-map)]
+  (let [entry-point-ids (into (get-entry-point-ids block-map) #{"SR Metadata"})]
     (loop [entities-to-examine entry-point-ids
            children-for-each-entity (get-all-children-recursively entities-to-examine block-map)
            all-children-of-examined (aggregate-children children-for-each-entity)
