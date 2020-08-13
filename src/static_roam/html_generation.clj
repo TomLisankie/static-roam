@@ -25,7 +25,7 @@
 (defn generate-pages-html
   [block-map output-dir]
   (let [html-file-names (utils/html-file-titles (keys block-map))
-        generated-html (map #(hiccup/html (templating/page-hiccup % "../assets/css/main.css" "../assets/js/extra.js"))
+        generated-html (map #(hiccup/html (templating/page-hiccup % "../assets/css/static-roam.css" "../assets/js/extra.js"))
                             (map #(templating/block-page-template %1 %2 block-map)
                                  (keys block-map) (map :content (vals block-map))))
         file-name-to-content (zipmap
@@ -42,7 +42,7 @@
                         (templating/page-index-hiccup
                          (templating/list-of-page-links
                           (sort (keys block-map)) ".")
-                         "../assets/css/main.css"
+                         "../assets/css/static-roam.css"
                          "../assets/js/extra.js"))
         file-name-to-content {html-file-name generated-html}]
     (stasis/export-pages
@@ -62,7 +62,7 @@
                          (templating/list-of-page-links
                           (sort (keys entry-points)) "pages" "entry-point-link")
                          (get (site-metadata block-map) "Title")
-                         "./assets/css/main.css"
+                         "./assets/css/static-roam.css"
                          "./assets/js/extra.js"))
         file-name-to-content {html-file-name generated-html}]
     (stasis/export-pages

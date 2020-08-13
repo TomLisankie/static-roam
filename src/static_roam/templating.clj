@@ -95,14 +95,17 @@
     [:link {:rel "stylesheet" :href css-path}]
     [:script {:src js-path}]]
    [:body
-    [:header.site-header {:role "banner"}
+    [:header.site-header
      [:div.wrapper
-      [:a.site-title {:rel "author" :href "."} title]]]
-    [:main.page-content {:aria-label="Content"}
+      [:a.site-title {:rel "author" :href "."} title]
+      [:div.nav-links
+       [:a.nav-link {:href "."} "Home"]
+       [:a.nav-link {:href "./pages/about.html"} "About"]
+       [:a.nav-link {:href "./pages/my-favorites.html"} "My Favorites"]]]]
+    [:main.page-content {:aria-label "Content"}
      [:div.wrapper
-      [:div.home
        [:h2.post-list-heading "Entry Points"]
-       link-list]]]]])
+       link-list]]]])
 
 (defn list-of-page-links
   "Generate a Hiccup unordered list of links to pages"
