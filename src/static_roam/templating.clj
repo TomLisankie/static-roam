@@ -26,7 +26,7 @@
   [block-id block-map]
   (let [properties (database/get-properties-for-block-id block-id block-map)]
     [:ul
-     (if (nil? (:hiccup properties))
+     (if (or (nil? (:hiccup properties)) (= (:content properties) block-id))
        ""
        [:li (:hiccup properties)])
      (let [children (:children properties)]
