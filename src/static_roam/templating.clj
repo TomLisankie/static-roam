@@ -9,6 +9,8 @@
   [:html
    [:head
     [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
+    [:title site-title]
     [:link {:rel "stylesheet" :href css-path}]
     [:script {:src js-path}]]
    [:body
@@ -89,6 +91,7 @@
   [:html
    [:head
     [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
     [:link {:rel "stylesheet" :href css-path}]
     [:script {:src js-path}]]
    [:body link-list]])
@@ -98,6 +101,7 @@
   [:html
    [:head
     [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
     [:title title]
     [:link {:rel "stylesheet" :href css-path}]
     [:script {:src js-path}]]
