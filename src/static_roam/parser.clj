@@ -42,7 +42,7 @@
                                (clojure.string/join chars))}
     tree))
 
-(def parser-file (.getPath (io/resource "parser.ebnf")))
+(def parser-file (io/file (io/resource "parser.ebnf")))
 
 (defparser block-parser
   (slurp parser-file))
