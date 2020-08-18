@@ -1,7 +1,8 @@
 (ns static-roam.parser
   (:require [instaparse.core :as insta :refer [defparser]]
             [clojure.string :as str-utils]
-            [static-roam.utils :as utils]))
+            [static-roam.utils :as utils]
+            [clojure.java.io :as io]))
 
 ;; Modified from Athens: https://github.com/athensresearch/athens/blob/master/src/cljc/athens/parser.cljc
 
@@ -41,8 +42,10 @@
                                (clojure.string/join chars))}
     tree))
 
+(def parser-file (.getPath (io/resource "parser.ebnf")))
+
 (defparser block-parser
-  (slurp "src/static_roam/resources/parser.ebnf"))
+  (slurp parser-file))
 
 (defn parse-to-ast
   "Converts a string of block syntax to an abstract syntax tree for SR markup."
