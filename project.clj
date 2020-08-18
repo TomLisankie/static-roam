@@ -1,4 +1,4 @@
-(defproject static-roam "0.0.14-alpha"
+(defproject static-roam "0.0.15-alpha"
   :description "A static-site generator for Roam Research"
   :url "https://github.com/TomLisankie/static-roam"
   :license {:name "Eclipse Public License"
@@ -9,5 +9,5 @@
                  [hiccup "1.0.5"]
                  [stasis "2.5.0"]
                  [instaparse "1.4.10"]]
-  :resource-paths ["src/static_roam/resources"]
+  :resource-paths ["resources"]
   :main static-roam.core)
