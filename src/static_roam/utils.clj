@@ -86,7 +86,8 @@
 
 (defn find-content-entities-in-string
   [string]
-  (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string))
+  (when (not (nil? string))
+    (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string)))
 
 (defn remove-heading-parens
   [strings]
