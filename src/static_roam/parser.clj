@@ -152,9 +152,8 @@
   [page]
   (if (= (count (:children page)) 0)
     false
-    (if (and (re-find #"\d{2}/\d{2}/\d{4}" (:string (first (:children page))))
-             (str-utils/includes?
-              (:string (first (:children page))) "#EntryPoint"))
+    (if (str-utils/includes?
+         (:string (first (:children page))) "#EntryPoint")
       true
       false)))
 
