@@ -98,7 +98,7 @@
   [image-ref-content]
   (let [alt-text (remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" image-ref-content))
         image-source (remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" image-ref-content))]
-    [:img {:src image-source :alt alt-text}]))
+    [:img {:src image-source :alt alt-text :style "max-width: 90%"}]))
 
 (defn get-youtube-vid-embed
   "Returns an iframe for a YouTube embedding"
