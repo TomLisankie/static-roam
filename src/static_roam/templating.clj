@@ -28,7 +28,7 @@
     [:ul
      (if (or (nil? (:hiccup properties)) (= (:content properties) block-id))
        ""
-       [:li (:hiccup properties)])
+       [:li {:onclick (str "location.href='" (utils/page-title->html-file-title block-id :case-sensitive) "'")} (:hiccup properties)])
      (let [children (:children properties)]
        (if (not= 0 (count children))
          ;; recurse on each of the children
@@ -45,13 +45,20 @@
              (if (nil? (get block-map r))
                ""
                [:li
-                [:a
-                 {:href
-                  (str ""
-                       (utils/page-title->html-file-title
-                        r
-                        :case-sensitive))}
-                 (:content (get block-map r))]]))
+                {:onclick (str "location.href='" (str ""
+                                                      (utils/page-title->html-file-title
+                                                       r
+                                                       :case-sensitive)) "'" )}
+                (:hiccup (get block-map r))]
+               ;; [:li
+               ;;  [:a
+               ;;   {:href
+               ;;    (str ""
+               ;;         (utils/page-title->html-file-title
+               ;;          r
+               ;;          :case-sensitive))}
+               ;;   (:content (get block-map r))]]
+               ))
            references)))
 
 (defn- is-parent
