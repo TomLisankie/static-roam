@@ -106,10 +106,15 @@
   [:iframe {:width "560"
             :height "315"
             :src (str "https://www.youtube-nocookie.com/embed/"
-                      (cond
-                        (re-find #"youtube\.com" string) (subs string 43 (- (count string) 2))
-                        (re-find #"youtu\.be" string) (subs string 28 (- (count string) 2))
-                        :else "NO VALID ID FOUND"))
+                      (if (re-find #"\[\[youtube\]\]" string)
+                        (cond
+                          (re-find #"youtube\.com" string) (subs string 47 (- (count string) 2))
+                          (re-find #"youtu\.be" string) (subs string 32 (- (count string) 2))
+                          :else "NO VALID ID FOUND")
+                        (cond
+                          (re-find #"youtube\.com" string) (subs string 43 (- (count string) 2))
+                          (re-find #"youtu\.be" string) (subs string 28 (- (count string) 2))
+                          :else "NO VALID ID FOUND")))
             :frameborder "0"
             :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
             :allowfullscreen ""}])
