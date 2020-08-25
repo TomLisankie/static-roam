@@ -1,7 +1,7 @@
 (* Parser for block content *)
 block = (syntax-in-block / any-char)*
 
-<syntax-in-block> = (todo | done |image | alias | hashtag | page-link | block-ref | metadata-tag | code-line | youtube | bold | italic | strikethrough | highlight) (* add query later*)
+<syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | metadata-tag | code-line | youtube | bold | italic | strikethrough | highlight) (* add query later*)
 alias = #"\[(.*?)\]\(.*?\)"
 image = #"!\[(.*?)\]\(.*?\)"
 page-link = #"\[\[.*?\]\]"
@@ -17,6 +17,7 @@ strikethrough = #"\~\~.*?\~\~"
 highlight = #"\^\^.*?\^\^"
 todo = #"\{\{\[\[TODO\]\]\}\}"
 done = #"\{\{\[\[DONE\]\]\}\}"
+block-embed = #"\{\{embed: .*?\}\}" | #"\{\{\[\[embed\]\]: .*?\}\}"
 
 any-chars = #'\w+|\W+'
 <any-char> = #'\w|\W'

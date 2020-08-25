@@ -45,20 +45,13 @@
              (if (nil? (get block-map r))
                ""
                [:li
-                {:onclick (str "location.href='" (str ""
-                                                      (utils/page-title->html-file-title
-                                                       r
-                                                       :case-sensitive)) "'" )}
-                (:hiccup (get block-map r))]
-               ;; [:li
-               ;;  [:a
-               ;;   {:href
-               ;;    (str ""
-               ;;         (utils/page-title->html-file-title
-               ;;          r
-               ;;          :case-sensitive))}
-               ;;   (:content (get block-map r))]]
-               ))
+                {:onclick
+                 (str "location.href='"
+                      (str ""
+                           (utils/page-title->html-file-title
+                            r
+                            :case-sensitive)) "'" )}
+                (:hiccup (get block-map r))]))
            references)))
 
 (defn- is-parent

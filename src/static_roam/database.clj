@@ -309,4 +309,5 @@
   (let [replicated-roam-block-map (replicate-roam-db roam-json)
         blocks-tagged-for-inclusion (mark-content-entities-for-inclusion degree replicated-roam-block-map)
         hiccup-for-included-blocks (generate-hiccup-for-included-blocks blocks-tagged-for-inclusion)]
+    (pprint/pprint (get blocks-tagged-for-inclusion "0tvFz5Iwz"))
     hiccup-for-included-blocks))
