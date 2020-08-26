@@ -304,9 +304,33 @@
         block-map-linked-by-and-refers-to (generate-links-and-backlinks block-map-no-links)]
     (into (hash-map) block-map-linked-by-and-refers-to)))
 
+(defn- lkjsafas
+  [pair block-map]
+  (let [block-id (first pair)
+        block-props (second pair)
+        block-content (:content block-props)
+        block-embed-found (re-find #"\{\{embed: .*?\}\}|\{\{\[\[embed\]\]: .*?\}\}" block-content)]
+    (if block-embed-found
+      (let [block-ref-uncleaned (re-find #"\(\(.*?\)\)|\[\[.*?\]\]"
+                                         (second (str-utils/split block-embed-found #":")))
+            referenced-block-id (utils/remove-double-delimiters block-ref-uncleaned)
+            referenced-block-props (get block-map referenced-block-id)]
+        [block-id
+         (assoc block-props :children (into (:children block-props) (reverse (:children referenced-block-props))) :content (:content referenced-block-props))])
+      pair)))
+
+(defn- add-children-of-block-embeds
+  [block-map]
+  (into
+   (hash-map)
+   (map
+    #(lkjsafas % block-map)
+    block-map)))
+
 (defn setup-static-roam-block-map
   [roam-json degree]
   (let [replicated-roam-block-map (replicate-roam-db roam-json)
         blocks-tagged-for-inclusion (mark-content-entities-for-inclusion degree replicated-roam-block-map)
-        hiccup-for-included-blocks (generate-hiccup-for-included-blocks blocks-tagged-for-inclusion)]
+        children-of-embeds-added (add-children-of-block-embeds blocks-tagged-for-inclusion)
+        hiccup-for-included-blocks (generate-hiccup-for-included-blocks children-of-embeds-added)]
     hiccup-for-included-blocks))
