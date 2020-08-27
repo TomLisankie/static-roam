@@ -157,8 +157,10 @@
   [page]
   (if (= (count (:children page)) 0)
     false
-    (if (str-utils/includes?
-         (:string (first (:children page))) "#EntryPoint")
+    (if (or (str-utils/includes?
+             (:string (first (:children page))) "#EntryPoint")
+            (str-utils/includes?
+             (:string (first (:children page))) "#Homepage"))
       true
       false)))
 

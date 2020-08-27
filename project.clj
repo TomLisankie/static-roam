@@ -1,4 +1,4 @@
-(defproject static-roam "0.0.20-alpha"
+(defproject static-roam "0.0.21-alpha"
   :description "A static-site generator for Roam Research"
   :url "https://github.com/TomLisankie/static-roam"
   :license {:name "Eclipse Public License"
