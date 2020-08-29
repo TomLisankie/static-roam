@@ -53,6 +53,10 @@
   [string]
   (subs string 1))
 
+(defn remove-double-colon
+  [string]
+  (apply str (drop-last 2 string)))
+
 (defn page-title->html-file-title
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   ([string]
@@ -97,6 +101,11 @@
   [string]
   (when (not (nil? string))
     (re-seq #"\#..*?(?=\s|$)" string)))
+
+(defn find-metadata-in-string
+  [string]
+  (when (not (nil? string))
+    (re-seq #"^.+?::" string)))
 
 (defn remove-heading-parens
   [strings]
