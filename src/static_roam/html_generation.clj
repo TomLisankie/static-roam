@@ -25,7 +25,9 @@
 (defn- create-nav-bar-page-dict
   [site-metadata-dict]
   (let [nav-bar-page-string (get site-metadata-dict "Nav Bar")
-        nav-bar-pages-uncleaned (utils/find-content-entities-in-string nav-bar-page-string)
+        nav-bar-pages-uncleaned (into
+                                 (utils/find-content-entities-in-string nav-bar-page-string)
+                                 (utils/find-hashtags-in-string nav-bar-page-string))
         nav-bar-pages (map utils/remove-double-delimiters nav-bar-pages-uncleaned)
         nav-bar-hrefs (map #(utils/page-title->html-file-title % true) nav-bar-pages)
         nav-bar-page-dict (zipmap nav-bar-hrefs nav-bar-pages)]

@@ -49,6 +49,10 @@
   [chars collection]
   (reduce str (remove #((set chars) %) collection)))
 
+(defn remove-leading-char
+  [string]
+  (subs string 1))
+
 (defn page-title->html-file-title
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   ([string]
@@ -88,6 +92,11 @@
   [string]
   (when (not (nil? string))
     (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string)))
+
+(defn find-hashtags-in-string
+  [string]
+  (when (not (nil? string))
+    (re-seq #"\#..*?(?=\s|$)" string)))
 
 (defn remove-heading-parens
   [strings]

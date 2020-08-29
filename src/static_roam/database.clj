@@ -57,11 +57,17 @@
   [string]
   (let [content-entities-found
         (utils/find-content-entities-in-string string)
+        hashtags-found
+        (utils/find-hashtags-in-string string)
         extra-paren-removed
         (utils/remove-heading-parens content-entities-found)
         cleaned-content-entities
-        (map utils/remove-double-delimiters extra-paren-removed)]
-    cleaned-content-entities))
+        (map utils/remove-double-delimiters extra-paren-removed)
+        cleaned-hashtags
+        (map utils/remove-leading-char hashtags-found)
+        all-cleaned-entities
+        (into cleaned-content-entities cleaned-hashtags)]
+    all-cleaned-entities))
 
 ;; sometimes people put references to other page titles inside of the title of another page. So pairs of brackets inside of other brackets when they reference them. This breaks things currently, so I'm removing all those instances here TODO: Fix so this is unnecessary
 (defn- filter-broken-references
