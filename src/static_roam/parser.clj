@@ -119,6 +119,10 @@
             :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
             :allowfullscreen ""}])
 
+(defn- make-link-from-url
+  [string]
+  [:a {:href string} string])
+
 (defn element-vec->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
   (let [ele-content (second ast-ele)]
@@ -143,6 +147,7 @@
       :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
       :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
       :youtube (get-youtube-vid-embed ele-content)
+      :bare-url (make-link-from-url ele-content)
       ast-ele)))
 
 (defn ele->hiccup
