@@ -262,20 +262,20 @@
                  max-degree))))))
 
 (defn- block-id-included?
-  [block-id included-block-ids]
-  (contains? included-block-ids block-id))
+  [block-id included-block-ids block-map]
+  (or (:included (get block-map block-id)) (contains? included-block-ids block-id)))
 
 (defn- mark-block-if-included
-  [included-block-ids block-kv]
+  [included-block-ids block-kv block-map]
   (let [block-id (first block-kv)
         block-props (second block-kv)]
-    (if (block-id-included? block-id included-block-ids)
+    (if (block-id-included? block-id included-block-ids block-map)
       [block-id (assoc block-props :included true)]
       [block-id (assoc block-props :included false)])))
 
 (defn- mark-blocks-to-include-as-included
   [included-block-ids block-map]
-  (map #(mark-block-if-included included-block-ids %) block-map))
+  (map #(mark-block-if-included included-block-ids % block-map) block-map))
 
 (defn- mark-content-entities-for-inclusion
   [degree block-map]
@@ -337,10 +337,43 @@
     #(lkjsafas % block-map)
     block-map)))
 
+(defn- mark-block-as-specially-tagged
+  [block-id-prop-pair block-map]
+  (let [block-id (first block-id-prop-pair)
+        block-props (second block-id-prop-pair)
+        first-child-id (first (:children block-props))
+        first-child-content (:content (get block-map first-child-id))]
+    (if (nil? first-child-content)
+      block-id-prop-pair
+      (cond
+        (str-utils/includes? first-child-content "#SR-Include")
+        (println (str "Explicitly included:" block-id))
+        (str-utils/includes? first-child-content "#SR-Exclude")
+        (println (str "Explicitly excluded:" block-id))
+        :else
+        block-id-prop-pair))
+    (if (nil? first-child-content)
+      block-id-prop-pair
+      (cond
+        (str-utils/includes? first-child-content "#SR-Include")
+        [block-id (assoc block-props :included true)]
+        (str-utils/includes? first-child-content "#SR-Exclude")
+        [block-id (assoc block-props :included false)]
+        :else
+        block-id-prop-pair))))
+
+(defn- mark-specially-tagged-blocks
+  [block-map]
+  (let [marked (map #(mark-block-as-specially-tagged % block-map) block-map)]
+    (into (hash-map) marked)))
+
 (defn setup-static-roam-block-map
   [roam-json degree]
   (let [replicated-roam-block-map (replicate-roam-db roam-json)
-        blocks-tagged-for-inclusion (mark-content-entities-for-inclusion degree replicated-roam-block-map)
+        marked-specially-tagged-blocks (mark-specially-tagged-blocks replicated-roam-block-map)
+        print-marked-as-included (println ())
+        blocks-tagged-for-inclusion (mark-content-entities-for-inclusion
+                                     degree marked-specially-tagged-blocks)
         children-of-embeds-added (add-children-of-block-embeds blocks-tagged-for-inclusion)
         hiccup-for-included-blocks (generate-hiccup-for-included-blocks children-of-embeds-added)]
     hiccup-for-included-blocks))

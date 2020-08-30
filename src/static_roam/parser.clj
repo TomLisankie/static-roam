@@ -169,6 +169,24 @@
       true
       false)))
 
+(defn explicit-include?
+  [page]
+  (if (= (count (:children page)) 0)
+    false
+    (if (str-utils/includes?
+         (:string (first (:children page))) "#SR-Include")
+      true
+      false)))
+
+(defn explicit-exclude?
+  [page]
+  (if (= (count (:children page)) 0)
+    false
+    (if (str-utils/includes?
+         (:string (first (:children page))) "#SR-Exclude")
+      true
+      false)))
+
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
   [content block-map]
