@@ -371,7 +371,6 @@
   [roam-json degree]
   (let [replicated-roam-block-map (replicate-roam-db roam-json)
         marked-specially-tagged-blocks (mark-specially-tagged-blocks replicated-roam-block-map)
-        print-marked-as-included (println ())
         blocks-tagged-for-inclusion (mark-content-entities-for-inclusion
                                      degree marked-specially-tagged-blocks)
         children-of-embeds-added (add-children-of-block-embeds blocks-tagged-for-inclusion)
