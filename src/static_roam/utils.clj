@@ -76,10 +76,9 @@
         (#(str-utils/replace % #"\s" "-"))
         (#(str "./" % ".html")))))
 
-(defn html-file-titles
-  [page-titles]
-  (let [page-titles-vec (vec page-titles)]
-    (map #(subs (page-title->html-file-title % :case-sensitive) 1) page-titles-vec)))
+(defn html-file-title
+  [page-title]
+  (subs (page-title->html-file-title page-title :case-sensitive) 1))
 
 (defn page-link-from-title
   "Given a page and a directory for the page to go in, create Hiccup that contains the link to the HTML of that page"

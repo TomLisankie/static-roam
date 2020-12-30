@@ -33,15 +33,29 @@
         nav-bar-page-dict (zipmap nav-bar-hrefs nav-bar-pages)]
     nav-bar-page-dict))
 
+;;; → multitool, should replace dissoc-if
+(defn map-filter-by-value
+  [f m]
+  (apply dissoc m (keep #(if (f (val %))
+                           nil
+                           (key %))
+                        m)))
+
 (defn generate-pages-html
   [block-map output-dir]
-  (let [html-file-names (utils/html-file-titles (keys block-map))
-        generated-html (map #(hiccup/html (templating/page-hiccup % (get (site-metadata block-map) "Title") (create-nav-bar-page-dict (site-metadata block-map)) "../assets/css/static-roam.css" "../assets/js/extra.js"))
-                            (map #(templating/block-page-template %1 %2 block-map)
-                                 (keys block-map) (map :content (vals block-map))))
-        file-name-to-content (zipmap
-                              html-file-names
-                              generated-html)]
+  (let [page-map (map-filter-by-value :page block-map) ;Filter to pages only
+        file-name-to-content
+        (into {}
+              (map (fn [[block-id block-def]]
+                     [(utils/html-file-title block-id)
+                      (hiccup/html
+                       (templating/page-hiccup
+                               (templating/block-page-template block-id (:content block-map) block-map)
+                               (get (site-metadata block-map) "Title")
+                               (create-nav-bar-page-dict (site-metadata block-map))
+                               "../assets/css/static-roam.css"
+                               "../assets/js/extra.js"))])
+                   page-map))]
     (stasis/export-pages
      file-name-to-content
      output-dir)))

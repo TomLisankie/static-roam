@@ -28,7 +28,8 @@
     [:ul
      (if (or (nil? (:hiccup properties)) (= (:content properties) block-id))
        ""
-       [:li {:onclick (str "location.href='" (utils/page-title->html-file-title block-id :case-sensitive) "'")} (:hiccup properties)])
+       ;;; TODO Turned off block clicks, may want it under a flag or something
+       [:li #_ {:onclick (str "location.href='" (utils/page-title->html-file-title block-id :case-sensitive) "'")} (:hiccup properties)])
      (let [children (:children properties)]
        (if (not= 0 (count children))
          ;; recurse on each of the children
