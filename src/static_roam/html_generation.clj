@@ -41,21 +41,28 @@
                            (key %))
                         m)))
 
+(defn generate-page-html
+  [block-map block-id]
+  [(utils/html-file-title block-id)
+   (hiccup/html
+    (templating/page-hiccup
+     (templating/block-page-template block-id block-map)
+     (get (site-metadata block-map) "Title")
+     (create-nav-bar-page-dict (site-metadata block-map))
+     [[:link {:rel "stylesheet"
+              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+              :crossorigin "anonymous"}]
+      [:link {:rel "stylesheet" :href "../assets/css/static-roam.css"}]
+      ]))])
+
 (defn generate-pages-html
   [block-map output-dir]
   (let [page-map (map-filter-by-value :page block-map) ;Filter to pages only TODO maybe optionl
         file-name-to-content
         (into {}
-              (map (fn [[block-id block-def]]
-                     [(utils/html-file-title block-id)
-                      (hiccup/html
-                       (templating/page-hiccup
-                               (templating/block-page-template block-id block-map)
-                               (get (site-metadata block-map) "Title")
-                               (create-nav-bar-page-dict (site-metadata block-map))
-                               "../assets/css/static-roam.css"
-                               "../assets/js/extra.js"))])
-                   page-map))]
+              (map (partial generate-page-html block-map)
+                   (keys page-map)))]
     (stasis/export-pages
      file-name-to-content
      output-dir)))

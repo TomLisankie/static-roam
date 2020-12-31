@@ -1,0 +1,24 @@
+body {
+    background-color: #FEFEFF;
+    font-family: Baskerville;
+    font-size: 14pt;
+}
+
+.block {
+    margin-bottom: 6px;
+    
+}
+
+ul {
+  list-style: none; /* Remove default bullets */
+}
+
+/* Gyrations to get red list bullets */
+ul li::before {
+  content: "\2022"; 
+  color: red; 
+  font-weight: bold;
+  display: inline-block; 
+  width: 1em; 
+  margin-left: -1em; 
+}

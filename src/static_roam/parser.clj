@@ -154,7 +154,7 @@
   [ele block-map]
   (cond
     (string? ele) ele
-    (= ele :block) :div
+    (= ele :block) :span
     (vector? ele) (element-vec->hiccup ele block-map)))
 
 (defn entry-point?

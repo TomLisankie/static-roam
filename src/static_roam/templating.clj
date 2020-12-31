@@ -5,14 +5,13 @@
             [clojure.pprint :as pprint]))
 
 (defn page-hiccup
-  [body-hiccup site-title nav-bar-page-dict css-path js-path]
+  [body-hiccup site-title nav-bar-page-dict head-extra]
   [:html
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-    [:title site-title]
-    [:link {:rel "stylesheet" :href css-path}]
-    [:script {:src js-path}]]
+   `[:head
+     [:meta {:charset "utf-8"}]
+     [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
+     [:title ~site-title]
+     ~@head-extra]
    [:body
     [:header.site-header
      [:div.wrapper
@@ -20,7 +19,8 @@
       (into
        [:div.nav-links]
        (map (fn [pair] [:a.nav-link {:href (first pair)} (second pair)]) nav-bar-page-dict))]]
-    body-hiccup]])
+    [:div.container.main
+     body-hiccup]]])
 
 (defn children-of-block-template
   [block-id block-map]
@@ -29,7 +29,8 @@
      (if (or (nil? (:hiccup properties)) (= (:content properties) block-id))
        ""
        ;;; TODO Turned off block clicks, may want it under a flag or something
-       [:li #_ {:onclick (str "location.href='" (utils/page-title->html-file-title block-id :case-sensitive) "'")} (:hiccup properties)])
+       [:li.block #_ {:onclick (str "location.href='" (utils/page-title->html-file-title block-id :case-sensitive) "'")}
+        (:hiccup properties)])
      (let [children (:children properties)]
        (if (not= 0 (count children))
          ;; recurse on each of the children
@@ -82,14 +83,15 @@
 
 (defn block-page-template
   [block-id block-map]
-  [:div
-   [:div
-    [:h3 (get-parent block-id block-map)]]
-   [:h2 (vec (map #(parser/ele->hiccup % block-map) (parser/parse-to-ast block-content)))]
-   [:div (children-of-block-template block-id block-map)]
-   [:div {:style "background-color:lightblue;"} ;TODO css
-    [:h3 "Linked References"]
-    (linked-references-template (database/get-linked-references block-id block-map) block-map)]])
+  (let [block-content (get-in block-map [block-id :content])]
+    [:div
+     [:div
+      [:h3 (get-parent block-id block-map)]]
+     [:h2 (vec (map #(parser/ele->hiccup % block-map) (parser/parse-to-ast block-content)))]
+     [:div (children-of-block-template block-id block-map)]
+     [:div {:style "background-color:lightblue;"} ;TODO css
+      [:h3 "Linked References"]
+      (linked-references-template (database/get-linked-references block-id block-map) block-map)]]))
 
 (defn page-index-hiccup
   [link-list css-path js-path]
