@@ -72,9 +72,8 @@
       [:li
        {:onclick
         (format "location.href='%s'" link)}
-       parent
-       (:hiccup (get block-map r))])
-    ))
+       parent                           ;block title
+       [:div (children-of-block-template r block-map)]])))
 
 (defn linked-references-template
   [references block-map]
@@ -82,7 +81,7 @@
           (map (partial linked-reference-template block-map) references)))
 
 (defn block-page-template
-  [block-id block-content block-map]
+  [block-id block-map]
   [:div
    [:div
     [:h3 (get-parent block-id block-map)]]

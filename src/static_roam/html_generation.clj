@@ -50,7 +50,7 @@
                      [(utils/html-file-title block-id)
                       (hiccup/html
                        (templating/page-hiccup
-                               (templating/block-page-template block-id (:content block-map) block-map)
+                               (templating/block-page-template block-id block-map)
                                (get (site-metadata block-map) "Title")
                                (create-nav-bar-page-dict (site-metadata block-map))
                                "../assets/css/static-roam.css"
