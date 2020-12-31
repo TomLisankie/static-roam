@@ -22,11 +22,13 @@
    :heading (:heading block-json -1)
    :text-align (:text-align block-json "")
    :entry-point (parser/entry-point? block-json)
+   :exit-point (parser/exit-point? block-json)
    :page (if (:title block-json)
            true
            false)
    })
 
+;;; TODO none of this transaction stuff is used
 (defn- generate-block-linking-transaction
   [referer-eid reference-id]
   {:block/id reference-id
@@ -187,7 +189,7 @@
 (defn- get-children-of-block
   [block-id block-map]
   (let [block-props (get block-map block-id)]
-    (:children block-props)))
+    (remove #(get-in block-map [% :exit-point]) (:children block-props))))
 
 (defn- get-all-children-of-blocks
   [block-ids block-map]
@@ -231,17 +233,18 @@
   [included-entities children references]
   (reduce into included-entities [children references]))
 
+;;; TODO argh this needs to be condensed; could probably use walker.
+;;; Or maybe not, loop is for references, children are handled by get-all-children-recursively
 (defn- get-content-entity-ids-to-include
-  [degree block-map]
+  [max-degree block-map]
   (let [entry-point-ids (into (get-entry-point-ids block-map) #{"SR Metadata"})]
     (loop [entities-to-examine entry-point-ids
-           children-for-each-entity (get-all-children-recursively entities-to-examine block-map)
+           children-for-each-entity (get-all-children-recursively entities-to-examine block-map) ;
            all-children-of-examined (aggregate-children children-for-each-entity)
            references-for-children (get-child-content-references all-children-of-examined block-map)
            all-references-of-children (aggregate-references references-for-children)
            included-entities (generate-included-entities entities-to-examine all-children-of-examined all-references-of-children)
-           current-degree 0
-           max-degree degree]
+           current-degree 0]
       (if (>= current-degree max-degree)
         included-entities
         (let [entities-to-examine all-references-of-children
@@ -249,18 +252,17 @@
               all-children-of-examined (aggregate-children children-for-each-entity)
               references-for-children (get-child-content-references all-children-of-examined block-map)
               all-references-of-children (aggregate-references references-for-children)
-              included-entities (generate-included-entities included-entities all-children-of-examined all-references-of-children)
-              current-degree (inc current-degree)
-              max-degree max-degree]
+              included-entities (generate-included-entities included-entities all-children-of-examined all-references-of-children)]
           (recur entities-to-examine
                  children-for-each-entity
                  all-children-of-examined
                  references-for-children
                  all-references-of-children
                  included-entities
-                 current-degree
-                 max-degree))))))
+                 (inc current-degree)
+                 ))))))
 
+;;; TODO a lot of this code looks like it could be radically condensed
 (defn- block-id-included?
   [block-id included-block-ids]
   (contains? included-block-ids block-id))

@@ -158,17 +158,22 @@
     (= ele :block) :span
     (vector? ele) (element-vec->hiccup ele block-map)))
 
+(defn tagged?
+  [block tag]
+  (if (= (count (:children block)) 0)
+    false
+    (str-utils/includes?
+     (:string (first (:children block))) tag)))
+
 (defn entry-point?
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
   [page]
-  (if (= (count (:children page)) 0)
-    false
-    (if (or (str-utils/includes?
-             (:string (first (:children page))) "#EntryPoint")
-            (str-utils/includes?
-             (:string (first (:children page))) "#Homepage"))
-      true
-      false)))
+  (or (tagged? page "#EntryPoint")
+      (tagged? page "#Homepage")))
+
+(defn exit-point?
+  [block]
+  (tagged? block "#Private"))
 
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
