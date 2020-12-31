@@ -1,6 +1,6 @@
 body {
     background-color: #FEFEFF;
-    font-family: Baskerville;
+    font-family: Optima;
     font-size: 14pt;
 }
 
@@ -20,5 +20,18 @@ ul li::before {
   font-weight: bold;
   display: inline-block; 
   width: 1em; 
-  margin-left: -1em; 
+  margin-left: -1em;
+  vertical-align: top;
+}
+
+h1, h2, h3 {
+    display: inline;
+}
+
+blockquote {
+    display: inline-block;
+    background: bisque;
+    font-family: Baskerville;
+    padding-left: 20px;
+    border-left: 3px solid black;
 }

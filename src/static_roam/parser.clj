@@ -148,6 +148,7 @@
       :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
       :youtube (get-youtube-vid-embed ele-content)
       :bare-url (make-link-from-url ele-content)
+      :blockquote [:blockquote (subs ele-content 2)]
       ast-ele)))
 
 (defn ele->hiccup
