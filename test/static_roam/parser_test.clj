@@ -4,4 +4,6 @@
 
 (deftest a-test
   (testing "FIXME, I fail."
-    (is (= (parse-to-ast "[[Physics]] #Static-Roam") [:block [:page-link "Physics"] " " [:hashtag "Static-Roam"]]))))
+    (is (= [:block [:page-link "Physics"] " " [:hashtag "Static-Roam"]]
+           (parse-to-ast "[[Physics]] #Static-Roam")
+           ))))

@@ -38,20 +38,17 @@
          ;; otherwise, evaluate to empty div
          [:div]))]))
 
-
-
-
-;;; TODO this is way the fuck inefficient; might want to cache parent links or use         benkamphaus/contextual
-(defn- is-parent
-  [block-id block-kv]
-  (if (some #(= block-id %) (:children (second block-kv)))
-    (first block-kv)
-    nil))
-
 ;;; TODO does this find page, or intermediate parents?
 (defn- find-parent
   [block-id block-map]
-  (first (filter #(not (nil? %)) (map #(is-parent block-id %) block-map))))
+                                        ; (first (filter #(not (nil? %)) (map #(is-parent block-id %) block-map)))
+  (get-in block-map [block-id :parent]))
+
+(defn- find-page
+  [block-id block-map]
+  (if-let [parent (find-parent block-id block-map)]
+    (find-page parent block-map)
+    block-id))
 
 (defn- get-parent
   [block-id block-map]
@@ -64,11 +61,13 @@
                        :case-sensitive))}
        (:content (get block-map parent-id))])))
 
+  
+
 (defn linked-reference-template
   [block-map r]
   (if (nil? (get block-map r))
     ""                                  ;TODO ugly
-    (let [parent (find-parent r block-map)
+    (let [parent (find-page r block-map)
           link (utils/page-title->html-file-title (or parent r) :case-sensitive)]
       [:li
        {:onclick
@@ -89,9 +88,11 @@
       [:h3 (get-parent block-id block-map)]]
      [:h2 (vec (map #(parser/ele->hiccup % block-map) (parser/parse-to-ast block-content)))]
      [:div (children-of-block-template block-id block-map)]
-     [:div {:style "background-color:lightblue;"} ;TODO css
-      [:h3 "Linked References"]
-      (linked-references-template (database/get-linked-references block-id block-map) block-map)]]))
+     (let [linked-refs (database/get-linked-references block-id block-map)]
+       (when-not (empty? linked-refs)
+         [:div.incoming
+          [:h3 "Links to here"]
+          (linked-references-template linked-refs block-map)]))]))
 
 (defn page-index-hiccup
   [link-list css-path js-path]

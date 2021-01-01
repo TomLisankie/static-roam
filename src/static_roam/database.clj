@@ -14,13 +14,13 @@
   [block-id block-map]
   (get block-map block-id))
 
-(defn- get-block-properties
-  [block-json]
+(defn- block-properties
+  [block-json parent]
   {
    :children (map :uid (:children block-json))
+   :parent parent
    :content (:string block-json (:title block-json))
    :heading (:heading block-json -1)
-   :text-align (:text-align block-json "")
    :entry-point (parser/entry-point? block-json)
    :exit-point (parser/exit-point? block-json)
    :page (if (:title block-json)
@@ -35,18 +35,21 @@
    :block/linked-by referer-eid})
 
 (defn- create-id-properties-pair
-  [block-json]
-  [(get-block-id block-json) (get-block-properties block-json)])
+  [block-json parent]
+  [(get-block-id block-json) (block-properties block-json parent)])
 
+;; Really should use walk, this is fugly
+;; TODO but really want to get parent in
 (defn- create-id-properties-pairs
-  [roam-json]
+  [roam-json & [parent]]
   (map
    vec
    (partition
     2
     (flatten
      (for [block-json roam-json]
-       (conj (create-id-properties-pairs (:children block-json)) (create-id-properties-pair block-json)))))))
+       (conj (create-id-properties-pairs (:children block-json) (get-block-id block-json))
+             (create-id-properties-pair block-json parent)))))))
 
 (defn- create-block-map-no-links
   "Populate database with relevant properties of pages and blocks"
