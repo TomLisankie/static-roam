@@ -19,6 +19,18 @@ So the basic flow goes like this:
 1. You specify the entry points for your graph. You do this by having `#EntryPoint` as the text of the *first* child block of the page/block you want to use as an entry point.
 2. Run `lein run /path/to/export/zip /path/to/output/dir degree` from within the directory of this project. `degree` is of course how far away from the entry points you want to be included in the generated static site.
 
+## Conventions
+
+TODO document
+
+### #Private
+### #EntryPoint
+### #ExitPoint
+### SR Metadata
+#### Nav Bar
+
+
+
 ## Future Development
 
 Static-Roam is used in production at [Roaman Pub](https://roaman.pub/) currently. However, I have basically put Static-Roam aside in favor of working on a revamped, much prettier, much more user friendly version of Roaman Pub that will likely be open source. So this project is basically just in maintenance mode until the new Roaman Pub is done. Once it's done, Static-Roam will likely receive no further development from me.

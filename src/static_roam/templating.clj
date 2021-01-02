@@ -16,9 +16,14 @@
     [:header.site-header
      [:div.wrapper
       [:a.site-title {:rel "author" :href ".."} site-title]
-      (into
-       [:div.nav-links]
-       (map (fn [pair] [:a.nav-link {:href (first pair)} (second pair)]) nav-bar-page-dict))]]
+      [:nav.navbar.navbar-expand-lg.bg-dark.navbar-dark
+       (into
+       [:ul.navbar-nav.mr-auto]
+       (map (fn [[url title]] [:li.nav-item 
+                               [:a.nav-link {:href url}
+                                title
+                                ]])
+            nav-bar-page-dict))]]]
     [:div.container.main
      body-hiccup]]])
 
@@ -114,12 +119,13 @@
     [:link {:rel "stylesheet" :href css-path}]
     [:script {:src js-path}]]
    [:body
-    [:header.site-header
+    [:header.site-header                ;TODO make this work or gegt rid
      [:div.wrapper
       [:a.site-title {:rel "author" :href "."} title]
-      (into
-       [:div.nav-links]
-       (map (fn [pair] [:a.nav-link {:href (str "./pages" (subs (first pair) 1))} (second pair)]) nav-bar-page-dict))]]
+      [:nav.navbar.navbar-expand-lg.bg-dark.navbar-dark
+       (into
+        [:ul.navbar-nav.mr-auto]
+        (map (fn [pair] [:a.nav-link {:href (str "./pages" (subs (first pair) 1))} (second pair)]) nav-bar-page-dict))]]
     [:main.page-content {:aria-label "Content"}
      [:div.wrapper
        [:h2.post-list-heading "Entry Points"]
