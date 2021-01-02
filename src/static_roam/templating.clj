@@ -86,7 +86,7 @@
     [:div
      [:div
       [:h3 (get-parent block-id block-map)]]
-     [:h2 (vec (map #(parser/ele->hiccup % block-map) (parser/parse-to-ast block-content)))]
+     [:h2.title (vec (map #(parser/ele->hiccup % block-map) (parser/parse-to-ast block-content)))]
      [:div (children-of-block-template block-id block-map)]
      (let [linked-refs (database/get-linked-references block-id block-map)]
        (when-not (empty? linked-refs)

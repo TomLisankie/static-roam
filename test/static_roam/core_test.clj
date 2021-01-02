@@ -152,7 +152,10 @@
         (let [block-map (database/setup-static-roam-block-map roam-json nil)]
           (is (map? block-map))
           (is (= 10 (count block-map)))
-          (is (= test1-block-map block-map)))))))
+          (is (= test1-block-map block-map))
+          
+
+          )))))
 
 
   

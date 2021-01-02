@@ -1,12 +1,19 @@
 body {
     background-color: #FEFEFF;
-    font-family: Optima;
-    font-size: 14pt;
+    /* font-family: Georgia; */
+    font-family: 'Martel', serif;
+    font-size: 13pt;
+    line-height: 1.3;
 }
 
 .block {
-    margin-bottom: 6px;
+    margin-bottom: 10px;
     
+}
+
+.title {
+    display: block;
+    margin-bottom: 20px;
 }
 
 ul {
@@ -34,4 +41,10 @@ blockquote {
     font-family: Baskerville;
     padding-left: 20px;
     border-left: 3px solid black;
+}
+
+/* aka linked references */
+.incoming {
+    padding: 10px;
+    background: aliceblue;
 }

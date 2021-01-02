@@ -2,9 +2,9 @@
 block = (syntax-in-block / any-char)*
 
 <syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | metadata-tag | code-line | youtube | bold | italic | strikethrough | highlight | bare-url | blockquote) (* add query later*)
-alias = #"\[(.*?)\]\(.*?\)"
 image = #"!\[(.*?)\]\(.*?\)"
 page-link = #"\[\[.*?\]\]"
+alias = #"\[([^\[\]]*?)\]\(.*?\)"  (* Note this hairy but correct char class that means everything but square brackets *)
 hashtag = #"\#..*?(?=\s|$)" | #"#\[\[.*?\]\]"
 block-ref = #"\(\(([\w\s\d]+)\)\)"
 metadata-tag = #"^.+?::"

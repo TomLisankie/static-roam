@@ -54,7 +54,8 @@
               :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
               :crossorigin "anonymous"}]
       [:link {:rel "stylesheet" :href "../assets/css/static-roam.css"}]
-      ]))])
+      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
+      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Martel&display=swap"}]]))])
 
 (defn generate-pages-html
   [block-map output-dir]
