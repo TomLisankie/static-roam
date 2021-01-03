@@ -1,6 +1,20 @@
 # Static-Roam
+
+## Staus
+
+This is a fork from [the original]([![Clojars Project](https://clojars.org/static-roam/static-roam/latest-version.svg)](https://clojars.org/static-roam)) by Tom Lisankie. I'm using it for a personal project and it's very much in flux. 
+
+Among the changes from the original:
+
+- new tags for content control (privacy)
+- doesn't generate or link to pages for individual blocks
+- more css customization points
+- generates a navbar properly
+- generates backlinks properly
+- fixes some parsing issues, eg multiline blockquotes
+- more testing
+
 ## A static-site generator for [Roam Research](https://roamresearch.com/)
-[![Clojars Project](https://clojars.org/static-roam/static-roam/latest-version.svg)](https://clojars.org/static-roam)
 
 Usage: `lein run /path/to/export/zip /path/to/output/dir degree`. You must use the JSON export from Roam, not the Markdown export.
 
