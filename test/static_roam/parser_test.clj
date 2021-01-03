@@ -80,4 +80,24 @@ And its fallen Emanation, the Spectre and its cruel Shadow.")))))
     (is (= [:span [:blockquote "I see the Four-fold Man, The Humanity in deadly sleep
 And its fallen Emanation, the Spectre and its cruel Shadow."]]
            (block-content->hiccup "> I see the Four-fold Man, The Humanity in deadly sleep
-And its fallen Emanation, the Spectre and its cruel Shadow." {})))))
+And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
+
+  ;; Not working
+  (testing "blockquote with embedded markup"
+    (= [:span
+        [:blockquote
+         "A: Well, " [:b "meditation is dealing with purpose itself"] ". It is not that meditation is for something, but it is dealing with the aim."]]
+       (block-content->hiccup "> A: Well, **meditation is dealing with purpose itself**. It is not that meditation is for something, but it is dealing with the aim." {})))
+  )
+
+
+(deftest code-block-test
+  (testing "codeblock parsing"
+    (is (= [:block [:code-block "```This is code
+ and so is this.```"]]
+           (parse-to-ast "```This is code
+ and so is this.```"))))
+  (testing "codeblock htmlgen"
+    (is (= [:span [:code "This is code\n and so is this."]]
+           (block-content->hiccup "```This is code
+ and so is this.```" {})))))

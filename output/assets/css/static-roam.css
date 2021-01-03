@@ -63,3 +63,7 @@ blockquote {
 .incoming .block {
     font-size: smaller;
 }
+
+.codeblock {
+    white-space: break-spaces;    
+}

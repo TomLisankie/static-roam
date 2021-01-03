@@ -142,6 +142,7 @@
       :todo [:input {:type "checkbox" :disabled "disabled"}]
       :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
       :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
+      :code-block [:code.codeblock (remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
       :youtube (get-youtube-vid-embed ele-content)
       :bare-url (make-link-from-url ele-content)
       :blockquote [:blockquote (subs ele-content 2)]
