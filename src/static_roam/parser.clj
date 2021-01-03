@@ -66,6 +66,7 @@
   [string]
   (remove-n-surrounding-delimiters 2 string))
 
+;;; TODO not used
 (defn- strip-chars
   "Removes every character of a given set from a string"
   [chars collection]

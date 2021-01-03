@@ -28,11 +28,7 @@
            false)
    })
 
-;;; TODO none of this transaction stuff is used
-(defn- generate-block-linking-transaction
-  [referer-eid reference-id]
-  {:block/id reference-id
-   :block/linked-by referer-eid})
+
 
 (defn- create-id-properties-pair
   [block-json parent]
@@ -91,16 +87,6 @@
   [(first pair)
    (clean-content-entities (second pair))])
 
-(defn- generate-block-linking-transactions-for-entity-reference-pair
-  [entity-id-reference-pair]
-  (let [referer-eid (first entity-id-reference-pair)
-        reference-ids (second entity-id-reference-pair)]
-    (map #(generate-block-linking-transaction referer-eid %) reference-ids)))
-
-(defn- generate-transactions-for-linking-blocks
-  [entity-id-reference-pairs]
-  (map generate-block-linking-transactions-for-entity-reference-pair entity-id-reference-pairs))
-
 (defn- get-block-id-content-pair
   [pair]
   [(first pair) (:content (second pair))])
@@ -109,13 +95,15 @@
   [block-map]
   (map get-block-id-content-pair block-map))
 
+;;; TODO Not used
+#_ 
 (defn- add-linked-by-property
   [pair]
   [(first pair) (assoc (second pair) :linked-by '())])
 
 (defn- get-block-id-reference-pairs
   [block-map]
-  (let [block-map-with-linked-by (map add-linked-by-property block-map)
+  (let [;TODO not used, block-map-with-linked-by (map add-linked-by-property block-map)
         block-id-content-pairs (get-block-id-content-pairs block-map)
         block-id-reference-pairs (map generate-block-id-reference-pair block-id-content-pairs)]
     block-id-reference-pairs))
@@ -202,12 +190,6 @@
   [block-id block-map]
   (let [block-props (get block-map block-id)]
     (:refers-to block-props)))
-
-(defn- get-references-for-blocks
-  [block-ids block-map]
-  (let [children (get-all-children-of-blocks block-ids block-map)
-        references (reduce into #{} (map #(get-references-for-block % block-map) children))]
-    (reduce into #{} [children references])))
 
 (defn- get-children-recursively
   [entity-id block-map]
@@ -302,8 +284,7 @@
      (if (true? (:included block-props))
        (assoc block-props
               :hiccup
-              (let [heading (:heading block-props)
-                    the-hiccup (parser/block-content->hiccup (:content block-props) block-map)]
+              (let [the-hiccup (parser/block-content->hiccup (:content block-props) block-map)]
                 (if (> (:heading block-props) 0)
                   (give-header the-hiccup block-props)
                   the-hiccup)))

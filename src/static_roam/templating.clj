@@ -1,8 +1,7 @@
 (ns static-roam.templating
   (:require [static-roam.utils :as utils]
             [static-roam.parser :as parser]
-            [static-roam.database :as database]
-            [clojure.pprint :as pprint]))
+            [static-roam.database :as database]))
 
 (defn page-hiccup
   [body-hiccup site-title nav-bar-page-dict head-extra]
@@ -74,8 +73,7 @@
   [block-map r]
   (if (nil? (get block-map r))
     ""                                  ;TODO ugly
-    (let [parent (find-page r block-map)
-          link (utils/page-title->html-file-title (or parent r) :case-sensitive)]
+    (let [parent (find-page r block-map)]
       [:div
        "From " (page-link parent)
        [:div (children-of-block-template r block-map)]])))
@@ -136,7 +134,7 @@
   ([page-titles]
    (let [page-links (map utils/page-link-from-title page-titles)]
      (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
-  ([page-titles dir]
+  ([page-titles dir]                    ;TODO dir not used
    (let [page-links (map #(utils/page-link-from-title %) page-titles)]
      (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
   ([page-titles dir link-class]

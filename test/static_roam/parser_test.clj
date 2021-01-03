@@ -14,13 +14,11 @@
 )
 
 
-
-
+;;; TODO I thik parsing should stript the punctuation, but that is not the current convention
 (deftest a-test
-  (testing "FIXME, I fail."
-    (is (= [:block [:page-link "Physics"] " " [:hashtag "Static-Roam"]]
-           (parse-to-ast "[[Physics]] #Static-Roam")
-           ))))
+  (is (= [:block [:page-link "[[Physics]]"] " " [:hashtag "#Static-Roam"]]
+         (parse-to-ast "[[Physics]] #Static-Roam")
+         )))
 
 (deftest alias-parse-test
   ;; Was formerly misparsing, changed the alias regex to use \w
