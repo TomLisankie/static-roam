@@ -13,12 +13,19 @@
 (parse-to-ast "I hope to combine my expertise in behavioral science and gamification to help users improve their lives through products. Your users hire you to help them achieve some goal, but loving your product is a result of your teamwork with the user.[++]([[The role of the user and the role of the app]]) Both players need to play.")
 )
 
-
 ;;; TODO I thik parsing should stript the punctuation, but that is not the current convention
+#_
+(deftest a-test
+  (is (= [:block [:page-link "Physics"] " " [:hashtag "Static-Roam"]]
+         (parse-to-ast "[[Physics]] #Static-Roam")
+         )))
+
 (deftest a-test
   (is (= [:block [:page-link "[[Physics]]"] " " [:hashtag "#Static-Roam"]]
          (parse-to-ast "[[Physics]] #Static-Roam")
          )))
+
+
 
 (deftest alias-parse-test
   ;; Was formerly misparsing, changed the alias regex to use \w
@@ -52,3 +59,25 @@
          )))
   
 
+(deftest blockquote-parse-test
+  (testing "simple blockquote"
+    (is (= [:block [:blockquote "> Call me Ishmael."]]
+           (parse-to-ast "> Call me Ishmael."))))
+  ;; TODO failing
+  (testing "multiline blockquote"
+    (is (= [:block [:blockquote "> I see the Four-fold Man, The Humanity in deadly sleep
+And its fallen Emanation, the Spectre and its cruel Shadow."]]
+           (parse-to-ast "> I see the Four-fold Man, The Humanity in deadly sleep
+And its fallen Emanation, the Spectre and its cruel Shadow.")))))
+
+
+(deftest blockquote-gen-test
+  (testing "simple blockquote"
+    ;; TODO not sure why these need to gen a :span
+    (is (= [:span [:blockquote "Call me Ishmael."]]
+           (block-content->hiccup "> Call me Ishmael." {}))))
+  (testing "multiline blockquote"
+    (is (= [:span [:blockquote "I see the Four-fold Man, The Humanity in deadly sleep
+And its fallen Emanation, the Spectre and its cruel Shadow."]]
+           (block-content->hiccup "> I see the Four-fold Man, The Humanity in deadly sleep
+And its fallen Emanation, the Spectre and its cruel Shadow." {})))))
