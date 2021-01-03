@@ -2,7 +2,7 @@
 
 ## Staus
 
-This is a fork from [the original]([![Clojars Project](https://clojars.org/static-roam/static-roam/latest-version.svg)](https://clojars.org/static-roam)) by Tom Lisankie. I'm using it for a personal project and it's very much in flux. 
+This is a fork from [the original](https://github.com/TomLisankie/static-roam) by Tom Lisankie. I'm using it for a personal project and it's very much in flux. 
 
 Among the changes from the original:
 
