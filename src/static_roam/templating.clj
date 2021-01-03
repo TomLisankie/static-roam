@@ -16,7 +16,7 @@
     [:header.site-header
      [:div.wrapper
       [:a.site-title {:rel "author" :href ".."} site-title]
-      [:nav.navbar.navbar-expand-lg.bg-dark.navbar-dark
+      [:nav.navbar.navbar-expand-lg.navbar-dark ; .bg-dark.navbar-dark
        (into
        [:ul.navbar-nav.mr-auto]
        (map (fn [[url title]] [:li.nav-item 
@@ -66,7 +66,9 @@
                        :case-sensitive))}
        (:content (get block-map parent-id))])))
 
-  
+(defn page-link [page]
+  [:a {:href (utils/page-title->html-file-title page :case-sensitive)}
+   (parser/block-content->hiccup page {})]) ;TODO ugly but does the italic thing right
 
 (defn linked-reference-template
   [block-map r]
@@ -74,10 +76,8 @@
     ""                                  ;TODO ugly
     (let [parent (find-page r block-map)
           link (utils/page-title->html-file-title (or parent r) :case-sensitive)]
-      [:li
-       {:onclick
-        (format "location.href='%s'" link)}
-       parent                           ;block title
+      [:div
+       "From " (page-link parent)
        [:div (children-of-block-template r block-map)]])))
 
 (defn linked-references-template
@@ -96,7 +96,7 @@
      (let [linked-refs (database/get-linked-references block-id block-map)]
        (when-not (empty? linked-refs)
          [:div.incoming
-          [:h3 "Links to here"]
+          [:h3 "Incoming links"]
           (linked-references-template linked-refs block-map)]))]))
 
 (defn page-index-hiccup
@@ -122,10 +122,10 @@
     [:header.site-header                ;TODO make this work or gegt rid
      [:div.wrapper
       [:a.site-title {:rel "author" :href "."} title]
-      [:nav.navbar.navbar-expand-lg.bg-dark.navbar-dark
+      [:nav.navbar.navbar-expand-lg ; .bg-dark.navbar-dark
        (into
         [:ul.navbar-nav.mr-auto]
-        (map (fn [pair] [:a.nav-link {:href (str "./pages" (subs (first pair) 1))} (second pair)]) nav-bar-page-dict))]]
+        (map (fn [pair] [:a.nav-link {:href (str "./pages" (subs (first pair) 1))} (second pair)]) nav-bar-page-dict))]]]
     [:main.page-content {:aria-label "Content"}
      [:div.wrapper
        [:h2.post-list-heading "Entry Points"]

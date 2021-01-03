@@ -6,6 +6,10 @@ body {
     line-height: 1.5;
 }
 
+.main {
+    margin-top: 12px;
+}
+
 .block {
     margin-bottom: 10px;
 }
@@ -15,12 +19,16 @@ body {
     margin-bottom: 20px;
 }
 
+.navbar {
+    background-color: #446;
+}
+
 ul {
   list-style: none; /* Remove default bullets */
 }
 
 /* Gyrations to get red list bullets */
-ul li::before {
+.main ul li::before {
   content: "\2022"; 
   color: red; 
   font-weight: bold;
@@ -46,4 +54,8 @@ blockquote {
 .incoming {
     padding: 10px;
     background: aliceblue;
+}
+
+.incoming .block {
+    font-size: smaller;
 }

@@ -115,14 +115,17 @@
   [string]
   [:a {:href string} string])
 
+(defn page-link [ele-content]
+  [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+   (remove-double-delimiters ele-content)])
+
 (defn element-vec->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
   (let [ele-content (second ast-ele)]
     (case (first ast-ele)
       :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                          (subs ele-content 0 (dec (count ele-content)))]]
-      :page-link [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                  (remove-double-delimiters ele-content)]
+      :page-link (page-link ele-content)
       :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                   (:content
                    (get block-map

@@ -29,8 +29,11 @@
                                  (utils/find-content-entities-in-string nav-bar-page-string)
                                  (utils/find-hashtags-in-string nav-bar-page-string))
         nav-bar-pages (map utils/remove-double-delimiters nav-bar-pages-uncleaned)
+        ;; TODO ugly but works to get italics in titles rendered properly. Should do same for backlinks
+        nav-bar-pages-r (map #(static-roam.parser/block-content->hiccup % {})
+                            nav-bar-pages)
         nav-bar-hrefs (map #(utils/page-title->html-file-title % true) nav-bar-pages)
-        nav-bar-page-dict (zipmap nav-bar-hrefs nav-bar-pages)]
+        nav-bar-page-dict (zipmap nav-bar-hrefs nav-bar-pages-r)]
     nav-bar-page-dict))
 
 ;;; → multitool, should replace dissoc-if
