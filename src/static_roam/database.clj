@@ -344,3 +344,17 @@
         children-of-embeds-added (add-children-of-block-embeds blocks-tagged-for-inclusion)
         hiccup-for-included-blocks (generate-hiccup-for-included-blocks children-of-embeds-added)]
     hiccup-for-included-blocks))
+
+(defn determine-which-content-to-include
+  [roam-db-conn degree]
+  ;; mark all entities "included" field as `false` initially
+  (let [eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db-conn))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) eids))]
+    (ds/transact! roam-db-conn transactions)) ;; might want to make this more nuanced so only entities with :block/string or :node/title get included
+  ;; then determine which content to include
+      ;; find pages marked as entry points and mark them as included
+  (let [sr-info-eid (first (first (ds/q '[:find ?eid :where [?eid :node/title "Static-Roam Info"]] @roam-db-conn)))
+        entry-point-eid (first (first (ds/q '[:find ?eid :where [?eid :node/title "EntryPoint"]] @roam-db-conn)))
+        eids-of-entry-points (map first (ds/q '[:find ?parent-eid :where [?eid :block/refs sr-info-eid] [?eid :block/refs entry-point-eid] [?eid :block/parents ?parent-eid]] @roam-db-conn))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true])))]
+    (ds/transact! roam-db-conn transactions)))

@@ -2,10 +2,12 @@
   (:require [me.raynes.fs :as fs]
             [clojure.java.io :as io]
             [clojure.string :as str-utils]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [datascript.core :as ds]
+            [clojure.edn :as edn-utils])
   (:import (java.util.zip ZipFile)))
 
-(defn unzip-roam-json
+(defn unzip-roam-edn
   "Takes the path to a zipfile `source` and unzips it to `target-dir`, returning the path of the target file"
   [source target-dir]
   (str target-dir (with-open [zip (ZipFile. (fs/file source))]
@@ -18,16 +20,17 @@
                         (io/copy (.getInputStream zip entry) f))
                       database-file-name))))
 
-(defn read-roam-json-from-zip
+(defn create-roam-edn-db-from-zip
   [path-to-zip]
-  (let [json-path (unzip-roam-json
+  (let [edn-path (unzip-roam-json
                    path-to-zip
                    (->> path-to-zip
                         (#(str-utils/split % #"/"))
                         drop-last
                         (str-utils/join "/") (#(str % "/"))))
-        roam-json (json/read-str (slurp json-path) :key-fn keyword)]
-    roam-json))
+        roam-db (edn-utils/read-string {:readers ds/data-readers} (slurp edn-path))
+        roam-db-conn (ds/conn-from-db roam-db)]
+    roam-db-conn))
 
 (defn remove-n-surrounding-delimiters
   "Removes n surrounding characters from both the beginning and end of a string"

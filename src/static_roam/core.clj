@@ -6,8 +6,8 @@
 
 (defn generate-static-roam!
   [path-to-zip output-dir degree]
-  (let [roam-json (utils/read-roam-json-from-zip path-to-zip)
-        static-roam-block-map (database/setup-static-roam-block-map roam-json degree)]
+  (let [roam-db-conn (utils/create-roam-edn-db-from-zip path-to-zip)]
+    (database/determine-which-content-to-include roam-db-conn degree)
     (html-gen/generate-static-roam-html static-roam-block-map output-dir)))
 
 (defn -main
