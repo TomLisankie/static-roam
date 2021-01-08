@@ -353,8 +353,28 @@
     (ds/transact! roam-db-conn transactions)) ;; might want to make this more nuanced so only entities with :block/string or :node/title get included
   ;; then determine which content to include
       ;; find pages marked as entry points and mark them as included
-  (let [sr-info-eid (first (first (ds/q '[:find ?eid :where [?eid :node/title "Static-Roam Info"]] @roam-db-conn)))
-        entry-point-eid (first (first (ds/q '[:find ?eid :where [?eid :node/title "EntryPoint"]] @roam-db-conn)))
-        eids-of-entry-points (map first (ds/q '[:find ?parent-eid :where [?eid :block/refs sr-info-eid] [?eid :block/refs entry-point-eid] [?eid :block/parents ?parent-eid]] @roam-db-conn))
+  (let [sr-info-eid (first (first (ds/q '[:find ?eid
+                                          :where
+                                          [?eid :node/title "Static-Roam Info"]]
+                                        @roam-db-conn)))
+        entry-point-eid (first (first (ds/q '[:find ?eid
+                                              :where
+                                              [?eid :node/title "EntryPoint"]]
+                                            @roam-db-conn)))
+        eids-of-entry-points (map first (ds/q '[:find ?parent-eid
+                                                :where
+                                                [?eid :block/refs sr-info-eid]
+                                                [?eid :block/refs entry-point-eid]
+                                                [?eid :block/parents ?parent-eid]]
+                                              @roam-db-conn))
         transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true])))]
-    (ds/transact! roam-db-conn transactions)))
+    (ds/transact! roam-db-conn transactions))
+      ;; find all pages ref'd by the entry point children and mark them as included as well. repeat this up through the degree
+
+      ;; up to this point, the only entities marked as visible have been the blocks containing the titles of the entry points. So now, aggregate all of the children (recursively) and mark their `included` as `true`
+
+      ;; now that all of the entry point stuff is done, mark all of the pages/blocks (and their children) marked for explicit inclusion `included` to `true`
+
+      ;; and now that all of the pages/blocks that are going to be included have been marked as such, mark the `included` to `false` for all the pages/blocks (and their children) marked for explicit exclusion
+
+  )
