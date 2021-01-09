@@ -345,6 +345,57 @@
         hiccup-for-included-blocks (generate-hiccup-for-included-blocks children-of-embeds-added)]
     hiccup-for-included-blocks))
 
+(defn- mark-refs-as-included
+  [roam-db-conn degree entry-point-eids]
+  ;; loop over entry-points
+  (loop [entry-point-eids entry-point-eids
+         refs (get-refs-for-page roam-db-conn )]))
+
+(defn- include-children-of-included-pages
+  [roam-db-conn])
+
+(defn- include-explicitly-included-blocks
+  [roam-db-conn]
+  (let [sr-info-eid (first (first (ds/q '[:find ?eid
+                                          :where
+                                          [?eid :node/title "Static-Roam Info"]]
+                                        @roam-db-conn)))
+        explicit-include-eid (first (first (ds/q '[:find ?eid
+                                                   :where
+                                                   [?eid :node/title "SRInclude"]]
+                                                 @roam-db-conn)))
+        eids-of-explicit-includes (map first (ds/q '[:find ?parent-eid
+                                                     :where
+                                                     [?eid :block/refs sr-info-eid]
+                                                     [?eid :block/refs explicit-include-eid]
+                                                     [?eid :block/parents ?parent-eid]]
+                                                   @roam-db-conn))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) eids-of-explicit-includes))
+        ;; TODO include children as well
+        ]
+    (ds/transact! roam-db-conn transactions)))
+
+(defn- exclude-explicitly-excluded-blocks
+  [roam-db-conn]
+  (let [sr-info-eid (first (first (ds/q '[:find ?eid
+                                          :where
+                                          [?eid :node/title "Static-Roam Info"]]
+                                        @roam-db-conn)))
+        explicit-exclude-eid (first (first (ds/q '[:find ?eid
+                                                   :where
+                                                   [?eid :node/title "SRExclude"]]
+                                                 @roam-db-conn)))
+        eids-of-explicit-excludes (map first (ds/q '[:find ?parent-eid
+                                                     :where
+                                                     [?eid :block/refs sr-info-eid]
+                                                     [?eid :block/refs explicit-exclude-eid]
+                                                     [?eid :block/parents ?parent-eid]]
+                                                   @roam-db-conn))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) eids-of-explicit-excludes))
+        ;; TODO exclude children as well
+        ]
+    (ds/transact! roam-db-conn transactions)))
+
 (defn determine-which-content-to-include
   [roam-db-conn degree]
   ;; mark all entities "included" field as `false` initially
@@ -367,14 +418,13 @@
                                                 [?eid :block/refs entry-point-eid]
                                                 [?eid :block/parents ?parent-eid]]
                                               @roam-db-conn))
-        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true])))]
-    (ds/transact! roam-db-conn transactions))
-      ;; find all pages ref'd by the entry point children and mark them as included as well. repeat this up through the degree
-
-      ;; up to this point, the only entities marked as visible have been the blocks containing the titles of the entry points. So now, aggregate all of the children (recursively) and mark their `included` as `true`
-
-      ;; now that all of the entry point stuff is done, mark all of the pages/blocks (and their children) marked for explicit inclusion `included` to `true`
-
-      ;; and now that all of the pages/blocks that are going to be included have been marked as such, mark the `included` to `false` for all the pages/blocks (and their children) marked for explicit exclusion
-
-  )
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) eids-of-entry-points))]
+    (ds/transact! roam-db-conn transactions)
+    ;; find all pages ref'd by the entry point children and mark them as included as well. repeat this up through the degree
+    (mark-refs-as-included roam-db-conn degree eids-of-entry-points)
+    ;; up to this point, the only entities marked as visible have been the blocks containing the titles of the entry points. So now, aggregate all of the children (recursively) and mark their `included` as `true`
+    (include-children-of-included-pages roam-db-conn)
+    ;; now that all of the entry point stuff is done, mark all of the pages/blocks (and their children) marked for explicit inclusion `included` to `true`
+    (include-explicitly-included-blocks roam-db-conn)
+    ;; and now that all of the pages/blocks that are going to be included have been marked as such, mark the `included` to `false` for all the pages/blocks (and their children) marked for explicit exclusion
+    (exclude-explicitly-excluded-blocks roam-db-conn)))
