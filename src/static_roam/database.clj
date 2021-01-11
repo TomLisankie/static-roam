@@ -165,10 +165,6 @@
         linked-refs (:linked-by block-props)]
     linked-refs))
 
-(defn- mark-block-as-included
-  [block-kv]
-  [(first block-kv) (assoc (second block-kv) :included true)])
-
 (defn- entry-point?
   [block-kv]
   (true? (:entry-point (second block-kv))))
@@ -222,7 +218,8 @@
 ;;; Or maybe not, loop is for references, children are handled by get-all-children-recursively
 (defn- get-content-entity-ids-to-include
   [max-degree block-map]
-  (let [entry-point-ids (into (get-entry-point-ids block-map) #{"SR Metadata"})]
+  (let [max-degree (or max-degree 1000)
+        entry-point-ids (into (get-entry-point-ids block-map) #{"SR Metadata"})]
     (loop [entities-to-examine entry-point-ids
            children-for-each-entity (get-all-children-recursively entities-to-examine block-map) ;
            all-children-of-examined (aggregate-children children-for-each-entity)
@@ -256,9 +253,7 @@
   [included-block-ids block-kv]
   (let [block-id (first block-kv)
         block-props (second block-kv)]
-    (if (block-id-included? block-id included-block-ids)
-      [block-id (assoc block-props :included true)]
-      [block-id (assoc block-props :included false)])))
+    [block-id (assoc block-props :included (block-id-included? block-id included-block-ids))]))
 
 (defn- mark-blocks-to-include-as-included
   [included-block-ids block-map]
@@ -266,11 +261,9 @@
 
 (defn- mark-content-entities-for-inclusion
   [degree block-map]
-  (if (and (int? degree) (>= degree 0))
-    (into (hash-map) (mark-blocks-to-include-as-included
-                      (get-content-entity-ids-to-include degree block-map)
-                      block-map))
-    (into (hash-map) (map mark-block-as-included block-map))))
+  (into (hash-map) (mark-blocks-to-include-as-included
+                    (get-content-entity-ids-to-include degree block-map)
+                    block-map)))
 
 (defn- give-header
   [the-hiccup block-props]

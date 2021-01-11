@@ -11,7 +11,13 @@
     (html-gen/generate-static-roam-html static-roam-block-map output-dir)))
 
 (defn -main
-  [path-to-zip output-dir degree]
-  (generate-static-roam! path-to-zip output-dir (if (nil? (re-find #"\d" degree))
-                                                  degree
-                                                  (Integer. degree))))
+  [path-to-zip output-dir & [degree]]
+  (generate-static-roam! path-to-zip output-dir (when degree (Integer. degree))))
+
+;;; For dev
+(defn block-map
+  [path-to-zip degree]
+  (let [roam-json (utils/read-roam-json-from-zip path-to-zip)
+        static-roam-block-map (database/setup-static-roam-block-map roam-json degree)]
+    static-roam-block-map))
+

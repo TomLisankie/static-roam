@@ -2,7 +2,7 @@ body {
     background-color: #FEFEFF;
     /* font-family: Georgia; */
     font-family: 'Martel', serif;
-    font-size: 13pt;
+    font-size: 11pt;
     line-height: 1.5;
 }
 
@@ -27,10 +27,10 @@ ul {
   list-style: none; /* Remove default bullets */
 }
 
-/* Gyrations to get red list bullets */
+/* Gyrations to get colored list bullets */
 .main ul li::before {
   content: "\2022"; 
-  color: red; 
+  color: lightgray; 
   font-weight: bold;
   display: inline-block; 
   width: 1em; 
@@ -40,6 +40,10 @@ ul {
 
 h1, h2, h3 {
     display: inline;
+}
+
+h2 {
+    font-size: 22px;
 }
 
 blockquote {
@@ -66,4 +70,10 @@ blockquote {
 
 .codeblock {
     white-space: break-spaces;    
+}
+
+
+.missing {
+    border: 5px solid red;
+    padding: 20px;
 }
