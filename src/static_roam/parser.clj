@@ -78,6 +78,9 @@
     (remove-double-delimiters (subs hashtag 1))
     (subs hashtag 1)))
 
+(declare block-content->hiccup)         ;allow recursion on this
+
+;;; TODO "alias" seems like a misnomer, these are external links.
 (defn- format-alias
   [alias-content]
   (let [alias-text (remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" alias-content))
@@ -85,7 +88,7 @@
         alias-link (if (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
                      (utils/page-title->html-file-title alias-dest :case-sensitive)
                      alias-dest)]
-    [:a {:href alias-link} alias-text]))
+    [:a {:href alias-link} (block-content->hiccup alias-text {})])) 
 
 (defn- format-image
   [image-ref-content]
