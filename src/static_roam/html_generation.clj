@@ -43,21 +43,25 @@
                            (key %))
                         m)))
 
+;;; This is relative to output TODO probably copy into output?
+(def site-css "../../resources/public/hyper-roam.css") ;TODO make this user settable somehow
+
 (defn generate-page-html
   [block-map block-id]
   [(utils/html-file-title block-id)
    (hiccup/html
     (templating/page-hiccup
      (templating/block-page-template block-id block-map)
-     (get (site-metadata block-map) "Title")
+     ;(get (site-metadata block-map) "Title")
+     block-id                           ;TODO htmlize
      (create-nav-bar-page-dict (site-metadata block-map))
      [[:link {:rel "stylesheet"
               :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
               :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
               :crossorigin "anonymous"}]
-      [:link {:rel "stylesheet" :href "../assets/css/static-roam.css"}]
+      [:link {:rel "stylesheet" :href site-css}] 
       [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
-      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Martel&display=swap"}]]))])
+      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Martel:wght@400;600&display=swap"}]]))])
 
 (defn generate-pages-html
   [block-map output-dir]

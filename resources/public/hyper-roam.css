@@ -1,0 +1,100 @@
+body {
+    background-color: #FEFEFF;
+    /* font-family: Georgia; */
+    /* font-family: 'Martel', serif; */
+    font-family: Optima;
+    font-size: 11pt;
+    line-height: 1.5;
+}
+
+.main {
+    margin-top: 12px;
+}
+
+.block {
+    margin-bottom: 10px;
+}
+
+.title {
+    display: block;
+    margin-bottom: 20px;
+}
+
+.navbar {
+    background-color: #F0DC97;
+}
+
+.nav-link {
+    color: #4E176E !important;		/* Hyperphor purple */
+    font-weight: bold;
+}
+
+ul {
+  list-style: none; /* Remove default bullets */
+}
+
+/* Gyrations to get colored list bullets */
+.main ul li::before {
+  content: "\2022"; 
+  color: #4E176E; 		
+  font-weight: bold;
+  display: inline-block; 
+  width: 1em; 
+  margin-left: -1em;
+  vertical-align: top;
+}
+
+a {
+    color: #B23D37; /* Hyperphor color 2 */
+    font-weight: 600;
+}
+
+a:hover {
+    background-color: #CCC; 
+    color: #B23D37; /* Hyperphor color 2 */
+    text-decoration: none;
+    box-shadow: 0 0 0 5px #CCC;
+}
+
+/* TODO highlighting needs to match */
+
+
+h1, h2, h3 {
+    display: inline;
+}
+
+h2 {
+    font-size: 22px;
+}
+
+blockquote {
+    display: inline-block;
+    white-space: break-spaces;
+    background: bisque;
+    font-family: Baskerville;
+    padding-left: 20px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-left: 3px solid black;
+}
+
+/* aka linked references */
+.incoming {
+    padding: 10px;
+    background: aliceblue;
+}
+
+.incoming .block {
+    font-size: smaller;
+}
+
+.codeblock {
+    white-space: break-spaces;    
+}
+
+
+.missing {
+    border: 5px solid red;
+    padding: 20px;
+}

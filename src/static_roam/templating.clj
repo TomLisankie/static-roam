@@ -4,18 +4,17 @@
             [static-roam.database :as database]))
 
 (defn page-hiccup
-  [body-hiccup site-title nav-bar-page-dict head-extra]
+  [body-hiccup page-title nav-bar-page-dict head-extra]
   [:html
    `[:head
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-     [:title ~site-title]
+     [:title ~page-title]               ;TODO might want to prepend a site title
      ~@head-extra]
    [:body
     [:header.site-header
      [:div.wrapper
-      [:a.site-title {:rel "author" :href ".."} site-title]
-      [:nav.navbar.navbar-expand-lg.navbar-dark ; .bg-dark.navbar-dark
+      [:nav.navbar.navbar-expand-lg.navbar-light ; .bg-dark.navbar-dark
        (into
        [:ul.navbar-nav.mr-auto]
        (map (fn [[url title]] [:li.nav-item 
@@ -125,8 +124,7 @@
    [:body
     [:header.site-header                ;TODO make this work or gegt rid
      [:div.wrapper
-      [:a.site-title {:rel "author" :href "."} title]
-      [:nav.navbar.navbar-expand-lg ; .bg-dark.navbar-dark
+      [:nav.navbar.navbar-expand-lg.navbar-light ; .bg-dark.navbar-dark
        (into
         [:ul.navbar-nav.mr-auto]
         (map (fn [pair] [:a.nav-link {:href (str "./pages" (subs (first pair) 1))} (second pair)]) nav-bar-page-dict))]]]

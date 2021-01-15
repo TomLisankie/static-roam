@@ -148,7 +148,7 @@
       :code-block [:code.codeblock (remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
       :youtube (get-youtube-vid-embed ele-content)
       :bare-url (make-link-from-url ele-content)
-      :blockquote [:blockquote (subs ele-content 2)]
+      :blockquote [:blockquote (block-content->hiccup (subs ele-content 2) block-map)] ;TODO make this more uniform
       ast-ele)))
 
 (defn ele->hiccup
