@@ -11,8 +11,9 @@ Among the changes from the original:
 - more css customization points
 - generates a navbar properly
 - generates backlinks properly
-- fixes some parsing issues, eg multiline blockquotes
+- handles blockquotes
 - more testing
+- faster
 
 ## A static-site generator for [Roam Research](https://roamresearch.com/)
 
@@ -43,9 +44,4 @@ TODO document
 ### SR Metadata
 #### Nav Bar
 
-
-
-## Future Development
-
-Static-Roam is used in production at [Roaman Pub](https://roaman.pub/) currently. However, I have basically put Static-Roam aside in favor of working on a revamped, much prettier, much more user friendly version of Roaman Pub that will likely be open source. So this project is basically just in maintenance mode until the new Roaman Pub is done. Once it's done, Static-Roam will likely receive no further development from me.
 

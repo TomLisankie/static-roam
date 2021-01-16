@@ -1,5 +1,6 @@
 (ns static-roam.html-generation
   (:require [clojure.string :as str-utils]
+            [org.parkerici.multitool.core :as u]
             [static-roam.utils :as utils]
             [hiccup.core :as hiccup]
             [static-roam.templating :as templating]
@@ -88,14 +89,10 @@
      file-name-to-content
      output-dir)))
 
-(defn- is-entry-point?
-  [block-kv]
-  (true? (:entry-point (second block-kv))))
-
 (defn generate-home-page-html
   [block-map output-dir]
   (let [html-file-name "/index.html"
-        entry-points (into (hash-map) (filter is-entry-point? block-map))
+        entry-points (u/clean-map block-map (comp not :entry-point))
         generated-html (hiccup/html
                         (templating/home-page-hiccup
                          (templating/list-of-page-links
@@ -109,18 +106,16 @@
      file-name-to-content
      output-dir)))
 
-(defn- included?
-  [block-kv]
-  (let [block-props (second block-kv)]
-    (true? (:included block-props))))
+(defn export-page
+  "Write out a single page. Content is hiccup. TODO use this more" 
+  [content name output-dir]
+  (stasis/export-pages
+   {name (hiccup/html content)}
+   output-dir))
 
 (defn generate-static-roam-html
   [block-map output-dir]
-  (let [included-block-map (into
-                            (hash-map)
-                            (map
-                             vec
-                             (filter included? block-map)))]
+  (let [included-block-map (u/clean-map block-map (comp not :included))]
     (generate-pages-html included-block-map (str output-dir "/pages"))
     (generate-index-of-pages-html included-block-map (str output-dir "/pages"))
     (generate-home-page-html included-block-map output-dir)))

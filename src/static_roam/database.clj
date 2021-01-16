@@ -17,18 +17,18 @@
 (defn- block-properties
   [block-json parent]
   {
+   :id (get-block-id block-json)       ;TODO this lets everything else be simplified radcially, but haven't gotten aroound to it yet
    :children (map :uid (:children block-json))
    :parent parent
-   :content (:string block-json (:title block-json))
+   :content (or (:string block-json) (:title block-json))
    :heading (:heading block-json -1)
+   :edit-time (or (:edit-time block-json) (:create-time block-json)) ;TODO convert to #inst 
    :entry-point (parser/entry-point? block-json)
    :exit-point (parser/exit-point? block-json)
    :page (if (:title block-json)
            true
            false)
    })
-
-
 
 (defn- create-id-properties-pair
   [block-json parent]
@@ -260,7 +260,7 @@
   (map #(mark-block-if-included included-block-ids %) block-map))
 
 (defn- mark-content-entities-for-inclusion
-  [degree block-map]
+  [block-map degree]
   (into (hash-map) (mark-blocks-to-include-as-included
                     (get-content-entity-ids-to-include degree block-map)
                     block-map)))
@@ -287,11 +287,12 @@
   [block-map]
   (into (hash-map) (filter #(not= nil (:content (second %))) (map #(generate-hiccup-if-block-is-included % block-map) block-map))))
 
-(defn replicate-roam-db
+(defn roam-db
   [roam-json]
-  (let [block-map-no-links (create-block-map-no-links roam-json)
-        block-map-linked-by-and-refers-to (generate-links-and-backlinks block-map-no-links)]
-    (into (hash-map) block-map-linked-by-and-refers-to)))
+  (->> roam-json
+       create-block-map-no-links
+       generate-links-and-backlinks
+       (into {})))
 
 (defn- lkjsafas
   [pair block-map]
@@ -318,8 +319,9 @@
 
 (defn setup-static-roam-block-map
   [roam-json degree]
-  (let [replicated-roam-block-map (replicate-roam-db roam-json)
-        blocks-tagged-for-inclusion (mark-content-entities-for-inclusion degree replicated-roam-block-map)
-        children-of-embeds-added (add-children-of-block-embeds blocks-tagged-for-inclusion)
-        hiccup-for-included-blocks (generate-hiccup-for-included-blocks children-of-embeds-added)]
-    hiccup-for-included-blocks))
+  (-> roam-json
+      roam-db
+      (mark-content-entities-for-inclusion degree)
+      add-children-of-block-embeds
+      generate-hiccup-for-included-blocks))
+
