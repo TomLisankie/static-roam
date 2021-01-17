@@ -5,12 +5,16 @@
             [clojure.data.json :as json])
   (:import (java.util.zip ZipFile)))
 
+
 (defn latest-export
   []
-  (->> (fs/list-dir "/Users/mtravers/Downloads")
+  (->> "~/Downloads"
+       fs/expand-home
+       fs/list-dir
        (filter #(s/includes? (str %) "Roam-Export" ))
        (sort-by fs/mod-time)
-       last))
+       last
+       str))
 
 (defn unzip-roam-json
   "Takes the path to a zipfile `source` and unzips it to `target-dir`, returning the path of the target file"

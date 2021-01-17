@@ -18,14 +18,12 @@
   bm)
 
 (defn -main
-  [path-to-zip output-dir & [degree]]
-  (-> path-to-zip
+  [& [path-to-zip output-dir degree]]
+  (-> (or path-to-zip (utils/latest-export))
       (block-map degree)
       tap
-      (html-gen/generate-static-roam-html output-dir)))
+      (html-gen/generate-static-roam-html (or output-dir "output"))))
 
-(defn build
-  []
-  (-main (str (utils/latest-export)) "output"))
+
 
 
