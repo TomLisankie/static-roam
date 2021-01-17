@@ -1,9 +1,16 @@
 (ns static-roam.utils
   (:require [me.raynes.fs :as fs]
             [clojure.java.io :as io]
-            [clojure.string :as str-utils]
+            [clojure.string :as s]
             [clojure.data.json :as json])
   (:import (java.util.zip ZipFile)))
+
+(defn latest-export
+  []
+  (->> (fs/list-dir "/Users/mtravers/Downloads")
+       (filter #(s/includes? (str %) "Roam-Export" ))
+       (sort-by fs/mod-time)
+       last))
 
 (defn unzip-roam-json
   "Takes the path to a zipfile `source` and unzips it to `target-dir`, returning the path of the target file"
@@ -23,9 +30,9 @@
   (let [json-path (unzip-roam-json
                    path-to-zip
                    (->> path-to-zip
-                        (#(str-utils/split % #"/"))
+                        (#(s/split % #"/"))
                         drop-last
-                        (str-utils/join "/") (#(str % "/"))))
+                        (s/join "/") (#(str % "/"))))
         roam-json (json/read-str (slurp json-path) :key-fn keyword)]
     roam-json))
 
@@ -62,18 +69,18 @@
   ([string]
    {:pre [(string? string)]}
    (->> string
-        (str-utils/lower-case)
+        (s/lower-case)
         (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
-        (#(str-utils/replace % #"\s" "-"))
+        (#(s/replace % #"\s" "-"))
         (#(str "/" % ".html"))))
   ([string case-sensitive?]
    {:pre [(string? string)]}
    (->> string
         (#(if case-sensitive?
             %
-            (str-utils/lower-case %)))
+            (s/lower-case %)))
         (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
-        (#(str-utils/replace % #"\s" "-"))
+        (#(s/replace % #"\s" "-"))
         (#(str "./" % ".html")))))
 
 (defn html-file-title

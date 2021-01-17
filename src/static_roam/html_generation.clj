@@ -66,7 +66,7 @@
 
 (defn generate-pages-html
   [block-map output-dir]
-  (let [page-map (map-filter-by-value :page block-map)  ;Filter to pages only TODO maybe optionl
+  (let [page-map (map-filter-by-value :page? block-map)  ;Filter to pages only TODO maybe optionl
         file-name-to-content
         (into {}
               (map (partial generate-page-html block-map)

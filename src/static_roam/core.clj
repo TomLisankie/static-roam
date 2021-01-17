@@ -4,20 +4,28 @@
             [static-roam.html-generation :as html-gen]
             [clojure.pprint :as pprint]))
 
-(defn generate-static-roam!
-  [path-to-zip output-dir degree]
-  (let [roam-json (utils/read-roam-json-from-zip path-to-zip)
-        static-roam-block-map (database/setup-static-roam-block-map roam-json degree)]
-    (html-gen/generate-static-roam-html static-roam-block-map output-dir)))
+(defn block-map
+  [path-to-zip degree]
+  (-> path-to-zip
+      utils/read-roam-json-from-zip
+      (database/setup-static-roam-block-map degree)))
+
+(def last-bm (atom nil))
+
+(defn tap
+  [bm]
+  (reset! last-bm bm)
+  bm)
 
 (defn -main
   [path-to-zip output-dir & [degree]]
-  (generate-static-roam! path-to-zip output-dir (when degree (Integer. degree))))
+  (-> path-to-zip
+      (block-map degree)
+      tap
+      (html-gen/generate-static-roam-html output-dir)))
 
-;;; For dev
-(defn block-map
-  [path-to-zip degree]
-  (let [roam-json (utils/read-roam-json-from-zip path-to-zip)
-        static-roam-block-map (database/setup-static-roam-block-map roam-json degree)]
-    static-roam-block-map))
+(defn build
+  []
+  (-main (str (utils/latest-export)) "output"))
+
 

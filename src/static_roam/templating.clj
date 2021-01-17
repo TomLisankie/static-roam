@@ -71,9 +71,9 @@
   [block-map r]
   (if (nil? (get block-map r))
     ""                                  ;TODO ugly
-    (let [parent (find-page r block-map)]
+    (let [page (find-page r block-map)]
       [:div
-       "From " (page-link parent)
+       "From " (page-link page)
        [:div (children-of-block-template r block-map)]])))
 
 (defn linked-references-template
@@ -86,10 +86,6 @@
   (let [block (get block-map block-id)
         block-content (get block :content)]
     [:div
-     ;; TODO not clear what this is for, and it doesn't work
-     #_
-     [:div
-      [:h3 (get-parent block-id block-map)]]
      [:h1.title (vec (map #(parser/ele->hiccup % block-map) (parser/parse-to-ast block-content)))]
      (if (or (:exit-point block)
              (empty? (:children block)))

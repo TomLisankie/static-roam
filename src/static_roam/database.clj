@@ -10,10 +10,6 @@
     (:title block-json)
     (:uid block-json)))
 
-(defn get-properties-for-block-id
-  [block-id block-map]
-  (get block-map block-id))
-
 (defn- block-properties
   [block-json parent]
   {
@@ -25,7 +21,7 @@
    :edit-time (or (:edit-time block-json) (:create-time block-json)) ;TODO convert to #inst 
    :entry-point (parser/entry-point? block-json)
    :exit-point (parser/exit-point? block-json)
-   :page (if (:title block-json)
+   :page? (if (:title block-json)
            true
            false)
    })
