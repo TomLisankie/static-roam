@@ -1,16 +1,56 @@
 (ns static-roam.templating
-  (:require [static-roam.utils :as utils]
+  (:require [clojure.string :as s]
+            [static-roam.utils :as utils]
             [static-roam.parser :as parser]
             [static-roam.database :as database]))
 
+;;; TODO Note: the functions of templating and html-gen seem to overlap; not sure they should be separate.
+
+(def site-css "../../resources/public/hyper-roam.css") ;TODO make this user settable somehow
+
+(defn- metadata-properties
+  [metadata]
+  (into (hash-map) (filter #(= 2 (count %)) (map #(s/split % #":: ") metadata))))
+
+(defn- site-metadata
+  [block-map]
+  (let [property-block-ids (:children (get block-map "SR Metadata"))
+        property-block-content (map #(:content (get block-map %)) property-block-ids)
+        prop-val-dict (metadata-properties property-block-content)]
+    prop-val-dict))
+
+(defn- create-nav-bar-page-dict
+  [site-metadata-dict]
+  (let [nav-bar-page-string (get site-metadata-dict "Nav Bar")
+        nav-bar-pages-uncleaned (into
+                                 (utils/find-content-entities-in-string nav-bar-page-string)
+                                 (utils/find-hashtags-in-string nav-bar-page-string))
+        nav-bar-pages (map utils/remove-double-delimiters nav-bar-pages-uncleaned)
+        ;; TODO ugly but works to get italics in titles rendered properly. Should do same for backlinks
+        nav-bar-pages-r (map #(static-roam.parser/block-content->hiccup % {}) 
+                             nav-bar-pages)
+        nav-bar-hrefs (map #(utils/page-title->html-file-title % true) nav-bar-pages)
+        nav-bar-page-dict (zipmap nav-bar-hrefs nav-bar-pages-r)]
+    nav-bar-page-dict))
+
+(defn  nav-bar-page-dict
+  [block-map]
+  (create-nav-bar-page-dict (site-metadata block-map)))
+
 (defn page-hiccup
-  [body-hiccup page-title nav-bar-page-dict head-extra]
+  [body-hiccup page-title block-map]
   [:html
    `[:head
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
      [:title ~page-title]               ;TODO might want to prepend a site title
-     ~@head-extra]
+     [:link {:rel "stylesheet"
+              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+              :crossorigin "anonymous"}]
+      [:link {:rel "stylesheet" :href ~site-css}] 
+      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
+      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Martel:wght@400;600&display=swap"}]]
    [:body
     [:header.site-header
      [:div.wrapper
@@ -21,15 +61,16 @@
                                [:a.nav-link {:href url}
                                 title
                                 ]])
-            nav-bar-page-dict))]]]
+            (nav-bar-page-dict block-map)))]]]
     [:div.container.main
      body-hiccup]]])
 
 (defn children-of-block-template
   [block-id block-map]
-  (let [properties (database/get-properties-for-block-id block-id block-map)]
+  (let [properties (get block-map block-id)]
     [:ul
-     (if (or (nil? (:hiccup properties)) (= (:content properties) block-id))
+     (if (or (nil? (:hiccup properties))
+             (= (:content properties) block-id))
        ""
        ;;; TODO Turned off block clicks, may want it under a flag or something
        [:li.block #_ {:onclick (str "location.href='" (utils/page-title->html-file-title block-id :case-sensitive) "'")}
@@ -41,13 +82,13 @@
          ;; otherwise, evaluate to empty div
          [:div]))]))
 
-;;; TODO does this find page, or intermediate parents?
 (defn- find-parent
   [block-id block-map]
                                         ; (first (filter #(not (nil? %)) (map #(is-parent block-id %) block-map)))
   (get-in block-map [block-id :parent]))
 
-(defn- find-page
+;;; TODO this should prob be built into block map, or cached.
+(defn find-page
   [block-id block-map]
   (if-let [parent (find-parent block-id block-map)]
     (find-page parent block-map)
@@ -98,37 +139,6 @@
           [:h3 "Incoming links"]
           (linked-references-template linked-refs block-map)]))]))
 
-(defn page-index-hiccup
-  [link-list css-path js-path]
-  [:html
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-    [:link {:rel "stylesheet" :href css-path}]
-    [:script {:src js-path}]]
-   [:body link-list]])
-
-(defn home-page-hiccup
-  [link-list title nav-bar-page-dict css-path js-path]
-  [:html
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-    [:title title]
-    [:link {:rel "stylesheet" :href css-path}]
-    [:script {:src js-path}]]
-   [:body
-    [:header.site-header                ;TODO make this work or gegt rid
-     [:div.wrapper
-      [:nav.navbar.navbar-expand-lg.navbar-light ; .bg-dark.navbar-dark
-       (into
-        [:ul.navbar-nav.mr-auto]
-        (map (fn [pair] [:a.nav-link {:href (str "./pages" (subs (first pair) 1))} (second pair)]) nav-bar-page-dict))]]]
-    [:main.page-content {:aria-label "Content"}
-     [:div.wrapper
-       [:h2.post-list-heading "Entry Points"]
-       link-list]]]])
-
 (defn list-of-page-links
   "Generate a Hiccup unordered list of links to pages"
   ([page-titles]
@@ -140,3 +150,17 @@
   ([page-titles dir link-class]
    (let [page-links (map #(utils/page-link-from-title dir % link-class) page-titles)]
      (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links)))))
+
+(defn home-page-hiccup
+  [entry-points block-map]
+  (page-hiccup 
+   [:main.page-content {:aria-label "Content"}
+     [:div.wrapper
+       [:h2.post-list-heading "Entry Points"]
+      (list-of-page-links
+       (sort (keys entry-points)) "pages" "entry-point-link")
+      ]]
+      (get (site-metadata block-map) "Title")
+      block-map))
+
+
