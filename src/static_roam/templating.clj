@@ -19,9 +19,10 @@
         prop-val-dict (metadata-properties property-block-content)]
     prop-val-dict))
 
-(defn- create-nav-bar-page-dict
-  [site-metadata-dict]
-  (let [nav-bar-page-string (get site-metadata-dict "Nav Bar")
+(defn- nav-bar-page-dict
+  [block-map]
+  (let [site-metadata-dict (site-metadata block-map)
+        nav-bar-page-string (get site-metadata-dict "Nav Bar")
         nav-bar-pages-uncleaned (into
                                  (utils/find-content-entities-in-string nav-bar-page-string)
                                  (utils/find-hashtags-in-string nav-bar-page-string))
@@ -32,10 +33,6 @@
         nav-bar-hrefs (map #(utils/page-title->html-file-title % true) nav-bar-pages)
         nav-bar-page-dict (zipmap nav-bar-hrefs nav-bar-pages-r)]
     nav-bar-page-dict))
-
-(defn  nav-bar-page-dict
-  [block-map]
-  (create-nav-bar-page-dict (site-metadata block-map)))
 
 (defn page-hiccup
   [body-hiccup page-title block-map]
@@ -50,7 +47,7 @@
               :crossorigin "anonymous"}]
       [:link {:rel "stylesheet" :href ~site-css}] 
       [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
-      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Martel:wght@400;600&display=swap"}]]
+      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap"}]]
    [:body
     [:header.site-header
      [:div.wrapper

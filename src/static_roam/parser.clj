@@ -1,6 +1,7 @@
 (ns static-roam.parser
   (:require [instaparse.core :as insta :refer [defparser]]
             [clojure.string :as str-utils]
+            [clojure.data.json :as json]
             [static-roam.utils :as utils]
             [clojure.java.io :as io]))
 
@@ -120,43 +121,75 @@
   [string]
   [:a {:href string} string])
 
+;;; Tried to build this into instaparse parser, but couldn't make it take precedence over :bare-url
+(defn- twitter-url?
+  [url]
+  (re-matches #"https:\/\/twitter.com\/\S*" url))
+
+(defn- embed-twitter
+  [url]
+  (try
+    (let [oembed (json/read-str (slurp (str "https://publish.twitter.com/oembed?url=" url)) :key-fn keyword)]
+      (:html oembed))
+    (catch Throwable e
+        (make-link-from-url url))))
+
+(defn- make-content-from-url
+  [url]
+  (if (twitter-url? url)                ;TODO if there are more
+    (embed-twitter url)
+    (make-link-from-url url)))
+
 (defn page-link [ele-content]
   [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-   (remove-double-delimiters ele-content)])
+   (block-content->hiccup               ;ensure formatting in links works
+    (remove-double-delimiters ele-content) {})])
+
+
+(defn unspan
+  "Remove :span elts that are basically no-ops. Would be cleaner to not generate"
+  [hiccup]
+  (if (and (vector? hiccup)
+           (= :span (first hiccup))
+           (= 2 (count hiccup)))
+    (second hiccup)
+    hiccup))
 
 (defn element-vec->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
   (let [ele-content (second ast-ele)]
-    (case (first ast-ele)
-      :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                         (subs ele-content 0 (dec (count ele-content)))]]
-      :page-link (page-link ele-content)
-      :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                  (:content
-                   (get block-map
-                    (remove-double-delimiters ele-content)))]
-      :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                (format-hashtag ele-content)]
-      :strikethrough [:s (remove-double-delimiters ele-content)]
-      :highlight [:mark (remove-double-delimiters ele-content)]
-      :italic [:i (remove-double-delimiters ele-content)]
-      :bold [:b (remove-double-delimiters ele-content)]
-      :alias (format-alias ele-content)
-      :image (format-image ele-content)
-      :todo [:input {:type "checkbox" :disabled "disabled"}]
-      :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
-      :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
-      :code-block [:code.codeblock (remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
-      :youtube (get-youtube-vid-embed ele-content)
-      :bare-url (make-link-from-url ele-content)
-      :blockquote [:blockquote (block-content->hiccup (subs ele-content 2) block-map)] ;TODO make this more uniform
-      ast-ele)))
+    (unspan
+     (case (first ast-ele)
+       :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                          (subs ele-content 0 (dec (count ele-content)))]]
+       :page-link (page-link ele-content)
+       :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                   (:content
+                    (get block-map
+                         (remove-double-delimiters ele-content)))]
+       :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                 (format-hashtag ele-content)]
+       :strikethrough [:s (remove-double-delimiters ele-content)]
+       :highlight [:mark (remove-double-delimiters ele-content)]
+       :italic [:i (remove-double-delimiters ele-content)]
+       :bold [:b (remove-double-delimiters ele-content)]
+       :alias (format-alias ele-content)
+       :image (format-image ele-content)
+       :todo [:input {:type "checkbox" :disabled "disabled"}]
+       :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
+       :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
+       :code-block [:code.codeblock (remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
+       :youtube (get-youtube-vid-embed ele-content)
+       :bare-url (make-content-from-url ele-content)
+       :blockquote [:blockquote (block-content->hiccup (subs ele-content 2) block-map)] ;TODO make this more uniform
+       ast-ele))))
+
 
 (defn ele->hiccup
   [ele block-map]
   (cond
     (string? ele) ele
-    (= ele :block) :span
+    (= ele :block) :span                ;??? this looks like a mistake
     (vector? ele) (element-vec->hiccup ele block-map)))
 
 (defn tagged?

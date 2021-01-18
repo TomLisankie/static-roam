@@ -2,7 +2,7 @@ body {
     background-color: #FEFEFF;
     /* font-family: Georgia; */
     /* font-family: 'Martel', serif; */
-    font-family: Optima;
+    font-family: Lato;
     font-size: 11pt;
     line-height: 1.5;
 }
@@ -41,19 +41,19 @@ ul {
   display: inline-block; 
   width: 1em; 
   margin-left: -1em;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 a {
     color: #B23D37; /* Hyperphor color 2 */
-    font-weight: 600;
+    font-weight: bold;
 }
 
 a:hover {
-    background-color: #CCC; 
+    background-color: #eeeee0; 
     color: #B23D37; /* Hyperphor color 2 */
     text-decoration: none;
-    box-shadow: 0 0 0 5px #CCC;
+    box-shadow: 0 0 0 5px #eeeee0;
 }
 
 /* TODO highlighting needs to match */
@@ -68,21 +68,26 @@ h2 {
 }
 
 blockquote {
-    display: inline-block;
     white-space: break-spaces;
-    background: bisque;
+    background: #eeeee0;
     font-family: Baskerville;
     padding-left: 20px;
     padding-right: 10px;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-right: 100px;
     border-left: 3px solid black;
 }
 
 /* aka linked references */
 .incoming {
     padding: 10px;
-    background: aliceblue;
+    background: #eeeee0;
+}
+
+.incoming h3 {
+    display: block;
+    margin-bottom: 10px;
 }
 
 .incoming .block {
