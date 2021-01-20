@@ -155,42 +155,38 @@
     (second hiccup)
     hiccup))
 
-(defn element-vec->hiccup ;; TODO: have code to change behavior if page/block is not included
+(defn ele->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
-  (let [ele-content (second ast-ele)]
-    (unspan
-     (case (first ast-ele)
-       :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                          (subs ele-content 0 (dec (count ele-content)))]]
-       :page-link (page-link ele-content)
-       :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                   (:content
-                    (get block-map
-                         (remove-double-delimiters ele-content)))]
-       :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                 (format-hashtag ele-content)]
-       :strikethrough [:s (remove-double-delimiters ele-content)]
-       :highlight [:mark (remove-double-delimiters ele-content)]
-       :italic [:i (remove-double-delimiters ele-content)]
-       :bold [:b (remove-double-delimiters ele-content)]
-       :alias (format-alias ele-content)
-       :image (format-image ele-content)
-       :todo [:input {:type "checkbox" :disabled "disabled"}]
-       :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
-       :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
-       :code-block [:code.codeblock (remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
-       :youtube (get-youtube-vid-embed ele-content)
-       :bare-url (make-content-from-url ele-content)
-       :blockquote [:blockquote (block-content->hiccup (subs ele-content 2) block-map)] ;TODO make this more uniform
-       ast-ele))))
-
-
-(defn ele->hiccup
-  [ele block-map]
-  (cond
-    (string? ele) ele
-    (= ele :block) :span                ;??? this looks like a mistake
-    (vector? ele) (element-vec->hiccup ele block-map)))
+  (if (string? ast-ele)
+    ast-ele
+    (let [ele-content (second ast-ele)]
+      (unspan
+       (case (first ast-ele)
+         :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                            (subs ele-content 0 (dec (count ele-content)))]]
+         :page-link (page-link ele-content)
+         :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                     (:content
+                      (get block-map
+                           (remove-double-delimiters ele-content)))]
+         :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                   (format-hashtag ele-content)]
+         :strikethrough [:s (remove-double-delimiters ele-content)]
+         :highlight [:mark (remove-double-delimiters ele-content)]
+         :italic [:i (remove-double-delimiters ele-content)]
+         :bold [:b (remove-double-delimiters ele-content)]
+         :alias (format-alias ele-content)
+         :image (format-image ele-content)
+         :todo [:input {:type "checkbox" :disabled "disabled"}]
+         :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
+         :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
+         :code-block [:code.codeblock (remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
+         :youtube (get-youtube-vid-embed ele-content)
+         :bare-url (make-content-from-url ele-content)
+         :blockquote `[:blockquote ~(ele->hiccup ele-content block-map)]
+                                        ;ast-ele
+         :block `[:span ~@(map #(ele->hiccup % block-map) (rest ast-ele))]
+         )))))
 
 (defn tagged?
   [block tag]
@@ -212,4 +208,5 @@
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
   [content block-map]
-  (vec (map #(ele->hiccup % block-map) (parse-to-ast content))))
+                                        ;  (vec (map #(ele->hiccup % block-map) (parse-to-ast content)))
+  (ele->hiccup (parse-to-ast content) block-map))

@@ -63,7 +63,6 @@
   (testing "simple blockquote"
     (is (= [:block [:blockquote "> Call me Ishmael."]]
            (parse-to-ast "> Call me Ishmael."))))
-  ;; TODO failing
   (testing "multiline blockquote"
     (is (= [:block [:blockquote "> I see the Four-fold Man, The Humanity in deadly sleep
 And its fallen Emanation, the Spectre and its cruel Shadow."]]
@@ -98,6 +97,17 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
            (parse-to-ast "```This is code
  and so is this.```"))))
   (testing "codeblock htmlgen"
-    (is (= [:span [:code "This is code\n and so is this."]]
+    (is (= [:span [:code.codeblock "This is code\n and so is this."]]
            (block-content->hiccup "```This is code
  and so is this.```" {})))))
+
+
+;;; failing
+(deftest markup-in-page-names-test
+  (is (= [:span [:a {:href "./__foo__.html"} [:span [:i "foo"]]]] ;would be nice to get rid of redundant :span
+         (block-content->hiccup "[[__foo__]]" {}))))
+
+
+(deftest blockquote-parse-bug
+  (is (=
+       (block-parser " why me> ")
