@@ -6,7 +6,7 @@
 
 ;;; TODO Note: the functions of templating and html-gen seem to overlap; not sure they should be separate.
 
-(def site-css "../../resources/public/hyper-roam.css") ;TODO make this user settable somehow
+(def site-css "../assets/hyper-roam.css") ;TODO make this user settable somehow
 
 (defn- metadata-properties
   [metadata]

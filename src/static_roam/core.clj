@@ -12,6 +12,10 @@
 
 (def last-bm (atom nil))
 
+;;; Dump blocks in readable file
+#_
+(org.parkerici.multitool.cljcore/schppit "blocks.edn" @last-bm)
+
 (defn tap
   [bm]
   (reset! last-bm bm)

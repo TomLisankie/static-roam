@@ -29,9 +29,10 @@
             :let [page (:page (first group))
                   edit-time (reduce max 0 (map :edit-time group))]]
         `[:div
-          "From " ~(templating/page-link page) [:span ~(render-time edit-time)]
-          [:span ]
-         ~@(for [block group]
-             [:div (templating/children-of-block-template (:id block) block-map)])])])
+          "From " ~(templating/page-link page)
+          " "
+          [:span ~(render-time edit-time)]
+          ~@(for [block (take 3 group)] ;limit to 3 chunks
+              [:div (templating/children-of-block-template (:id block) block-map)])])])
 
 

@@ -33,15 +33,20 @@ ul {
   list-style: none; /* Remove default bullets */
 }
 
+li {
+    display: flex;
+}
+
 /* Gyrations to get colored list bullets */
 .main ul li::before {
-  content: "\2022"; 
-  color: #4E176E; 		
-  font-weight: bold;
-  display: inline-block; 
-  width: 1em; 
-  margin-left: -1em;
-  vertical-align: middle;
+    /* content: "\2022";  bullet */
+    content: "\2aa2";  
+    color: #B23D37;
+  /* color: #4E176E; 		 */
+    display: inline-block; 
+    width: 1em; 
+    vertical-align: top;
+    margin-right: 0.5em;
 }
 
 a {
@@ -70,7 +75,6 @@ h2 {
 blockquote {
     white-space: break-spaces;
     background: #eeeee0;
-    font-family: Baskerville;
     padding-left: 20px;
     padding-right: 10px;
     padding-top: 10px;
