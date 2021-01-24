@@ -5,7 +5,7 @@ block = blockquote | (syntax-in-block / any-chars)*
 image = #"!\[(.*?)\]\(.*?\)"
 page-link = #"\[\[.*?\]\]"
 alias = #"\[([^\[\]]*?)\]\(.*?\)"  (* Note this hairy but correct char class that means everything but square brackets *)
-hashtag = #"\#..*?(?=\s|$)" | #"#\[\[.*?\]\]"
+hashtag = #"\#\w*" | #"#\[\[.*?\]\]"
 block-ref = #"\(\(([\w\s\d]+)\)\)"
 metadata-tag = #"^.+?::"
 code-line = #"\`.*?\`"

@@ -40,7 +40,6 @@ TODO document
 
 ### #Private
 ### #EntryPoint
-### #ExitPoint
 ### SR Metadata
 #### Nav Bar
 

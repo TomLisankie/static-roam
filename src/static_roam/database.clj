@@ -91,12 +91,6 @@
   [block-map]
   (map get-block-id-content-pair block-map))
 
-;;; TODO Not used
-#_ 
-(defn- add-linked-by-property
-  [pair]
-  [(first pair) (assoc (second pair) :linked-by '())])
-
 (defn- get-block-id-reference-pairs
   [block-map]
   (let [;TODO not used, block-map-with-linked-by (map add-linked-by-property block-map)
@@ -157,9 +151,7 @@
 
 (defn get-linked-references
   [block-id block-map]
-  (let [block-props (get block-map block-id "BLOCK DOESN'T EXIST")
-        linked-refs (:linked-by block-props)]
-    linked-refs))
+  (get-in block-map [block-id :linked-by]))
 
 (defn- entry-point?
   [block-kv]

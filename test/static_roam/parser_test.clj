@@ -109,5 +109,11 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
 
 
 (deftest blockquote-parse-bug
-  (is (=
-       (block-parser " why me> ")
+  (is (= ...
+         (block-parser " why me> "))))
+
+(deftest hastag-parse-bug
+  (is (= '[:block "I was under the " [:hashtag "#influence"] ", officer"]
+         (parse-to-ast "I was under the #influence, officer"))))
+
+       

@@ -27,6 +27,8 @@ body {
 .nav-link {
     color: #4E176E !important;		/* Hyperphor purple */
     font-weight: bold;
+    padding-right: 1rem;
+    padding-left: 1rem;
 }
 
 ul {

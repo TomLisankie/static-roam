@@ -107,10 +107,11 @@
   (when (not (nil? string))
     (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string)))
 
+;;; TODO why is this necessary when we've already parsed the fucker!
 (defn find-hashtags-in-string
   [string]
   (when (not (nil? string))
-    (re-seq #"\#..*?(?=\s|$)" string)))
+    (re-seq #"\#\w*" string)))
 
 (defn find-metadata-in-string
   [string]

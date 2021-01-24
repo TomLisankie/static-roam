@@ -203,7 +203,7 @@
 
 (defn exit-point?
   [block]
-  (tagged? block "#Private"))
+  (tagged? block "#Private"))           ;Formerly #ExitPoint
 
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
