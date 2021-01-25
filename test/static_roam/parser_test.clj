@@ -4,7 +4,7 @@
 
 ;;; Stray stuff
 (comment
-(def parsed (parse-to-ast "Metadata is here:: According to [[BJ Fogg]], we have [[motivation waves]].  Tie that in with the [[Fogg Behavior Model]] and you find that when people have high motivation, you should ask them to do something big and impactful, because if people are motivated to do more than the task that we ask them to do, it would be a waste for us not to prompt them to do so.  On the flip side, if people aren't particularly motivated, we shouldn't ask them to do something hard. ((j598fj6)) This is similar to the premise of #[[difficulty matching]] #yessereebob `this is a line of code` {{query: {and: [[note]] [[January]] }}} {{youtube: https://youtu.be/5iI_0wnwIpU}} [fasfa]([[Hello page]]) **IMPORTANT** __emphasis__ ^^pop out^^ ~~old news~~"))
+
 
 (parse-to-ast "(((hello)))")
 
@@ -14,18 +14,25 @@
 )
 
 ;;; TODO I thik parsing should stript the punctuation, but that is not the current convention
-#_
-(deftest a-test
-  (is (= [:block [:page-link "Physics"] " " [:hashtag "Static-Roam"]]
-         (parse-to-ast "[[Physics]] #Static-Roam")
-         )))
 
-(deftest a-test
+(deftest parsing-test
+  (let [parsed (set (rest (parse-to-ast "Metadata is here:: According to [[BJ Fogg]], we have [[motivation waves]].  Tie that in with the [[Fogg Behavior Model]] and you find that when people have high motivation, you should ask them to do something big and impactful, because if people are motivated to do more than the task that we ask them to do, it would be a waste for us not to prompt them to do so.  On the flip side, if people aren't particularly motivated, we shouldn't ask them to do something hard. ((j598fj6)) This is similar to the premise of #[[difficulty matching]] #yessereebob `this is a line of code` {{query: {and: [[note]] [[January]] }}} {{youtube: https://youtu.be/5iI_0wnwIpU}} [fasfa]([[Hello page]]) **IMPORTANT** __emphasis__ ^^pop out^^ ~~old news~~")))
+        ]
+    (is (contains? parsed [:page-link "[[BJ Fogg]]"]))
+    (is (contains? parsed [:block-ref "((j598fj6))"]))
+    (is (contains? parsed [:hashtag "#[[difficulty matching]]"])) ;TODO failing
+    (is (contains? parsed [:hashtag "#yessereebob"]))
+    (is (contains? parsed [:alias "[fasfa]([[Hello page]])"]))
+    (is (contains? parsed [:youtube "{{youtube: https://youtu.be/5iI_0wnwIpU}}"]))
+    (is (contains? parsed [:bold "**IMPORTANT**"]))
+    (is (contains? parsed [:italic "__emphasis__"]))
+    (is (contains? parsed [:highlight "^^pop out^^"]))
+    (is (contains? parsed [:strikethrough "~~old news~~"]))))
+
+
+(deftest hashtag-parse-test
   (is (= [:block [:page-link "[[Physics]]"] " " [:hashtag "#Static-Roam"]]
          (parse-to-ast "[[Physics]] #Static-Roam")
-         )))
-
-
 
 (deftest alias-parse-test
   ;; Was formerly misparsing, changed the alias regex to use \w
@@ -61,31 +68,31 @@
 
 (deftest blockquote-parse-test
   (testing "simple blockquote"
-    (is (= [:block [:blockquote "> Call me Ishmael."]]
+    (is (= [:block [:blockquote [:block "Call me Ishmael."]]]
            (parse-to-ast "> Call me Ishmael."))))
   (testing "multiline blockquote"
-    (is (= [:block [:blockquote "> I see the Four-fold Man, The Humanity in deadly sleep
-And its fallen Emanation, the Spectre and its cruel Shadow."]]
+    (is (= [:block
+            [:blockquote
+             [:block "I see the Four-fold Man, The Humanity in deadly sleep
+And its fallen Emanation, the Spectre and its cruel Shadow."]]]
            (parse-to-ast "> I see the Four-fold Man, The Humanity in deadly sleep
 And its fallen Emanation, the Spectre and its cruel Shadow.")))))
 
 
 (deftest blockquote-gen-test
   (testing "simple blockquote"
-    ;; TODO not sure why these need to gen a :span
-    (is (= [:span [:blockquote "Call me Ishmael."]]
+    (is (= [:blockquote "Call me Ishmael."]
            (block-content->hiccup "> Call me Ishmael." {}))))
   (testing "multiline blockquote"
-    (is (= [:span [:blockquote "I see the Four-fold Man, The Humanity in deadly sleep
-And its fallen Emanation, the Spectre and its cruel Shadow."]]
+    (is (= [:blockquote "I see the Four-fold Man, The Humanity in deadly sleep
+And its fallen Emanation, the Spectre and its cruel Shadow."]
            (block-content->hiccup "> I see the Four-fold Man, The Humanity in deadly sleep
 And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
 
   ;; Not working
   (testing "blockquote with embedded markup"
-    (= [:span
-        [:blockquote
-         "A: Well, " [:b "meditation is dealing with purpose itself"] ". It is not that meditation is for something, but it is dealing with the aim."]]
+    (= [:blockquote
+         "A: Well, " [:b "meditation is dealing with purpose itself"] ". It is not that meditation is for something, but it is dealing with the aim."]
        (block-content->hiccup "> A: Well, **meditation is dealing with purpose itself**. It is not that meditation is for something, but it is dealing with the aim." {})))
   )
 
@@ -97,22 +104,25 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
            (parse-to-ast "```This is code
  and so is this.```"))))
   (testing "codeblock htmlgen"
-    (is (= [:span [:code.codeblock "This is code\n and so is this."]]
+    (is (= [:code.codeblock "This is code\n and so is this."]
            (block-content->hiccup "```This is code
  and so is this.```" {})))))
 
-
-;;; failing
 (deftest markup-in-page-names-test
-  (is (= [:span [:a {:href "./__foo__.html"} [:span [:i "foo"]]]] ;would be nice to get rid of redundant :span
+  (is (= [:a {:href "./__foo__.html"} [:i "foo"]] 
          (block-content->hiccup "[[__foo__]]" {}))))
 
-
 (deftest blockquote-parse-bug
-  (is (= ...
+  (is (= [:block                        ;Ugly. The point is to not gen a blockquote
+          [:any-chars " "]
+          [:any-chars "why"]
+          [:any-chars " "]
+          [:any-chars "me"]
+          [:any-chars ">"]
+          [:any-chars " "]]
          (block-parser " why me> "))))
 
-(deftest hastag-parse-bug
+(deftest hashtag-parse-bug
   (is (= '[:block "I was under the " [:hashtag "#influence"] ", officer"]
          (parse-to-ast "I was under the #influence, officer"))))
 
