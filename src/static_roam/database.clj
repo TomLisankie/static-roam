@@ -347,9 +347,17 @@
 
 (defn- mark-refs-as-included
   [roam-db-conn degree entry-point-eids]
-  ;; loop over entry-points
+  ;; loop over entry-points, gather refs that their children include, mark those as included, repeat with degree lesser and the new eids
   (loop [entry-point-eids entry-point-eids
-         refs (get-refs-for-page roam-db-conn )]))
+         current-entry-point (first entry-point-eids)
+         refs (get-refs-for-page roam-db-conn current-entry-point)]
+    (let [remaining-entry-points (rest entry-point-eids)
+          next-entry-point (first (rest entry-point-eids))]
+      (if (= (count entry-point-eids) 0)
+        (mark-refs-as-included roam-db-conn (dec degree) refs)
+        (recur remaining-entry-points
+               next-entry-point
+               (get-refs-for-page roam-db-conn next-entry-point))))))
 
 (defn- include-children-of-included-pages
   [roam-db-conn])

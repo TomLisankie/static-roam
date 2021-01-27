@@ -3,50 +3,49 @@
 {
  "about"
  {
-  :folder "about"
-  :query '[:find ?eid
-           :where
-           [?eid :node/title "About"]]
+  :folder "/about"
+  :index true
+  :query "PageTitle: About"
+  :query '(tagged-as "About")
   }
  "contact"
  {
-  :folder "contact"
-  :query '[:find ?eid
-           :where
-           [?eid :node/title "Contact"]]
+  :folder "/contact"
+  :index true
+  :query "PageTitle: Contact"
   }
  "graph-page-example"
  {
-  :folder "nodes"
-  :query :query-for-graph-pages
+  :folder "/nodes"
+  :query "Not:Post,About,Homepage,Contact,Now"
   }
  "index"
  {
-  :folder "."
-  :query '[:find ?eid
-           :where
-           [?eid :node/title "Homepage"]]
+  :folder "/"
+  :index true
+  :query "PageTitle: Homepage"
   }
  "mind"
  {
-  :folder "mind"
-  :query :query-for-entry-points-page
+  :folder "/mind"
+  :index true
+  :query "TaggedAs: EntryPoint"
   }
  "now"
  {
-  :folder "now"
-  :query '[:find ?eid
-           :where
-           [?eid :node/title "Now Page"]]
+  :folder "/now"
+  :index true
+  :query "PageTitle: Now"
   }
  "post-example"
  {
-  :folder "nodes"
-  :query :query-for-post-pages
+  :folder "/nodes"
+  :query "TaggedAs: Post"
   }
  "posts"
  {
-  :folder "posts"
-  :query :query-for-posts-page
+  :folder "/posts"
+  :index true
+  :query "TaggedAs: Post"
   }
  }
