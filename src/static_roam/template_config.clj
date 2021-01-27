@@ -1,9 +1,9 @@
 (ns static-roam.template-config)
 
-;; Keep in mind, all of these are only operating on blocks that we've already marked as included
 {
  :exclude ["Exclude", "high"]
  :include ["Include"]
+ ;; Keep in mind, all of these are only operating on blocks that we've already marked as included:
  :templates {"about"
              {
               :folder "/about"
