@@ -4,7 +4,9 @@
             [hiccup.core :as hiccup]
             [static-roam.templating :as templating]
             [stasis.core :as stasis]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint]
+            [clojure.java.io :as io]
+            [clojure.edn :as edn-utils]))
 
 (defn- metadata-properties
   [metadata]
@@ -92,7 +94,8 @@
                             (hash-map)
                             (map
                              vec
-                             (filter included? block-map)))]
+                             (filter included? block-map)))
+        config (edn-utils/read-string (slurp (io/resource "config.edn")))]
     (generate-pages-html included-block-map (str output-dir "/pages"))
     (generate-index-of-pages-html included-block-map (str output-dir "/pages"))
     (generate-home-page-html included-block-map output-dir)))

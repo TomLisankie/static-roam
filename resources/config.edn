@@ -1,7 +1,7 @@
-(ns static-roam.template-config)
-
 {
  :site-title "Thomas Lisankie"
+ :twitter-username "TomLisankie"
+ :github-username "TomLisankie"
  :exclude ["Exclude" "high"]
  :include ["Include"]
  ;; Keep in mind, all of these are only operating on blocks that we've already marked as included:
