@@ -89,7 +89,7 @@
     (true? (:included block-props))))
 
 (defn generate-static-roam-html
-  [block-map output-dir]
+  [roam-db output-dir]
   (let [included-block-map (into
                             (hash-map)
                             (map

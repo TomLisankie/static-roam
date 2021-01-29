@@ -363,42 +363,56 @@
   [roam-db-conn])
 
 (defn- include-explicitly-included-blocks
-  [roam-db-conn]
+  [roam-db-conn include-tags]
   (let [sr-info-eid (first (first (ds/q '[:find ?eid
                                           :where
                                           [?eid :node/title "Static-Roam Info"]]
                                         @roam-db-conn)))
-        explicit-include-eid (first (first (ds/q '[:find ?eid
-                                                   :where
-                                                   [?eid :node/title "SRInclude"]]
-                                                 @roam-db-conn)))
-        eids-of-explicit-includes (map first (ds/q '[:find ?parent-eid
-                                                     :where
-                                                     [?eid :block/refs sr-info-eid]
-                                                     [?eid :block/refs explicit-include-eid]
-                                                     [?eid :block/parents ?parent-eid]]
-                                                   @roam-db-conn))
+        explicit-include-eids (map #(first (first %))
+                                   (map #(ds/q '[:find ?eid
+                                                 :in $ ?tag
+                                                 :where
+                                                 [?eid :node/title ?tag]]
+                                               @roam-db-conn %)
+                                        include-tags))
+        eids-of-explicit-includes (reduce into []
+                                          (map first
+                                               (map #(ds/q '[:find ?parent-eid
+                                                             :in $ ?explicit-include-tag-eid
+                                                             :where
+                                                             [?eid :block/refs sr-info-eid]
+                                                             [?eid :block/refs ?explicit-include-tag-eid]
+                                                             [?eid :block/parents ?parent-eid]]
+                                                           @roam-db-conn %)
+                                                    eids-of-explicit-includes)))
         transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) eids-of-explicit-includes))
         ;; TODO include children as well
         ]
     (ds/transact! roam-db-conn transactions)))
 
 (defn- exclude-explicitly-excluded-blocks
-  [roam-db-conn]
+  [roam-db-conn exclude-tags]
   (let [sr-info-eid (first (first (ds/q '[:find ?eid
                                           :where
                                           [?eid :node/title "Static-Roam Info"]]
                                         @roam-db-conn)))
-        explicit-exclude-eid (first (first (ds/q '[:find ?eid
-                                                   :where
-                                                   [?eid :node/title "SRExclude"]]
-                                                 @roam-db-conn)))
-        eids-of-explicit-excludes (map first (ds/q '[:find ?parent-eid
-                                                     :where
-                                                     [?eid :block/refs sr-info-eid]
-                                                     [?eid :block/refs explicit-exclude-eid]
-                                                     [?eid :block/parents ?parent-eid]]
-                                                   @roam-db-conn))
+        explicit-exclude-eid (map #(first (first %))
+                                  (map #(ds/q '[:find ?eid
+                                                :in $ ?tag
+                                                :where
+                                                [?eid :node/title ?tag]]
+                                              @roam-db-conn %)
+                                       exclude-tags))
+        eids-of-explicit-excludes (reduce into []
+                                          (map first
+                                               (map #(ds/q '[:find ?parent-eid
+                                                             :in $ ?explicit-exclude-tag-eid
+                                                             :where
+                                                             [?eid :block/refs sr-info-eid]
+                                                             [?eid :block/refs ?explicit-exclude-tag-eid]
+                                                             [?eid :block/parents ?parent-eid]]
+                                                           @roam-db-conn %)
+                                                    eids-of-explicit-excludes)))
         transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) eids-of-explicit-excludes))
         ;; TODO exclude children as well
         ]
@@ -419,18 +433,23 @@
                                           :where
                                           [?eid :node/title "Static-Roam Info"]]
                                         @roam-db-conn)))
-        entry-point-tag-eids (map #(ds/q '[:find ?eid
-                                      :in $ ?tag
-                                      :where
-                                      [?eid :node/title ?tag]]
-                                    @roam-db-conn %)
-                             entry-point-tags)
-        eids-of-entry-points (map first (ds/q '[:find ?parent-eid
+        entry-point-tag-eids (map #(first (first %))
+                                  (map #(ds/q '[:find ?eid
+                                                :in $ ?tag
                                                 :where
-                                                [?eid :block/refs sr-info-eid]
-                                                [?eid :block/refs entry-point-eid]
-                                                [?eid :block/parents ?parent-eid]]
-                                              @roam-db-conn))
+                                                [?eid :node/title ?tag]]
+                                              @roam-db-conn %)
+                                       entry-point-tags))
+        eids-of-entry-points (reduce into []
+                                     (map first
+                                          (map #(ds/q '[:find ?parent-eid
+                                                        :in $ ?entry-point-tag-eid
+                                                        :where
+                                                        [?eid :block/refs sr-info-eid]
+                                                        [?eid :block/refs ?entry-point-tag-eid]
+                                                        [?eid :block/parents ?parent-eid]]
+                                                      @roam-db-conn %)
+                                               entry-point-tag-eids)))
         transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) eids-of-entry-points))]
     (ds/transact! roam-db-conn transactions)
     ;; find all pages ref'd by the entry point children and mark them as included as well. repeat this up through the degree
@@ -438,6 +457,6 @@
     ;; up to this point, the only entities marked as visible have been the blocks containing the titles of the entry points. So now, aggregate all of the children (recursively) and mark their `included` as `true`
     (include-children-of-included-pages roam-db-conn)
     ;; now that all of the entry point stuff is done, mark all of the pages/blocks (and their children) marked for explicit inclusion `included` to `true`
-    (include-explicitly-included-blocks roam-db-conn)
+    (include-explicitly-included-blocks roam-db-conn include-tags)
     ;; and now that all of the pages/blocks that are going to be included have been marked as such, mark the `included` to `false` for all the pages/blocks (and their children) marked for explicit exclusion
-    (exclude-explicitly-excluded-blocks roam-db-conn)))
+    (exclude-explicitly-excluded-blocks roam-db-conn exclude-tags)))
