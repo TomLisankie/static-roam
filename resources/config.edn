@@ -2,8 +2,9 @@
  :site-title "Thomas Lisankie"
  :twitter-username "TomLisankie"
  :github-username "TomLisankie"
- :exclude ["Exclude" "high"]
+ :entry-point-tags ["EntryPoint"]
  :include ["Include"]
+ :exclude ["Exclude" "high"]
  ;; Keep in mind, all of these are only operating on blocks that we've already marked as included:
  :templates {"about"
              {

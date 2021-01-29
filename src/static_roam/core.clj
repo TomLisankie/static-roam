@@ -6,9 +6,10 @@
 
 (defn generate-static-roam!
   [path-to-zip output-dir degree]
-  (let [roam-db-conn (utils/create-roam-edn-db-from-zip path-to-zip)]
-    (database/determine-which-content-to-include roam-db-conn degree)
-    (html-gen/generate-static-roam-html static-roam-block-map output-dir)))
+  (let [roam-db-conn (utils/create-roam-edn-db-from-zip path-to-zip)
+        config (edn-utils/read-string (slurp (io/resource "config.edn")))]
+    (database/determine-which-content-to-include roam-db-conn degree config)
+    (html-gen/generate-static-roam-html static-roam-block-map output-dir config)))
 
 (defn -main
   [path-to-zip output-dir degree]

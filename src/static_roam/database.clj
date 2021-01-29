@@ -405,9 +405,12 @@
     (ds/transact! roam-db-conn transactions)))
 
 (defn determine-which-content-to-include
-  [roam-db-conn degree]
+  [roam-db-conn degree config]
   ;; mark all entities "included" field as `false` initially
-  (let [eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db-conn))
+  (let [entry-point-tags (:entry-point-tags config)
+        include-tags (:include config)
+        exclude-tags (:exclude config)
+        eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db-conn))
         transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) eids))]
     (ds/transact! roam-db-conn transactions)) ;; might want to make this more nuanced so only entities with :block/string or :node/title get included
   ;; then determine which content to include
@@ -416,10 +419,12 @@
                                           :where
                                           [?eid :node/title "Static-Roam Info"]]
                                         @roam-db-conn)))
-        entry-point-eid (first (first (ds/q '[:find ?eid
-                                              :where
-                                              [?eid :node/title "EntryPoint"]]
-                                            @roam-db-conn)))
+        entry-point-tag-eids (map #(ds/q '[:find ?eid
+                                      :in $ ?tag
+                                      :where
+                                      [?eid :node/title ?tag]]
+                                    @roam-db-conn %)
+                             entry-point-tags)
         eids-of-entry-points (map first (ds/q '[:find ?parent-eid
                                                 :where
                                                 [?eid :block/refs sr-info-eid]

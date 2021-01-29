@@ -22,7 +22,7 @@
 
 (defn create-roam-edn-db-from-zip
   [path-to-zip]
-  (let [edn-path (unzip-roam-json
+  (let [edn-path (unzip-roam-edn
                    path-to-zip
                    (->> path-to-zip
                         (#(str-utils/split % #"/"))

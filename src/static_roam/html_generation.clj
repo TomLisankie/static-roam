@@ -94,8 +94,7 @@
                             (hash-map)
                             (map
                              vec
-                             (filter included? block-map)))
-        config (edn-utils/read-string (slurp (io/resource "config.edn")))]
+                             (filter included? block-map)))]
     (generate-pages-html included-block-map (str output-dir "/pages"))
     (generate-index-of-pages-html included-block-map (str output-dir "/pages"))
     (generate-home-page-html included-block-map output-dir)))
