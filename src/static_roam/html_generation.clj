@@ -3,6 +3,7 @@
             [static-roam.utils :as utils]
             [hiccup.core :as hiccup]
             [static-roam.templating :as templating]
+            [static-roam.templates :as templates]
             [stasis.core :as stasis]
             [clojure.pprint :as pprint]
             [clojure.java.io :as io]
@@ -89,8 +90,10 @@
     (true? (:included block-props))))
 
 (defn generate-static-roam-html
-  [roam-db output-dir]
-  (let [included-block-map (into
+  [roam-db output-dir config]
+  ;; the roam-db passed in here (should) only consists now of blocks and pages that were marked for inclusion
+  (let [template-info (:template-info config)
+        included-block-map (into
                             (hash-map)
                             (map
                              vec
@@ -98,3 +101,49 @@
     (generate-pages-html included-block-map (str output-dir "/pages"))
     (generate-index-of-pages-html included-block-map (str output-dir "/pages"))
     (generate-home-page-html included-block-map output-dir)))
+
+(defn- fill-out-template
+  [roam-db sr-info-eid template-kv]
+  (let [template-name (first template-kv)
+        template-metadata (second template-kv)
+        tag-eid (first
+                 (first
+                  (ds/q '[:find ?eid
+                          :in $ ?tag
+                          :where
+                          [?eid :node/title ?tag]]
+                        @roam-db-conn (:tagged-as template-metadata))))
+        page-eid (ds/q '[:find ?parent-eid
+                         :in $ ?tag-eid
+                         :where
+                         [?eid :block/refs sr-info-eid]
+                         [?eid :block/refs ?tag-eid]
+                         [?eid :block/parents ?parent-eid]]
+                       @roam-db-conn tag-eid)
+        template-fn (get templates/template-fns template-name)
+        filled-out-template (template-fn roam-db page-eid)]
+    filled-out-template))
+
+(defn- fill-out-templates
+  [roam-db template-info sr-info-eid]
+  (into (hash-map) (map #(fill-out-template roam-db sr-info-eid %) template-info)))
+
+(defn- index?
+  [template-kv]
+  (true? (:index (second template-kv))))
+
+(defn- create-and-save-html-from-hiccup
+  [filled-out-template-map template-info output-dir]
+  (loop [template-kv (first filled-out-template-map)]
+    (if (index? template-kv)
+      )))
+
+(defn generate-site
+  [roam-db output-dir config]
+  (let [template-info (:template-info config)
+        sr-info-eid (first (first (ds/q '[:find ?eid
+                                          :where
+                                          [?eid :node/title "Static-Roam Info"]]
+                                        @roam-db-conn)))
+        filled-out-templates (fill-out-templates roam-db template-info sr-info-eid)]
+    (create-and-save-html-from-hiccup filled-out-templates template-info output-dir)))

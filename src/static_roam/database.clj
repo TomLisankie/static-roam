@@ -422,7 +422,7 @@
   [roam-db-conn degree config]
   ;; mark all entities "included" field as `false` initially
   (let [entry-point-tags (:entry-point-tags config)
-        include-tags (:include config)
+        include-tags (into #{} (:include config) (filter (complement nil?) (map #(:tagged-as (second %)) (:template-info config))))
         exclude-tags (:exclude config)
         eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db-conn))
         transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) eids))]
@@ -459,4 +459,6 @@
     ;; now that all of the entry point stuff is done, mark all of the pages/blocks (and their children) marked for explicit inclusion `included` to `true`
     (include-explicitly-included-blocks roam-db-conn include-tags)
     ;; and now that all of the pages/blocks that are going to be included have been marked as such, mark the `included` to `false` for all the pages/blocks (and their children) marked for explicit exclusion
-    (exclude-explicitly-excluded-blocks roam-db-conn exclude-tags)))
+    (exclude-explicitly-excluded-blocks roam-db-conn exclude-tags)
+    ;; TODO and now that that's done, remove all excluded blocks and pages (aka any entity where `included` is `false`)
+    ))
