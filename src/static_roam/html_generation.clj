@@ -132,11 +132,16 @@
   [template-kv]
   (true? (:index (second template-kv))))
 
-(defn- create-and-save-html-from-hiccup
+(defn- create-and-save-html-from-hiccup-template
+  [template-kv template-info output-dir]
+  ;; need to find place to save the html
+  (let [folder (str output-dir (:folder (get template-info (first template-kv))))])
+  ;; need to generate html
+  )
+
+(defn- create-and-save-html-from-hiccup-templates
   [filled-out-template-map template-info output-dir]
-  (loop [template-kv (first filled-out-template-map)]
-    (if (index? template-kv)
-      )))
+  (map #(create-and-save-html-from-hiccup-template % template-info output-dir) filled-out-template-map))
 
 (defn generate-site
   [roam-db output-dir config]
@@ -146,4 +151,4 @@
                                           [?eid :node/title "Static-Roam Info"]]
                                         @roam-db-conn)))
         filled-out-templates (fill-out-templates roam-db template-info sr-info-eid)]
-    (create-and-save-html-from-hiccup filled-out-templates template-info output-dir)))
+    (create-and-save-html-from-hiccup-templates filled-out-templates template-info output-dir)))
