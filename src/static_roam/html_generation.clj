@@ -121,9 +121,11 @@
                                [?eid :block/refs ?tag-eid]
                                [?eid :block/parents ?parent-eid]]
                              @roam-db-conn tag-eid))
+        page-uids (map #(get-page-uid roam-db %) page-eids)
         template-fn (get templates/template-fns template-name)
-        filled-out-template-instances (map #(template-fn roam-db %) page-eids)]
-    [template-name filled-out-template-instances]))
+        filled-out-template-instances (map #(template-fn roam-db %) page-eids)
+        uid-hiccup-map (zipmap page-uids filled-out-template-instances)]
+    [template-name uid-hiccup-map]))
 
 (defn- fill-out-templates
   [roam-db template-info]
@@ -133,14 +135,20 @@
                                         @roam-db-conn)))]
     (into (hash-map) (map #(fill-out-template roam-db sr-info-eid %) template-info))))
 
-(defn- index?
-  [template-kv]
-  (true? (:index (second template-kv))))
+(defn- make-path-template-map
+  [folder uid-template-map]
+  (into (hash-map) (map #(fn [kv] [(str folder "/" (first kv) ".html") (second kv)]) uid-template-map)))
 
 (defn- create-and-save-html-from-hiccup-template
   [template-instance-kv template-info output-dir]
   ;; need to find folder to save the html in
-  (let [folder (str output-dir (:folder (get template-info (first template-instance-kv))))])
+  (let [template-name (first template-instance-kv)
+        template-metadata (get template-info template-name)
+        folder (str output-dir (:folder template-metadata))
+        path-template-map (if (true? (:index template-metadata))
+                            {(str folder "/index.html") (second (second template-instance-kv))}
+                            (make-path-template-map folder (second template-instance-kv)))]
+    )
   ;; need to generate html
   )
 
