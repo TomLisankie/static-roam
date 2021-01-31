@@ -113,16 +113,17 @@
                           :where
                           [?eid :node/title ?tag]]
                         @roam-db-conn (:tagged-as template-metadata))))
-        page-eid (ds/q '[:find ?parent-eid
-                         :in $ ?tag-eid
-                         :where
-                         [?eid :block/refs sr-info-eid]
-                         [?eid :block/refs ?tag-eid]
-                         [?eid :block/parents ?parent-eid]]
-                       @roam-db-conn tag-eid)
+        page-eids (map #(first %)
+                       (ds/q '[:find ?parent-eid
+                               :in $ ?tag-eid
+                               :where
+                               [?eid :block/refs sr-info-eid]
+                               [?eid :block/refs ?tag-eid]
+                               [?eid :block/parents ?parent-eid]]
+                             @roam-db-conn tag-eid))
         template-fn (get templates/template-fns template-name)
-        filled-out-template (template-fn roam-db page-eid)]
-    filled-out-template))
+        filled-out-template-instances (map #(template-fn roam-db %) page-eids)]
+    [template-name filled-out-template-instances]))
 
 (defn- fill-out-templates
   [roam-db template-info]
@@ -137,9 +138,9 @@
   (true? (:index (second template-kv))))
 
 (defn- create-and-save-html-from-hiccup-template
-  [template-kv template-info output-dir]
+  [template-instance-kv template-info output-dir]
   ;; need to find folder to save the html in
-  (let [folder (str output-dir (:folder (get template-info (first template-kv))))])
+  (let [folder (str output-dir (:folder (get template-info (first template-instance-kv))))])
   ;; need to generate html
   )
 
