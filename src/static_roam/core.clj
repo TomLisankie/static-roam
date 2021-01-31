@@ -9,7 +9,7 @@
   (let [roam-db-conn (utils/create-roam-edn-db-from-zip path-to-zip)
         config (edn-utils/read-string (slurp (io/resource "config.edn")))]
     (database/determine-which-content-to-include roam-db-conn degree config)
-    (html-gen/generate-static-roam-html static-roam-block-map output-dir config)))
+    (html-gen/generate-site roam-db-conn output-dir config)))
 
 (defn -main
   [path-to-zip output-dir degree]

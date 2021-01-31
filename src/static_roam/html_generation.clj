@@ -125,8 +125,12 @@
     filled-out-template))
 
 (defn- fill-out-templates
-  [roam-db template-info sr-info-eid]
-  (into (hash-map) (map #(fill-out-template roam-db sr-info-eid %) template-info)))
+  [roam-db template-info]
+  (let [sr-info-eid (first (first (ds/q '[:find ?eid
+                                          :where
+                                          [?eid :node/title "Static-Roam Info"]]
+                                        @roam-db-conn)))]
+    (into (hash-map) (map #(fill-out-template roam-db sr-info-eid %) template-info))))
 
 (defn- index?
   [template-kv]
@@ -134,7 +138,7 @@
 
 (defn- create-and-save-html-from-hiccup-template
   [template-kv template-info output-dir]
-  ;; need to find place to save the html
+  ;; need to find folder to save the html in
   (let [folder (str output-dir (:folder (get template-info (first template-kv))))])
   ;; need to generate html
   )
@@ -146,9 +150,5 @@
 (defn generate-site
   [roam-db output-dir config]
   (let [template-info (:template-info config)
-        sr-info-eid (first (first (ds/q '[:find ?eid
-                                          :where
-                                          [?eid :node/title "Static-Roam Info"]]
-                                        @roam-db-conn)))
-        filled-out-templates (fill-out-templates roam-db template-info sr-info-eid)]
+        filled-out-templates (fill-out-templates roam-db template-info)]
     (create-and-save-html-from-hiccup-templates filled-out-templates template-info output-dir)))
