@@ -345,20 +345,6 @@
         hiccup-for-included-blocks (generate-hiccup-for-included-blocks children-of-embeds-added)]
     hiccup-for-included-blocks))
 
-(defn- mark-refs-as-included
-  [roam-db degree entry-point-eids]
-  ;; loop over entry-points, gather refs that their children include, mark those as included, repeat with degree lesser and the new eids
-  (loop [entry-point-eids entry-point-eids
-         current-entry-point (first entry-point-eids)
-         refs (get-refs-for-page roam-db current-entry-point)]
-    (let [remaining-entry-points (rest entry-point-eids)
-          next-entry-point (first (rest entry-point-eids))]
-      (if (= (count entry-point-eids) 0)
-        (mark-refs-as-included roam-db (dec degree) refs)
-        (recur remaining-entry-points
-               next-entry-point
-               (get-refs-for-page roam-db next-entry-point))))))
-
 (defn- include-children-of-included-pages
   [roam-db])
 
@@ -453,6 +439,34 @@
                                                      entity-tag-eids)))]
     eids-of-entities-with-tags))
 
+(defn- get-descendant-eids
+  [roam-db eid]
+  ;; This is a very important function and will be used in further steps
+  )
+
+(defn- get-entities-linked-by-descendants
+  [roam-db eid]
+  (let [descendant-eids (get-descendant-eids roam-db eid)
+        refs (get-refs-of-descendants roam-db descendant-eids)]
+    refs))
+
+(defn- get-eids-linked-by-entity
+  [roam-db eid]
+  (let [eids-linked (get-entities-linked-by-children roam-db eid)]
+    eids-linked))
+
+(defn- get-entities-linked-by
+  [roam-db eids]
+  (let [all-eids-linked (reduce into #{} (map #(get-eids-linked-by-entity roam-db %) eids))]
+    all-eids-linked))
+
+(defn- mark-refs-as-included
+  [roam-db degree entry-point-eids]
+  (let [eids entry-point-eids
+        linked-eids (get-entities-linked-by roam-db eids)]
+    (when (> degree 0)
+      (mark-refs-as-included roam-db (dec degree) linked-eids))))
+
 (defn- mark-entry-points-and-refs-as-included
   [roam-db degree entry-point-tags]
   (let [entry-point-eids (get-eids-of-entities-with-tags roam-db entry-point-tags)
@@ -475,6 +489,6 @@
   (if (int? degree)
     (mark-entry-point-and-ref-pages-as-included roam-db degree (:entry-point-tags config))
     (mark-all-entities-as-included roam-db))
-  (include-explicitly-included roam-db config)
-  (exclude-explicitly-excluded roam-db config)
+  (include-explicitly-included roam-db (:include config))
+  (exclude-explicitly-excluded roam-db (:exclude config))
   (remove-all-excluded-entities roam-db))
