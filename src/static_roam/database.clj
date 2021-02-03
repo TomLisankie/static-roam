@@ -406,10 +406,7 @@
 
 (defn- mark-all-entities-as-excluded
   [roam-db]
-  (let [entry-point-tags (:entry-point-tags config)
-        include-tags (into #{} (:include config) (filter (complement nil?) (map #(:tagged-as (second %)) (:template-info config))))
-        exclude-tags (:exclude config)
-        eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db))
+  (let [eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db))
         transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) eids))]
     (ds/transact! roam-db transactions)) ;; might want to make this more nuanced so only entities with :block/string or :node/title get included
   )
@@ -442,7 +439,26 @@
 (defn- get-descendant-eids
   [roam-db eid]
   ;; This is a very important function and will be used in further steps
-  )
+  (let [children (map first
+                      (ds/q '[:find ?children-eids
+                              :in $ ?parent-eid
+                              :where
+                              [?parent-eid :block/children ?children-eids]]
+                            @roam-db eid))]
+    (reduce into children (map #(get-descendant-eids roam-db %) children))))
+
+(defn- get-refs-for-entity
+  [roam-db eid]
+  (map first
+       (ds/q '[:find ?ref-eids
+               :in $ ?eid
+               :where
+               [?eid :block/refs ?ref-eids]]
+             @roam-db eid)))
+
+(defn- get-refs-of-descendants
+  [roam-db descendant-eids]
+  (reduce into #{} (map #(get-refs-for-entity roam-db %) descendant-eids)))
 
 (defn- get-entities-linked-by-descendants
   [roam-db eid]
@@ -452,7 +468,7 @@
 
 (defn- get-eids-linked-by-entity
   [roam-db eid]
-  (let [eids-linked (get-entities-linked-by-children roam-db eid)]
+  (let [eids-linked (get-entities-linked-by-descendants roam-db eid)]
     eids-linked))
 
 (defn- get-entities-linked-by
@@ -463,7 +479,9 @@
 (defn- mark-refs-as-included
   [roam-db degree entry-point-eids]
   (let [eids entry-point-eids
-        linked-eids (get-entities-linked-by roam-db eids)]
+        linked-eids (get-entities-linked-by roam-db eids)
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) linked-eids))]
+    (ds/transact! roam-db transactions)
     (when (> degree 0)
       (mark-refs-as-included roam-db (dec degree) linked-eids))))
 
@@ -482,6 +500,12 @@
   [roam-db degree]
   (mark-entry-points-and-refs-as-included roam-db degree)
   (mark-included-entity-children-as-included roam-db))
+
+(defn- mark-all-entities-as-included
+  [roam-db]
+  (let [eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) eids))]
+    (ds/transact! roam-db transactions)))
 
 (defn determine-which-content-to-include
   [roam-db degree config]
