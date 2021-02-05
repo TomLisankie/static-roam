@@ -3,8 +3,10 @@
  :twitter-username "TomLisankie"
  :github-username "TomLisankie"
  :entry-point-tags ["EntryPoint"]
- :include ["Include"]
- :exclude ["Exclude" "high"]
+ :include-tagged ["Include"]
+ :include-refs []
+ :exclude-tagged ["Exclude"]
+ :exclude-refs ["high"]
  ;; Keep in mind, all of these are only operating on blocks that we've already marked as included:
  :template-info {"about"
                  {
