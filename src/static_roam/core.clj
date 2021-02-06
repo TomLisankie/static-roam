@@ -28,6 +28,11 @@
       tap
       (html-gen/generate-static-roam-html (or output-dir "output"))))
 
+(defn gen-page
+  [page]
+  (html-gen/export-page
+   (html-gen/generate-page-hiccup @last-bm page) page "output/pages"))
+
 
 
 

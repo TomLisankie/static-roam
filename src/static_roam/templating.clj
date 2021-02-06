@@ -42,40 +42,40 @@
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
      [:title ~page-title]               ;TODO might want to prepend a site title
      [:link {:rel "stylesheet"
-              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
-              :crossorigin "anonymous"}]
-      [:link {:rel "stylesheet" :href ~site-css}] 
-      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
-      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap"}]]
+             :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+             :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+             :crossorigin "anonymous"}]
+     ~@(for [css site-css]
+         `[:link {:rel "stylesheet" :href ~css}])
+     [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
+     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap"}]]
    [:body
     [:header.site-header
      [:div.wrapper
       [:nav.navbar.navbar-expand-lg.navbar-light ; .bg-dark.navbar-dark
        (into
-       [:ul.navbar-nav.mr-auto]
-       (map (fn [[url title]] [:li.nav-item 
-                               [:a.nav-link {:href url}
-                                title
-                                ]])
-            (nav-bar-page-dict block-map)))]]]
+        [:ul.navbar-nav.mr-auto]
+        (map (fn [[url title]] [:li.nav-item 
+                                [:a.nav-link {:href url}
+                                 title
+                                 ]])
+             (nav-bar-page-dict block-map)))]]]
     [:div.container.main
      body-hiccup]]])
 
-(defn children-of-block-template
+(defn- block-template
   [block-id block-map]
   (let [properties (get block-map block-id)]
-    [:ul
+    [:ul {:id block-id}
      (if (or (nil? (:hiccup properties))
              (= (:content properties) block-id))
        ""
-       ;;; TODO Turned off block clicks, may want it under a flag or something
-       [:li.block #_ {:onclick (str "location.href='" (utils/page-title->html-file-title block-id :case-sensitive) "'")}
+       [:li.block
         (:hiccup properties)])
      (let [children (:children properties)]
        (if (not= 0 (count children))
          ;; recurse on each of the children
-         (map #(children-of-block-template % block-map) children)
+         (map #(block-template % block-map) children)
          ;; otherwise, evaluate to empty div
          [:div]))]))
 
@@ -112,7 +112,7 @@
     (let [page (find-page r block-map)]
       [:div
        "From " (page-link page)
-       [:div (children-of-block-template r block-map)]])))
+       [:div (block-template r block-map)]])))
 
 (defn linked-references-template
   [references block-map]
@@ -129,7 +129,7 @@
              (empty? (:children block)))
        [:div.missing
         "This page does not yet exist!"] ;TODO ok this is sucky UX, the links themselves should look or act differently.
-       [:div (children-of-block-template block-id block-map)])
+       [:div (block-template block-id block-map)])
      (let [linked-refs (database/get-linked-references block-id block-map)]
        (when-not (empty? linked-refs)
          [:div.incoming

@@ -20,13 +20,21 @@
 ;;; This is relative to output TODO probably copy into output?
 (defn generate-page-html
   [block-map block-id]
-  [(utils/html-file-title block-id)
+  [(utils/html-file-title block-id)     ;TODO bullshit
    (hiccup/html
     (templating/page-hiccup
      (templating/block-page-template block-id block-map)
      block-id                           ;TODO htmlize
      block-map
      ))])
+
+(defn generate-page-hiccup
+  [block-map block-id]
+  (templating/page-hiccup
+   (templating/block-page-template block-id block-map)
+   block-id                           ;TODO htmlize
+   block-map
+   ))
 
 (defn generate-pages-html
   [block-map output-dir]
@@ -42,9 +50,10 @@
 (defn export-page
   "Write out a single page. Content is hiccup. TODO use this more" 
   [content name output-dir]
-  (stasis/export-pages
-   {name (hiccup/html content)}
-   output-dir))
+  (let [fname (utils/html-file-title name)]
+    (stasis/export-pages
+     {fname (hiccup/html content)}
+     output-dir)))
 
 (defn generate-home-page-html
   [block-map output-dir]
