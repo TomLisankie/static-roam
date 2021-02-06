@@ -3,12 +3,13 @@ body {
     /* font-family: Georgia; */
     /* font-family: 'Martel', serif; */
     font-family: Lato;
-    font-size: 11pt;
-    line-height: 1.5;
+    font-size: 14pt;
+    line-height: 1.5; 
 }
 
 .main {
     margin-top: 12px;
+    width: 800px;
 }
 
 .block {
@@ -37,6 +38,11 @@ ul {
 
 li {
     display: flex;
+}
+
+.page-content {
+    /* A kludgy way to shift page content left so it aligns with title */
+    margin-left: -80px;
 }
 
 /* Gyrations to get colored list bullets */

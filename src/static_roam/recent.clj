@@ -33,6 +33,6 @@
           " "
           [:span ~(render-time edit-time)]
           ~@(for [block (take 3 group)] ;limit to 3 chunks
-              [:div (templating/children-of-block-template (:id block) block-map)])])])
+              [:div (templating/block-template (:id block) block-map)])])])
 
 

@@ -6,7 +6,10 @@
 
 ;;; TODO Note: the functions of templating and html-gen seem to overlap; not sure they should be separate.
 
-(def site-css "../assets/hyper-roam.css") ;TODO make this user settable somehow
+;;; TODO make this user settable somehow
+(def site-css ["../assets/hyper-roam.css"
+;               "../assets/proofreading.css"
+               ])
 
 (defn- metadata-properties
   [metadata]
@@ -63,7 +66,7 @@
     [:div.container.main
      body-hiccup]]])
 
-(defn- block-template
+(defn block-template
   [block-id block-map]
   (let [properties (get block-map block-id)]
     [:ul {:id block-id}
@@ -129,7 +132,7 @@
              (empty? (:children block)))
        [:div.missing
         "This page does not yet exist!"] ;TODO ok this is sucky UX, the links themselves should look or act differently.
-       [:div (block-template block-id block-map)])
+       [:div.page-content (block-template block-id block-map)])
      (let [linked-refs (database/get-linked-references block-id block-map)]
        (when-not (empty? linked-refs)
          [:div.incoming
