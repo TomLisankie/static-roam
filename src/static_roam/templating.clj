@@ -1,15 +1,11 @@
 (ns static-roam.templating
   (:require [clojure.string :as s]
+            [static-roam.config :as config]
             [static-roam.utils :as utils]
             [static-roam.parser :as parser]
             [static-roam.database :as database]))
 
 ;;; TODO Note: the functions of templating and html-gen seem to overlap; not sure they should be separate.
-
-;;; TODO make this user settable somehow
-(def site-css ["../assets/hyper-roam.css"
-;               "../assets/proofreading.css"
-               ])
 
 (defn- metadata-properties
   [metadata]
@@ -48,7 +44,7 @@
              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
              :crossorigin "anonymous"}]
-     ~@(for [css site-css]
+     ~@(for [css config/site-css]
          `[:link {:rel "stylesheet" :href ~css}])
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap"}]]
@@ -66,6 +62,10 @@
     [:div.container.main
      body-hiccup]]])
 
+(defn roam-url
+  [block-id]
+  (str "https://roamresearch.com/#/app/hyperphor/page/" block-id))
+
 (defn block-template
   [block-id block-map]
   (let [properties (get block-map block-id)]
@@ -73,7 +73,7 @@
      (if (or (nil? (:hiccup properties))
              (= (:content properties) block-id))
        ""
-       [:li.block
+       [:li.block {:onclick (when config/dev-mode (str "location.href='" (roam-url block-id) "'"))}
         (:hiccup properties)])
      (let [children (:children properties)]
        (if (not= 0 (count children))

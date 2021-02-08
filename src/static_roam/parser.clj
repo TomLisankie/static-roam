@@ -2,6 +2,7 @@
   (:require [instaparse.core :as insta :refer [defparser]]
             [clojure.string :as str-utils]
             [clojure.data.json :as json]
+            [static-roam.config :as config]
             [static-roam.utils :as utils]
             [clojure.java.io :as io]))
 
@@ -198,12 +199,12 @@
 (defn entry-point?
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
   [page]
-  (or (tagged? page "#EntryPoint")
+  (or (tagged? page "#EntryPoint")      ;TODO config 
       (tagged? page "#Homepage")))
 
 (defn exit-point?
   [block]
-  (tagged? block "#Private"))           ;Formerly #ExitPoint
+  (and config/exit-tag (tagged? block config/exit-tag)))      ;#Private
 
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
