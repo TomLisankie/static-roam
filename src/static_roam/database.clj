@@ -560,6 +560,29 @@
   (include-tagged roam-db tagged)
   (include-refs roam-db refs))
 
+(defn- exclude-tagged
+  [roam-db tagged]
+  (let [explicitly-excluded-tag-eids (get-eids-of-entities-with-tags roam-db tagged)
+        children-of-entities-eids (get-descendant-eids-for-eids roam-db explicitly-included-tag-eids)
+        parent-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) explicitly-excluded-tag-eids))
+        children-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) children-of-entities-eids))])
+  (ds/transact! roam-db parent-transactions)
+  (ds/transact! roam-db children-transactions))
+
+(defn- exclude-refs
+  [roam-db refs]
+  (let [explicitly-excluded-ref-eids (get-eids-of-entities-with-refs-to roam-db refs)
+        children-of-entities-eids (get-descendant-eids-for-eids roam-db explicitly-excluded-ref-eids)
+        parent-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) explicitly-excluded-ref-eids))
+        children-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) children-of-entities-eids))]
+    (ds/transact! roam-db parent-transactions)
+    (ds/transact! roam-db children-transactions)))
+
+(defn- exclude-explicitly-excluded
+  [roam-db tagged refs]
+  (exclude-tagged roam-db tagged)
+  (exclude-refs roam-db refs))
+
 (defn determine-which-content-to-include
   [roam-db degree config]
   (mark-all-entities-as-excluded roam-db)
