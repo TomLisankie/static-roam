@@ -583,6 +583,15 @@
   (exclude-tagged roam-db tagged)
   (exclude-refs roam-db refs))
 
+(defn- retract-all-excluded-entities
+  [roam-db]
+  (let [excluded-eids (map first(ds/q '[:find ?eid
+                                        :where
+                                        [?eid :static-roam/included false]]
+                                      @roam-db))
+        retraction-transactions (vec (map (fn [eid] [:db.fn/retractEntity eid]) excluded-eids))]
+    (ds/transact! roam-db retraction-transactions)))
+
 (defn determine-which-content-to-include
   [roam-db degree config]
   (mark-all-entities-as-excluded roam-db)
@@ -591,4 +600,4 @@
     (mark-all-entities-as-included roam-db))
   (include-explicitly-included roam-db (:include-tagged config) (:include-refs config))
   (exclude-explicitly-excluded roam-db (:exclude-tagged config) (:exclude-refs config))
-  (remove-all-excluded-entities roam-db))
+  (retract-all-excluded-entities roam-db))
