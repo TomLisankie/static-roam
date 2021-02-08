@@ -2,6 +2,7 @@
   (:require [static-roam.parser :as parser]
             [static-roam.utils :as utils]
             [clojure.string :as str-utils]
+            [datascript.core :as ds]
             [clojure.pprint :as pprint]))
 
 (defn- get-block-id
