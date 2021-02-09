@@ -192,27 +192,65 @@
      "Want to become a better programmer? "
      [:a {:href "https://www.recurse.com/scout/click?t=1a34fc98998afcb8a3ea183e9aa2b564"} "Join the Recurse Center!"]]]])
 
+(defn- children-of-block-hiccup
+  [roam-db block-eid]
+  (let [properties (database/get-properties-for-block-id block-id block-map)]
+    [:ul {:style "list-style-type:none; padding-left:0;"}
+     [:li (:static-roam/hiccup (ds/pull roam-db [:static-roam/hiccup] block-eid))]
+     (let [children-eids (:block/children (ds/pull roam-db [:block/children] block-eid))]
+       (if (not= 0 (count children))
+         ;; recurse on each of the children
+         (map #(children-of-block-hiccup roam-db %) children-eids)
+         ;; otherwise, evaluate to empty div
+         [:div]))]))
+
+(defn- get-about-content-hiccup
+  [roam-db]
+  (let [contact-page-eid (first (first (ds/q '[:find ?eid
+                                               :where
+                                               [?eid :node/title "Contact Page"]]
+                                              @roam-db)))
+        children-eids (:block/children (ds/pull roam-db [:block/children] eid))]
+    [:section {:id "about-content"}
+     [:div
+      [:h1 "About Me"]]
+     [:ul {:style "list-style-type:none; padding-left:0;"}
+      (map #(children-of-block-hiccup roam-db %) children-eids)]]))
+
 (defn about-template
   [roam-db]
-  [:html {:lang "en-US"}
-   (head "About | Thomas Lisankie")
-   [:body
-    (header)
-    [:main {:id "content"}
-     [:section {:id "about-content"}
-      [:div
-       [:h1 "About Me"]]
-      [:ul {:style "list-style-type:none; padding-left:0;" :sr-content {:page "About"}}
-       [:li {:style " padding-bottom:1em;"}
-        "fsfsadffasdfsd"]
-       [:li {:style " padding-bottom:1em;"}
-        "fsfsadffasdfsd"]]
-      [:p "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog."]
-      [:p "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. "]]]
-    (footer)]])
+  (let [about-content (get-about-content-hiccup roam-db)]
+    [:html {:lang "en-US"}
+     (head "About | Thomas Lisankie")
+     [:body
+      (header)
+      [:main {:id "content"}
+       about-content]
+      (footer)]]))
+
+(defn- get-contact-content-hiccup
+  [roam-db]
+  (let [contact-page-eid (first (first (ds/q '[:find ?eid
+                                               :where
+                                               [?eid :node/title "Contact Page"]]
+                                              @roam-db)))
+        children-eids (:block/children (ds/pull roam-db [:block/children] eid))]
+    [:section {:id "contact-content"}
+     [:div
+      [:h1 "Contact Me"]]
+     [:ul {:style "list-style-type:none; padding-left:0;"}
+      (map #(children-of-block-hiccup roam-db %) children-eids)]]))
 
 (defn contact-template
-  [roam-db])
+  [roam-db]
+  (let [contact-content (get-contact-content-hiccup roam-db)]
+    [:html {:lang "en-US"}
+     (head "Contact | Thomas Lisankie")
+     [:body
+      (header)
+      [:main {:id "content"}
+       contact-content]
+      (footer)]]))
 
 (defn graph-page-template
   [roam-db])
