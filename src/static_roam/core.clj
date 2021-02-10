@@ -12,8 +12,7 @@
         config (edn-utils/read-string (slurp (io/resource "config.edn")))]
     (database/determine-which-content-to-include roam-db-conn degree config)
     (parser/parse-entities-in-db-to-hiccup roam-db-conn)
-    (templating/generate-templates roam-db-conn (:template-info config))
-    (html-gen/generate-site roam-db-conn output-dir config)))
+    (html-gen/generate-site (templating/generate-templates roam-db-conn (:template-info config)) output-dir)))
 
 (defn -main
   [path-to-zip output-dir degree]
