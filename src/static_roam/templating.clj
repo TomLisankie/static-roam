@@ -219,13 +219,14 @@
 (defn about-template
   [roam-db]
   (let [about-content (get-about-content-hiccup roam-db)]
-    [:html {:lang "en-US"}
-     (head "About | Thomas Lisankie")
-     [:body
-      (header)
-      [:main {:id "content"}
-       about-content]
-      (footer)]]))
+    {"/about/index.html"
+     [:html {:lang "en-US"}
+      (head "About | Thomas Lisankie")
+      [:body
+       (header)
+       [:main {:id "content"}
+        about-content]
+       (footer)]]}))
 
 (defn- get-contact-content-hiccup
   [roam-db]
@@ -243,13 +244,14 @@
 (defn contact-template
   [roam-db]
   (let [contact-content (get-contact-content-hiccup roam-db)]
-    [:html {:lang "en-US"}
-     (head "Contact | Thomas Lisankie")
-     [:body
-      (header)
-      [:main {:id "content"}
-       contact-content]
-      (footer)]]))
+    {"/contact/index.html"
+     [:html {:lang "en-US"}
+      (head "Contact | Thomas Lisankie")
+      [:body
+       (header)
+       [:main {:id "content"}
+        contact-content]
+       (footer)]]}))
 
 (defn- get-now-content-hiccup
   [roam-db]
@@ -267,13 +269,17 @@
 (defn now-template
   [roam-db]
   (let [now-content (get-now-content-hiccup roam-db)]
-    [:html {:lang "en-US"}
-     (head "Now | Thomas Lisankie")
-     [:body
-      (header)
-      [:main {:id "content"}
-       now-content]
-      (footer)]]))
+    {"/now/index.html"
+     [:html {:lang "en-US"}
+      (head "Now | Thomas Lisankie")
+      [:body
+       (header)
+       [:main {:id "content"}
+        now-content]
+       (footer)]]}))
+
+(defn post-template
+  [roam-db])
 
 (defn- link-li-ele
   [roam-db eid]
@@ -313,58 +319,38 @@
 (defn mind-template
   [roam-db]
   (let [entry-point-list (into [:ul {:id "entry-points"}] (get-page-title-links-for-tagged roam-db "EntryPoint"))]
-    [:html {:lang "en-US"}
-     (head "My Mind | Thomas Lisankie")
-     [:body
-      (header)
-      [:main {:id "content"}
-       [:section {:id "entry-point-list"}
-        [:div
-         [:h1 "Entry Points into my mind"]]
-        entry-point-list]]
-      (footer)]]))
+    {"/mind/index.html"
+     [:html {:lang "en-US"}
+      (head "My Mind | Thomas Lisankie")
+      [:body
+       (header)
+       [:main {:id "content"}
+        [:section {:id "entry-point-list"}
+         [:div
+          [:h1 "Entry Points into my mind"]]
+         entry-point-list]]
+       (footer)]]}))
 
 (defn posts-index-template
   [roam-db]
   (let [post-list (into [:ul {:id "posts"}] (get-page-title-links-for-tagged roam-db "Post"))]
-    [:html {:lang "en-US"}
-     (head "My Mind | Thomas Lisankie")
-     [:body
-      (header)
-      [:main {:id "content"}
-       [:section {:id "post-list"}
-        [:div
-         [:h1 "Posts / Essays / Prose / etc."]]
-        post-list]]
-      (footer)]]))
+    {"/posts/index.html"
+     [:html {:lang "en-US"}
+      (head "My Mind | Thomas Lisankie")
+      [:body
+       (header)
+       [:main {:id "content"}
+        [:section {:id "post-list"}
+         [:div
+          [:h1 "Posts / Essays / Prose / etc."]]
+         post-list]]
+       (footer)]]}))
 
 (defn graph-page-template
   [roam-db])
 
 (defn homepage-template
   [roam-db])
-
-(defn post-template
-  [roam-db])
-
-(def template-fns
-  {"about"
-   about-template
-   "contact"
-   contact-template
-   "graph-page-example"
-   graph-page-template
-   "index"
-   homepage-template
-   "mind"
-   mind-template
-   "now"
-   now-template
-   "post-example"
-   post-template
-   "posts"
-   posts-index-template
-   })
 
 (defn- create-templates
   [roam-db template-info]
