@@ -203,6 +203,28 @@
        ;; otherwise, evaluate to empty div
        [:div]))])
 
+(defn- get-eids-for-tagged-blocks
+  [roam-db tag]
+  (let [sr-info-eid (first (first (ds/q '[:find ?eid
+                                          :where
+                                          [?eid :node/title "Static-Roam Info"]]
+                                        @roam-db)))
+        eid-of-tag (first (first
+                           (ds/q '[:find ?eid
+                                   :in $ ?tag
+                                   :where
+                                   [?eid :node/title ?tag]]
+                                  @roam-db tag)))
+        eids-of-tagged-blocks (reduce into []
+                                      (map first (ds/q '[:find ?parent-eid
+                                                         :in $ ?tag-eid
+                                                         :where
+                                                         [?eid :block/refs sr-info-eid]
+                                                         [?eid :block/refs ?tag-eid]
+                                                         [?eid :block/parents ?parent-eid]]
+                                                       @roam-db eid-of-tag)))]
+    eids-of-tagged-blocks))
+
 (defn- get-about-content-hiccup
   [roam-db]
   (let [about-page-eid (first (first (ds/q '[:find ?eid
@@ -278,8 +300,42 @@
         now-content]
        (footer)]]}))
 
+(defn- path-for-post
+  [roam-db post-eid]
+  (let [uid (:block/uid (ds/pull roam-db [:block/uid] post-eid))
+        path (str "./nodes/" uid ".html")]
+    path))
+
+(defn- get-post-content-hiccup
+  [roam-db post-eid]
+  (let [children-eids (:block/children (ds/pull roam-db [:block/children] post-eid))
+        post-title (:node/title (ds/pull roam-db [:node/title] post-eid))]
+    [:section {:id "post-content"}
+     [:div
+      [:h1 post-title]]
+     [:ul {:style "list-style-type:none; padding-left:0;"}
+      (map #(children-of-block-hiccup roam-db %) children-eids)]]))
+
+(defn- hiccup-for-post
+  [roam-db post-eid]
+  (let [post-content (get-post-content-hiccup roam-db post-eid)
+        post-title (:node/title (ds/pull roam-db [:node/title] post-eid))]
+    [:html {:lang "en-US"}
+     (head post-title)
+     [:body
+      (header)
+      [:main {:id "content"}
+       post-content]
+      (footer)]]))
+
+(defn- post-path-hiccup-pairs
+  [roam-db]
+  (let [post-eids (get-eids-for-tagged-blocks roam-db "Post")]
+    (map (fn [post] [(path-for-post roam-db post) (hiccup-for-post roam-db post)]) post-eids)))
+
 (defn post-template
-  [roam-db])
+  [roam-db]
+  (into {} (post-path-hiccup-pairs roam-db)))
 
 (defn- link-li-ele
   [roam-db eid]
@@ -295,24 +351,7 @@
 
 (defn- get-page-title-links-for-tagged
   [roam-db tag]
-  (let [sr-info-eid (first (first (ds/q '[:find ?eid
-                                          :where
-                                          [?eid :node/title "Static-Roam Info"]]
-                                        @roam-db)))
-        eid-of-tag (first (first
-                           (ds/q '[:find ?eid
-                                   :in $ ?tag
-                                   :where
-                                   [?eid :node/title ?tag]]
-                                  @roam-db tag)))
-        eids-of-tagged-blocks (reduce into []
-                                      (map first (ds/q '[:find ?parent-eid
-                                                         :in $ ?tag-eid
-                                                         :where
-                                                         [?eid :block/refs sr-info-eid]
-                                                         [?eid :block/refs ?tag-eid]
-                                                         [?eid :block/parents ?parent-eid]]
-                                                        @roam-db eid-of-tag)))
+  (let [eids-of-tagged-blocks (get-eids-for-tagged-blocks tag)
         link-li-eles (get-links-for-eids roam-db eids-of-tagged-blocks)]
     link-li-eles))
 
@@ -350,7 +389,33 @@
   [roam-db])
 
 (defn homepage-template
-  [roam-db])
+  [roam-db]
+  (let [post-list (into [:ul {:id "posts"}] (get-page-title-links-for-tagged roam-db "Post"))
+        entry-point-list (into [:ul {:id "entry-points"}] (get-page-title-links-for-tagged roam-db "EntryPoint"))]
+    {"/index.html"
+     [:html {:lang "en-US"}
+      (head "Thomas Lisankie")
+      [:body
+       (header)
+       [:main {:id "homepage"}
+        [:section {:id "about-me"}
+         [:div
+          [:h2 "Me In 10 Seconds"]
+          [:p "I'm a software developer. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog."]]
+         [:div
+          [:h2 "Me In 10 Minutes"]
+          [:p
+           "Check out the "
+           [:a {:href "./about"}
+            "about"]
+           " page"]]]
+        [:section {:id "posts-home"}
+         [:h2 "Posts"]
+         post-list]
+        [:section {:id "entry-points-home"}
+         [:h2 "Entry Points into my Mind"]
+         entry-point-list]]
+       (footer)]]}))
 
 (defn- create-templates
   [roam-db template-info]
