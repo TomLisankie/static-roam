@@ -303,7 +303,7 @@
 (defn- path-for-post
   [roam-db post-eid]
   (let [uid (:block/uid (ds/pull roam-db [:block/uid] post-eid))
-        path (str "./nodes/" uid ".html")]
+        path (str "/nodes/" uid ".html")]
     path))
 
 (defn- get-post-content-hiccup
@@ -385,8 +385,54 @@
          post-list]]
        (footer)]]}))
 
+(defn- children-of-node-hiccup
+  [roam-db block-eid]
+  [:ul
+   [:li {:onclick (str "location.href='" path "'")}
+    (:static-roam/hiccup (ds/pull roam-db [:static-roam/hiccup] block-eid))]
+   (let [children-eids (:block/children (ds/pull roam-db [:block/children] block-eid))]
+     (if (not= 0 (count children))
+       ;; recurse on each of the children
+       (map #(children-of-node-hiccup roam-db %) children-eids)
+       ;; otherwise, evaluate to empty div
+       [:div]))])
+
+(defn- get-node-content-hiccup
+  [roam-db node-eid]
+  (let [children-eids (:block/children (ds/pull roam-db [:block/children] node-eid))
+        node-title (if (:node/title (ds/pull roam-db [:node/title] node-eid))
+                     (:node/title (ds/pull roam-db [:node/title] node-eid))
+                     (:block/content (ds/pull roam-db [:block/content] node-eid)))
+        uid (:block/uid (ds/pull roam-db [:block/uid] node-eid))
+        path (str "./nodes/" uid ".html")]
+    [:section {:id "post-content"}
+     [:div
+      [:h1 node-title]]
+     [:ul
+      (map #(children-of-node-hiccup roam-db %) children-eids)]]))
+
+(defn- hiccup-for-node
+  [roam-db node-eid]
+  (let [node-content (get-node-content-hiccup roam-db node-eid)
+        node-title (if (:node/title (ds/pull roam-db [:node/title] node-eid))
+                     (:node/title (ds/pull roam-db [:node/title] node-eid))
+                     (:block/content (ds/pull roam-db [:block/content] node-eid)))]
+    [:html {:lang "en-US"}
+     (head post-title)
+     [:body
+      (header)
+      [:main {:id "content"}
+       node-content]
+      (footer)]]))
+
+(defn- node-path-hiccup-pairs
+  [roam-db]
+  (let [node-eids (get-eids-for-included-blocks roam-db)]
+    (map (fn [node] [(path-for-post roam-db node) (hiccup-for-node roam-db node)]) node-eids)))
+
 (defn graph-page-template
-  [roam-db])
+  [roam-db]
+  (into {} (node-path-hiccup-pairs roam-db)))
 
 (defn homepage-template
   [roam-db]
