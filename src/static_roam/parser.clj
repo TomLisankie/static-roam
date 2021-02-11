@@ -209,5 +209,4 @@
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
   [content block-map]
-                                        ;  (vec (map #(ele->hiccup % block-map) (parse-to-ast content)))
   (ele->hiccup (parse-to-ast content) block-map))

@@ -32,7 +32,7 @@
 
 (deftest hashtag-parse-test
   (is (= [:block [:page-link "[[Physics]]"] " " [:hashtag "#Static-Roam"]]
-         (parse-to-ast "[[Physics]] #Static-Roam")
+         (parse-to-ast "[[Physics]] #Static-Roam"))))
 
 (deftest alias-parse-test
   ;; Was formerly misparsing, changed the alias regex to use \w

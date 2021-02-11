@@ -153,8 +153,6 @@
           (is (map? block-map))
           (is (= 10 (count block-map)))
           (is (= test1-block-map block-map))
-          
-
           )))))
 
 

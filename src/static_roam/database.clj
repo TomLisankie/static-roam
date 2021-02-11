@@ -1,8 +1,9 @@
 (ns static-roam.database
   (:require [static-roam.parser :as parser]
             [static-roam.utils :as utils]
-            [clojure.string :as str-utils]
-            [clojure.pprint :as pprint]))
+            [org.parkerici.multitool.core :as u]
+            [clojure.walk :as walk]
+            [clojure.string :as str-utils]))
 
 (defn- get-block-id
   [block-json]
@@ -11,11 +12,10 @@
     (:uid block-json)))
 
 (defn- block-properties
-  [block-json parent]
+  [block-json]
   {
    :id (get-block-id block-json)       ;TODO this lets everything else be simplified radcially, but haven't gotten aroound to it yet
    :children (map :uid (:children block-json))
-   :parent parent
    :content (or (:string block-json) (:title block-json))
    :heading (:heading block-json -1)
    :edit-time (or (:edit-time block-json) (:create-time block-json)) ;TODO convert to #inst 
@@ -26,49 +26,60 @@
            false)
    })
 
-(defn- create-id-properties-pair
-  [block-json parent]
-  [(get-block-id block-json) (block-properties block-json parent)])
+#_
+(def j (utils/read-roam-json-from-zip "test/resources/static-test.zip"))
 
-;; Really should use walk, this is fugly
-;; TODO but really want to get parent in
-(defn- create-id-properties-pairs
-  [roam-json & [parent]]
-  (map
-   vec
-   (partition
-    2
-    (flatten
-     (for [block-json roam-json]
-       (conj (create-id-properties-pairs (:children block-json) (get-block-id block-json))
-             (create-id-properties-pair block-json parent)))))))
+;;; → Multitool
+(defn add-parents
+  [db children-att parent-att]
+  (reduce-kv (fn [acc key item]
+               (reduce (fn [acc child]
+                         (assoc-in acc [child parent-att] key))
+                       acc
+                       (children-att item)))
+             db
+             db))
 
 (defn- create-block-map-no-links
-  "Populate database with relevant properties of pages and blocks"
   [roam-json]
-  ;; what I need to happen here is have it so if the block has children, it creates pairs for those as well
-  ;; forget what I already implemented, I optimized too early.
-  (into (hash-map) (create-id-properties-pairs roam-json)))
+  (add-parents
+   (u/index-by :id
+               (u/walk-collect
+                (fn [thing]
+                  (when (and (map? thing)
+                             (:create-time thing))
+                    (block-properties thing)))
+                roam-json))
+   :children :parent))
 
+;;; Why isn't this using parser? Argh I hate this code
 (defn- clean-content-entities
   [string]
-  (let [content-entities-found
-        (utils/find-content-entities-in-string string)
-        hashtags-found
-        (utils/find-hashtags-in-string string)
-        metadata-found
-        (utils/find-metadata-in-string string)
-        extra-paren-removed
-        (utils/remove-heading-parens content-entities-found)
-        cleaned-content-entities
-        (map utils/remove-double-delimiters extra-paren-removed)
-        cleaned-hashtags
-        (map utils/remove-leading-char hashtags-found)
-        cleaned-metadata
-        (map utils/remove-double-colon metadata-found)
-        all-cleaned-entities
-        (concat cleaned-content-entities cleaned-hashtags cleaned-metadata)]
+  (let [content-entities-found    (utils/find-content-entities-in-string string)
+        hashtags-found            (utils/find-hashtags-in-string string) ;TODO needs work; will return #foo in urls
+        metadata-found            (utils/find-metadata-in-string string)
+        extra-paren-removed       (utils/remove-heading-parens content-entities-found)
+        cleaned-content-entities  (map utils/remove-double-delimiters extra-paren-removed)
+        cleaned-hashtags          (map utils/remove-leading-char hashtags-found)
+        cleaned-metadata          (map utils/remove-double-colon metadata-found)
+        all-cleaned-entities      (concat cleaned-content-entities cleaned-hashtags cleaned-metadata)]
     all-cleaned-entities))
+
+;;; TODO "((foobar))"
+(defn- cleaner-content-entities
+  [string]
+  (let [parsed (parser/parse-to-ast string)]
+    (reduce (fn [acc elt]
+              (when-not (string? elt) (prn :elt elt))
+              (if (string? elt)
+                acc
+                (case (first elt)
+                  :hashtag (conj acc (second elt)) ;TODO clean
+                  :page-link (conj acc (second elt))
+                  acc)))
+            #{}
+            (rest parsed))))
+
 
 ;; sometimes people put references to other page titles inside of the title of another page. So pairs of brackets inside of other brackets when they reference them. This breaks things currently, so I'm removing all those instances here TODO: Fix so this is unnecessary
 (defn- filter-broken-references
@@ -313,3 +324,21 @@
       add-children-of-block-embeds
       generate-hiccup-for-included-blocks))
 
+;;; Stolen from incidents/ocr.
+;;; Maybe use this early on in processing. Although here I think the hypertextishness means you can't just pass around a block tree. 
+(defn direct
+  "Turns a set of json blocks into a set of trees, with PAGEs as top elements and sub-blocks on the :children attribute"
+  [block-map block-name]
+  (letfn [(direct-children [b]
+              (-> b
+                  (assoc 
+                   :dchildren
+                   (map (fn [child-id]
+                          (-> child-id
+                              block-map
+                              (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
+                              direct-children
+                              ))
+                        (:children b)))
+                  ))]
+    (direct-children (get block-map block-name))))

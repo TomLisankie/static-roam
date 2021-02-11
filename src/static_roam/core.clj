@@ -2,6 +2,7 @@
   (:require [static-roam.utils :as utils]
             [static-roam.database :as database]
             [static-roam.html-generation :as html-gen]
+            [org.parkerici.multitool.core :as u]
             [clojure.pprint :as pprint]))
 
 (defn block-map
@@ -15,6 +16,14 @@
 ;;; Dump blocks in readable file
 #_
 (org.parkerici.multitool.cljcore/schppit "blocks.edn" @last-bm)
+
+(defn pages
+  []
+  (keys (u/dissoc-if (fn [[_ v]] (not (:page? v))) @last-bm)))
+
+(defn page-dump
+  [page]
+  (static-roam.database/direct @last-bm page))
 
 (defn tap
   [bm]

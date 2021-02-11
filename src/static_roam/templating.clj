@@ -127,7 +127,7 @@
   (let [block (get block-map block-id)
         block-content (get block :content)]
     [:div
-     [:h1.title (parser/block-content->hiccup block-content block-map)]    ; (vec (map #(parser/ele->hiccup % block-map) (parser/parse-to-ast block-content)))]
+     [:h1.title (parser/block-content->hiccup block-content block-map)]    
      (if (or (:exit-point block)
              (empty? (:children block)))
        [:div.missing
