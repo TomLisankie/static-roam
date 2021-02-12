@@ -70,8 +70,8 @@
 
 (defn- format-image
   [image-ref-content]
-  (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" image-ref-content))
-        image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" image-ref-content))]
+  (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))
+        image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))]
     [:img {:src image-source :alt alt-text :style "max-width: 90%"}]))
 
 ;;; TODO this really belongs in html gen, not in parsing, yes?

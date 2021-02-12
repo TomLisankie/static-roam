@@ -246,19 +246,16 @@
 
 ;;; TODO argh this needs to be condensed; could probably use walker.
 ;;; Or maybe not, loop is for references, children are handled by get-all-children-recursively
+;;; We onlly care about pages anyway, right? And fuck degree
 (defn- get-content-entity-ids-to-include
-  [max-degree block-map]
-  (let [max-degree (or max-degree 1000)
-        entry-point-ids (into (get-entry-point-ids block-map) #{"SR Metadata"})]
+  [block-map]
+  (let [entry-point-ids (into (get-entry-point-ids block-map) #{"SR Metadata"})]
     (loop [entities-to-examine entry-point-ids
            children-for-each-entity (get-all-children-recursively entities-to-examine block-map) ;
            all-children-of-examined (aggregate-children children-for-each-entity)
            references-for-children (get-child-content-references all-children-of-examined block-map)
            all-references-of-children (aggregate-references references-for-children)
-           included-entities (generate-included-entities entities-to-examine all-children-of-examined all-references-of-children)
-           current-degree 0]
-      (if (>= current-degree max-degree)
-        included-entities
+           included-entities (generate-included-entities entities-to-examine all-children-of-examined all-references-of-children)]
         (let [entities-to-examine all-references-of-children
               children-for-each-entity (get-all-children-recursively entities-to-examine block-map)
               all-children-of-examined (aggregate-children children-for-each-entity)
@@ -271,8 +268,10 @@
                  references-for-children
                  all-references-of-children
                  included-entities
-                 (inc current-degree)
-                 ))))))
+                 )))))
+
+
+
 
 ;;; TODO a lot of this code looks like it could be radically condensed
 (defn- block-id-included?
@@ -290,21 +289,18 @@
   (map #(mark-block-if-included included-block-ids %) block-map))
 
 (defn- mark-content-entities-for-inclusion
-  [block-map degree]
+  [block-map]
   (into (hash-map) (mark-blocks-to-include-as-included
-                    (get-content-entity-ids-to-include degree block-map)
+                    (get-content-entity-ids-to-include block-map)
                     block-map)))
 
-(defn- give-header
-  [the-hiccup block-props]
-  [(keyword (str "h" (:heading block-props))) the-hiccup])
-
+#_
 (defn- generate-hiccup-if-block-is-included
   [block-kv block-map]
   (let [block-id (first block-kv)
         block-props (second block-kv)]
     [block-id
-     (if (true? (:included block-props))
+     (when (:included block-props)
        (assoc block-props
               :hiccup
               (let [the-hiccup (parser/block-content->hiccup (:content block-props) block-map)]
@@ -313,9 +309,28 @@
                   the-hiccup)))
        block-props)]))
 
+#_
 (defn generate-hiccup-for-included-blocks
   [block-map]
-  (into (hash-map) (filter #(not= nil (:content (second %))) (map #(generate-hiccup-if-block-is-included % block-map) block-map))))
+  (into (hash-map)
+        (filter #(not= nil (:content (second %)))
+                (map #(generate-hiccup-if-block-is-included % block-map)
+                     block-map))))
+
+(defn generate-hiccup
+  [block block-map]
+  (let [basic (parser/block-content->hiccup (:content block) block-map)]
+    (if (> (:heading block) 0)
+      [(keyword (str "h" (:heading block-props))) basic]
+      basic)))
+
+(defn add-hiccup-for-included-blocks
+  [block-map]
+  (u/map-values #(if (:included %)
+                   (assoc % :hiccup (generate-hiccup % block-map))
+                   %)
+                block-map))
+
 
 ;;; TODO this does a parse but throws away the structure, probably shgould be saved so we don't have to do it again
 (defn generate-refs
@@ -357,12 +372,12 @@
     block-map)))
 
 (defn setup-static-roam-block-map
-  [roam-json degree]
+  [roam-json]
   (-> roam-json
       roam-db
-      (mark-content-entities-for-inclusion degree)
-      add-children-of-block-embeds
-      generate-hiccup-for-included-blocks))
+      mark-content-entities-for-inclusion
+#_      add-children-of-block-embeds
+      add-hiccup-for-included-blocks)) ;TODO this unmarks pages, too aggressivel
 
 ;;; Stolen from incidents/ocr.
 ;;; Maybe use this early on in processing. Although here I think the hypertextishness means you can't just pass around a block tree. 

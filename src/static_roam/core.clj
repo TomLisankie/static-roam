@@ -6,10 +6,10 @@
             [clojure.pprint :as pprint]))
 
 (defn block-map
-  [path-to-zip degree]
+  [path-to-zip]
   (-> path-to-zip
       utils/read-roam-json-from-zip
-      (database/setup-static-roam-block-map degree)))
+      (database/setup-static-roam-block-map)))
 
 (def last-bm (atom nil))
 
@@ -31,9 +31,9 @@
   bm)
 
 (defn -main
-  [& [path-to-zip output-dir degree]]
+  [& [path-to-zip output-dir]]
   (-> (or path-to-zip (utils/latest-export))
-      (block-map degree)
+      block-map
       tap
       (html-gen/generate-static-roam-html (or output-dir "output"))))
 
