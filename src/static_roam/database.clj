@@ -453,6 +453,7 @@
 (defn- get-descendant-eids
   [roam-db eid]
   ;; This is a very important function and will be used in further steps
+  (println eid)
   (let [children (map first
                       (ds/q '[:find ?children-eids
                               :in $ ?parent-eid
@@ -550,7 +551,7 @@
 
 (defn- get-eids-of-entities-with-refs-to
   [roam-db refs]
-  (let [ref-eids (get-eids-of-nodes-with-titles refs)
+  (let [ref-eids (get-eids-of-nodes-with-titles roam-db refs)
         eids-linking-to-ref (map first
                                  (map #(ds/q '[:find ?eid
                                                :in $ ?ref-eid
