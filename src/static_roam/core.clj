@@ -4,7 +4,9 @@
             [static-roam.parser :as parser]
             [static-roam.templating :as templating]
             [static-roam.html-generation :as html-gen]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint]
+            [clojure.java.io :as io]
+            [clojure.edn :as edn-utils]))
 
 (defn generate-static-roam!
   [path-to-zip output-dir degree]

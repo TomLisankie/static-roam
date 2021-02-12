@@ -197,7 +197,7 @@
   [:ul {:style "list-style-type:none; padding-left:0;"}
    [:li (:static-roam/hiccup (ds/pull roam-db [:static-roam/hiccup] block-eid))]
    (let [children-eids (:block/children (ds/pull roam-db [:block/children] block-eid))]
-     (if (not= 0 (count children))
+     (if (not= 0 (count children-eids))
        ;; recurse on each of the children
        (map #(children-of-block-hiccup roam-db %) children-eids)
        ;; otherwise, evaluate to empty div
@@ -231,7 +231,7 @@
                                                :where
                                                [?eid :node/title "About Page"]]
                                               @roam-db)))
-        children-eids (:block/children (ds/pull roam-db [:block/children] eid))]
+        children-eids (:block/children (ds/pull roam-db [:block/children] about-page-eid))]
     [:section {:id "about-content"}
      [:div
       [:h1 "About Me"]]
@@ -256,7 +256,7 @@
                                                :where
                                                [?eid :node/title "Contact Page"]]
                                               @roam-db)))
-        children-eids (:block/children (ds/pull roam-db [:block/children] eid))]
+        children-eids (:block/children (ds/pull roam-db [:block/children] contact-page-eid))]
     [:section {:id "contact-content"}
      [:div
       [:h1 "Contact Me"]]
@@ -281,7 +281,7 @@
                                                :where
                                                [?eid :node/title "Now Page"]]
                                               @roam-db)))
-        children-eids (:block/children (ds/pull roam-db [:block/children] eid))]
+        children-eids (:block/children (ds/pull roam-db [:block/children] now-page-eid))]
     [:section {:id "contact-content"}
      [:div
       [:h1 "What I'm Up To"]]
@@ -388,10 +388,11 @@
 (defn- children-of-node-hiccup
   [roam-db block-eid]
   [:ul
-   [:li {:onclick (str "location.href='" path "'")}
+   [:li {:onclick (str "location.href='" ;;path
+                       "'")}
     (:static-roam/hiccup (ds/pull roam-db [:static-roam/hiccup] block-eid))]
    (let [children-eids (:block/children (ds/pull roam-db [:block/children] block-eid))]
-     (if (not= 0 (count children))
+     (if (not= 0 (count children-eids))
        ;; recurse on each of the children
        (map #(children-of-node-hiccup roam-db %) children-eids)
        ;; otherwise, evaluate to empty div
@@ -418,12 +419,18 @@
                      (:node/title (ds/pull roam-db [:node/title] node-eid))
                      (:block/content (ds/pull roam-db [:block/content] node-eid)))]
     [:html {:lang "en-US"}
-     (head post-title)
+     (head node-title)
      [:body
       (header)
       [:main {:id "content"}
        node-content]
       (footer)]]))
+
+(defn- get-eids-for-included-blocks
+  [roam-db]
+  (map first (ds/q '[:find ?eids
+                     :where
+                     [?eids :static-roam/included true]] @roam-db)))
 
 (defn- node-path-hiccup-pairs
   [roam-db]
