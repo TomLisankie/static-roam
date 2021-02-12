@@ -412,6 +412,26 @@
     (ds/transact! roam-db transactions)) ;; might want to make this more nuanced so only entities with :block/string or :node/title get included
   )
 
+(defn- get-parent-eids
+  [roam-db sr-info-eid entity-tag-eid]
+  (let [query-result (ds/q '[:find ?parent-eid
+                             :in $ ?entity-tag-eid ?sr-info-eid
+                             :where
+                             [?eid :block/refs ?sr-info-eid]
+                             [?eid :block/refs ?entity-tag-eid]
+                             [?eid :block/parents ?parent-eid]]
+                           @roam-db entity-tag-eid sr-info-eid)]
+    query-result))
+
+(defn- get-all-queries
+  [roam-db sr-info-eid entity-tag-eids]
+  (let [nils-removed (filter #(not (nil? %)) entity-tag-eids)]
+    (if (empty? nils-removed)
+      []
+      (let [query-results (map #(get-parent-eids roam-db sr-info-eid %)
+                               entity-tag-eids)]
+        query-results))))
+
 (defn- get-eids-of-entities-with-tags
   [roam-db tags]
   (let [sr-info-eid (first (first (ds/q '[:find ?eid
@@ -427,14 +447,7 @@
                                   tags))
         eids-of-entities-with-tags (reduce into []
                                            (map first
-                                                (map #(ds/q '[:find ?parent-eid
-                                                              :in $ ?entity-tag-eid
-                                                              :where
-                                                              [?eid :block/refs sr-info-eid]
-                                                              [?eid :block/refs ?entry-point-tag-eid]
-                                                              [?eid :block/parents ?parent-eid]]
-                                                            @roam-db %)
-                                                     entity-tag-eids)))]
+                                                (get-all-queries roam-db sr-info-eid entity-tag-eids)))]
     eids-of-entities-with-tags))
 
 (defn- get-descendant-eids
@@ -502,8 +515,8 @@
   [roam-db])
 
 (defn- mark-entry-point-and-ref-pages-as-included
-  [roam-db degree]
-  (mark-entry-points-and-refs-as-included roam-db degree)
+  [roam-db degree entry-point-tags]
+  (mark-entry-points-and-refs-as-included roam-db degree entry-point-tags)
   (mark-included-entity-children-as-included roam-db))
 
 (defn- mark-all-entities-as-included
