@@ -156,8 +156,17 @@
   [filled-out-template-map template-info output-dir]
   (map #(create-and-save-html-from-hiccup-template % template-info output-dir) filled-out-template-map))
 
+(defn- get-path-html-pair
+  [path-template-pair]
+  (let [path (first path-template-pair)
+        html (hiccup/html (second path-template-pair))]
+    [path html]))
+
+(defn- get-path-html-map
+  [path-template-map]
+  (into {} (map get-path-html-pair path-template-map)))
+
 (defn generate-site
-  [roam-db output-dir config]
-  (let [template-info (:template-info config)
-        filled-out-templates (fill-out-templates roam-db template-info)]
-    (create-and-save-html-from-hiccup-templates filled-out-templates template-info output-dir)))
+  [filled-out-templates output-dir]
+  (let [path-html-map (get-path-html-map filled-out-templates)]
+    (stasis/export-pages path-html-map output-dir)))
