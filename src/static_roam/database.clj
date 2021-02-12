@@ -29,7 +29,7 @@
 (def j (utils/read-roam-json-from-zip  (utils/latest-export)))
 
 ;;; → Multitool
-(defn add-parents
+(defn add-parent
   [db children-att parent-att]
   (reduce-kv (fn [acc key item]
                (reduce (fn [acc child]
@@ -39,10 +39,21 @@
              db
              db))
 
+;;; As above but multivalued
+(defn add-parents
+  [db children-att parent-att]
+  (reduce-kv (fn [acc key item]
+               (reduce (fn [acc child]
+                         (update-in acc [child parent-att] conj key))
+                       acc
+                       (children-att item)))
+             db
+             db))
+
 (defn- create-block-map-no-links
   "Conver json into basic bloccks"
   [roam-json]
-  (add-parents
+  (add-parent
    (u/index-by :id
                (u/walk-collect
                 (fn [thing]
@@ -120,16 +131,19 @@
         block-id-reference-pairs (map generate-block-id-reference-pair block-id-content-pairs)]
     block-id-reference-pairs))
 
+#_
 (defn- get-referenced-referer-pair
   [referenced referer]
   [referenced referer])
 
+#_
 (defn- get-referenced-referer-pairs
   [referer-referenced-pairs]
   (let [referer (first referer-referenced-pairs)
         referenced (second referer-referenced-pairs)]
     (map #(get-referenced-referer-pair % referer) referenced)))
 
+#_
 (defn- generate-links
   [block-id-reference-pairs block-map-no-links]
   (let [individual-referenced-referer-pairs (partition
@@ -141,28 +155,33 @@
         ]
     (into (hash-map) reference-names-stripped)))
 
+#_
 (defn- attach-backlinks-to-block
   [id-backlinks-map block]
   (let [block-id (first block)
         block-props (second block)]
     [block-id (assoc block-props :linked-by (set (get id-backlinks-map block-id '())))]))
 
+#_
 (defn- attach-backlinks-to-block-map
   [links block-map]
   (map #(attach-backlinks-to-block links %) block-map))
 
+#_
 (defn- attach-links-to-block
   [id-reference-map block-kv]
   (let [block-id (first block-kv)
         block-props (second block-kv)]
     [block-id (assoc block-props :refers-to (set (get id-reference-map block-id '())))]))
 
+#_
 (defn- attach-links-to-block-map
   [block-id-reference-pairs block-map-no-links]
   (let [id-reference-map (into (hash-map) block-id-reference-pairs)]
     (into (hash-map) (map #(attach-links-to-block id-reference-map %) block-map-no-links))))
 
 ;;; Argh this is terrible code
+#_
 (defn- generate-links-and-backlinks
   [block-map-no-links]
   (let [block-id-reference-pairs (get-block-id-reference-pairs block-map-no-links)
@@ -298,12 +317,21 @@
   [block-map]
   (into (hash-map) (filter #(not= nil (:content (second %))) (map #(generate-hiccup-if-block-is-included % block-map) block-map))))
 
+;;; TODO this does a parse but throws away the structure, probably shgould be saved so we don't have to do it again
+(defn generate-refs
+  [db]
+  (u/map-values #(assoc % :refs (cleaner-content-entities (:content %))) db))
+
+(defn generate-inverse-refs
+  [db]
+  (add-parents db :refs :linked-by))    ;I don't like this name, but easier to leave it for now
+
 (defn roam-db
   [roam-json]
   (->> roam-json
        create-block-map-no-links
-       generate-links-and-backlinks
-       (into {})))
+       generate-refs
+       generate-inverse-refs))
 
 (defn- lkjsafas
   [pair block-map]

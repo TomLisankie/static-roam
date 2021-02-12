@@ -56,29 +56,13 @@
                       (block-parser block-content)
                       (catch Exception e (str "Exception when parsing content: " block-content)))))
 
-#_
-(defn remove-n-surrounding-delimiters
-  "Removes n surrounding characters from both the beginning and end of a string"
-  [n string]
-  (if (<= (count string) (* 2 n))
-    string
-    (subs string n (- (count string) n))))
-
-#_
-(defn remove-double-delimiters
-  "Removes 2 surrounding characters from both the beginning and end of a string"
-  [string]
-  (remove-n-surrounding-delimiters 2 string))
-
-
-
 (declare block-content->hiccup)         ;allow recursion on this
 
 ;;; TODO "alias" seems like a misnomer, these are external links.
 (defn- format-alias
   [alias-content]
-  (let [alias-text (remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" alias-content))
-        alias-dest (remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" alias-content))
+  (let [alias-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" alias-content))
+        alias-dest (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" alias-content))
         alias-link (if (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
                      (utils/page-title->html-file-title alias-dest :case-sensitive)
                      alias-dest)]
@@ -86,8 +70,8 @@
 
 (defn- format-image
   [image-ref-content]
-  (let [alt-text (remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" image-ref-content))
-        image-source (remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" image-ref-content))]
+  (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" image-ref-content))
+        image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" image-ref-content))]
     [:img {:src image-source :alt alt-text :style "max-width: 90%"}]))
 
 ;;; TODO this really belongs in html gen, not in parsing, yes?
@@ -172,8 +156,8 @@
          :image (format-image ele-content)
          :todo [:input {:type "checkbox" :disabled "disabled"}]
          :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
-         :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
-         :code-block [:code.codeblock (remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
+         :code-line [:code (utils/remove-n-surrounding-delimiters 1 ele-content)]
+         :code-block [:code.codeblock (utils/remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
          :youtube (get-youtube-vid-embed ele-content)
          :bare-url (make-content-from-url ele-content)
          :blockquote `[:blockquote ~(ele->hiccup ele-content block-map)]
