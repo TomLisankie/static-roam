@@ -68,6 +68,12 @@
   [string]
   (apply str (drop-last 2 string)))
 
+(defn format-hashtag
+  [hashtag]
+  (if (= \[ (second hashtag))
+    (remove-double-delimiters (subs hashtag 1))
+    (subs hashtag 1)))
+
 (defn page-title->html-file-title
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   ([string]

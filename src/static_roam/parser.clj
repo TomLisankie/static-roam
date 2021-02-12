@@ -56,6 +56,7 @@
                       (block-parser block-content)
                       (catch Exception e (str "Exception when parsing content: " block-content)))))
 
+#_
 (defn remove-n-surrounding-delimiters
   "Removes n surrounding characters from both the beginning and end of a string"
   [n string]
@@ -63,22 +64,13 @@
     string
     (subs string n (- (count string) n))))
 
+#_
 (defn remove-double-delimiters
   "Removes 2 surrounding characters from both the beginning and end of a string"
   [string]
   (remove-n-surrounding-delimiters 2 string))
 
-;;; TODO not used
-(defn- strip-chars
-  "Removes every character of a given set from a string"
-  [chars collection]
-  (reduce str (remove #((set chars) %) collection)))
 
-(defn- format-hashtag
-  [hashtag]
-  (if (= \[ (second hashtag))
-    (remove-double-delimiters (subs hashtag 1))
-    (subs hashtag 1)))
 
 (declare block-content->hiccup)         ;allow recursion on this
 
@@ -144,7 +136,7 @@
 (defn page-link [ele-content]
   [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
    (block-content->hiccup               ;ensure formatting in links works
-    (remove-double-delimiters ele-content) {})])
+    (utils/remove-double-delimiters ele-content) {})])
 
 
 (defn unspan
@@ -169,13 +161,13 @@
          :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                      (:content
                       (get block-map
-                           (remove-double-delimiters ele-content)))]
+                           (utils/remove-double-delimiters ele-content)))]
          :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                   (format-hashtag ele-content)]
-         :strikethrough [:s (remove-double-delimiters ele-content)]
-         :highlight [:mark (remove-double-delimiters ele-content)]
-         :italic [:i (remove-double-delimiters ele-content)]
-         :bold [:b (remove-double-delimiters ele-content)]
+                   (utils/format-hashtag ele-content)]
+         :strikethrough [:s (utils/remove-double-delimiters ele-content)]
+         :highlight [:mark (utils/remove-double-delimiters ele-content)]
+         :italic [:i (utils/remove-double-delimiters ele-content)]
+         :bold [:b (utils/remove-double-delimiters ele-content)]
          :alias (format-alias ele-content)
          :image (format-image ele-content)
          :todo [:input {:type "checkbox" :disabled "disabled"}]

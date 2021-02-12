@@ -13,21 +13,20 @@
 
 (defn- block-properties
   [block-json]
-  {
-   :id (get-block-id block-json)       ;TODO this lets everything else be simplified radcially, but haven't gotten aroound to it yet
+  {:id (get-block-id block-json)       ;TODO this lets everything else be simplified radcially, but haven't gotten aroound to it yet
    :children (map :uid (:children block-json))
    :content (or (:string block-json) (:title block-json))
    :heading (:heading block-json -1)
    :edit-time (or (:edit-time block-json) (:create-time block-json)) ;TODO convert to #inst 
    :entry-point (parser/entry-point? block-json)
    :exit-point (parser/exit-point? block-json)
-   :page? (if (:title block-json)
-           true
-           false)
+   :page? (contains? block-json :title)
    })
 
 #_
 (def j (utils/read-roam-json-from-zip "test/resources/static-test.zip"))
+#_
+(def j (utils/read-roam-json-from-zip  (utils/latest-export)))
 
 ;;; → Multitool
 (defn add-parents
@@ -41,6 +40,7 @@
              db))
 
 (defn- create-block-map-no-links
+  "Conver json into basic bloccks"
   [roam-json]
   (add-parents
    (u/index-by :id
@@ -68,19 +68,25 @@
 ;;; TODO "((foobar))"
 (defn- cleaner-content-entities
   [string]
-  (let [parsed (parser/parse-to-ast string)]
-    (reduce (fn [acc elt]
-              (when-not (string? elt) (prn :elt elt))
-              (if (string? elt)
-                acc
-                (case (first elt)
-                  :hashtag (conj acc (second elt)) ;TODO clean
-                  :page-link (conj acc (second elt))
-                  acc)))
-            #{}
-            (rest parsed))))
+  (letfn [(struct-entities [struct] 
+            (if (string? struct)
+              []
+              (case (first struct)
+                :block (mapcat struct-entities (rest struct))
+                :hashtag [(utils/format-hashtag (second struct))]
+                :page-link [(utils/remove-double-delimiters (second struct))]
+                :blockquote (struct-entities (second struct))
+                [])))]
+    (set (struct-entities (parser/parse-to-ast string)))))
 
-
+;;; For testing new entity extracction
+#_
+(def x
+  (remove (fn [[_ old new]]
+            (= (disj (set old) "TODO" "DONE") new))
+          (remove (comp empty? second)
+                  (map (comp (juxt identity clean-content-entities cleaner-content-entities) :content)
+                       (vals bm0)))))
 ;; sometimes people put references to other page titles inside of the title of another page. So pairs of brackets inside of other brackets when they reference them. This breaks things currently, so I'm removing all those instances here TODO: Fix so this is unnecessary
 (defn- filter-broken-references
   [pair]
@@ -89,19 +95,24 @@
     #(not (str-utils/includes? % "["))
     (second pair))])
 
+#_
 (defn- generate-block-id-reference-pair
   [pair]
   [(first pair)
    (clean-content-entities (second pair))])
 
+
+#_
 (defn- get-block-id-content-pair
   [pair]
   [(first pair) (:content (second pair))])
 
+#_
 (defn- get-block-id-content-pairs
   [block-map]
   (map get-block-id-content-pair block-map))
 
+#_
 (defn- get-block-id-reference-pairs
   [block-map]
   (let [;TODO not used, block-map-with-linked-by (map add-linked-by-property block-map)
@@ -151,6 +162,7 @@
   (let [id-reference-map (into (hash-map) block-id-reference-pairs)]
     (into (hash-map) (map #(attach-links-to-block id-reference-map %) block-map-no-links))))
 
+;;; Argh this is terrible code
 (defn- generate-links-and-backlinks
   [block-map-no-links]
   (let [block-id-reference-pairs (get-block-id-reference-pairs block-map-no-links)
