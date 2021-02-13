@@ -3,6 +3,7 @@
             [static-roam.database :as database]
             [static-roam.html-generation :as html-gen]
             [org.parkerici.multitool.core :as u]
+            [org.parkerici.multitool.cljcore :as ju]
             [clojure.pprint :as pprint]))
 
 (defn block-map
@@ -35,7 +36,8 @@
   (-> (or path-to-zip (utils/latest-export))
       block-map
       tap
-      (html-gen/generate-static-roam-html (or output-dir "output"))))
+      (html-gen/generate-static-roam-html (or output-dir "output")))
+  (ju/schppit "blocks.edn" @last-bm))
 
 (defn gen-page
   [page]

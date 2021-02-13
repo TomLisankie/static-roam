@@ -169,6 +169,8 @@
 
 (defn tagged?
   [block tag]
+  (or (contains? (:refs block) tag)
+      (some #(contains? (:refs %) tag))
   (if (= (count (:children block)) 0)
     false
     (str-utils/includes?

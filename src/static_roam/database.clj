@@ -188,12 +188,63 @@
   [db]
   (add-parents db :refs :linked-by))    ;I don't like this name, but easier to leave it for now
 
+;;; Stolen from incidents/ocr.
+;;; Maybe use this early on in processing. Although here I think the hypertextishness means you can't just pass around a block tree. 
+(defn direct
+  "Turns a set of json blocks into a set of trees, with PAGEs as top elements and sub-blocks on the :children attribute"
+  [block-map block-name]
+  (letfn [(direct-children [b]
+            (-> b
+                (assoc 
+                 :dchildren
+                 (map (fn [child-id]
+                        (-> child-id
+                            block-map
+                            (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
+                            direct-children
+                            ))
+                      (:children b)))
+                ))]
+    (direct-children (get block-map block-name))))
+
+(defn add-direct-children
+  [block-map]
+  (letfn [(direct-children [block]
+            (assoc block :dchildren 
+                   (map (fn [child-id]
+                          (-> child-id
+                              block-map
+                              (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
+                              direct-children
+                              ))
+                        (:children block))))]
+    (u/map-values direct-children block-map)))
+
+;;; Trick for memoizing a local recursive fn, see https://quanttype.net/posts/2020-09-20-local-memoized-recursive-functions.html
+(defn fix [f] (fn g [& args] (apply f g args)))
+
+(defn add-direct-children
+  [block-map]
+  (let [direct-children
+        (fn [direct-children block]
+          (assoc block :dchildren 
+                 (map (fn [child-id]
+                        (-> child-id
+                            block-map
+                            (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
+                            ))
+                      (:children block))))
+        direct-children-memoized (fix (memoize direct-children))]
+    (u/map-values direct-children-memoized block-map)))
+
 (defn roam-db
   [roam-json]
   (->> roam-json
        create-block-map-no-links
        generate-refs
-       generate-inverse-refs))
+       generate-inverse-refs
+       add-direct-children              ;experimental, makes it easier to use, harder to dump
+       ))
 
 (defn- lkjsafas
   [pair block-map]
@@ -227,21 +278,4 @@
 #_      add-children-of-block-embeds
       add-hiccup-for-included-blocks)) ;TODO this unmarks pages, too aggressivel
 
-;;; Stolen from incidents/ocr.
-;;; Maybe use this early on in processing. Although here I think the hypertextishness means you can't just pass around a block tree. 
-(defn direct
-  "Turns a set of json blocks into a set of trees, with PAGEs as top elements and sub-blocks on the :children attribute"
-  [block-map block-name]
-  (letfn [(direct-children [b]
-              (-> b
-                  (assoc 
-                   :dchildren
-                   (map (fn [child-id]
-                          (-> child-id
-                              block-map
-                              (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
-                              direct-children
-                              ))
-                        (:children b)))
-                  ))]
-    (direct-children (get block-map block-name))))
+

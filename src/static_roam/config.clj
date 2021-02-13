@@ -5,8 +5,9 @@
                "../assets/proofreading.css"
                ])
 
-(def exit-tag "#Private")
+(def exit-tags ["Private" "charliebrowning"])
 
-#_ (def exit-tag nil) ;; to bypass privacy mechanism entirely
+#_ (def exit-tags []) ;; to bypass privacy mechanism entirely
 
-(def dev-mode false)                    ;true turns on links into Roam itself
+(def dev-mode true)                    ;true turns on links into Roam itself
+(def roam-base-url "https://roamresearch.com/#/app/hyperphor/page/")
