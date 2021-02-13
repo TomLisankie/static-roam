@@ -66,7 +66,8 @@
 
 (defn roam-url
   [block-id]
-  (str "https://roamresearch.com/#/app/hyperphor/page/" block-id))
+  (str config/roam-base-url block-id))
+
 
 (defn block-template
   [block-id block-map]

@@ -52,19 +52,20 @@
              db))
 
 (defn- create-block-map-no-links
-  "Conver json into basic bloccks"
+  "Convert json into basic blocks"
   [roam-json]
   (add-parent
    (u/index-by :id
                (u/walk-collect
                 (fn [thing]
                   (when (and (map? thing)
-                             (:create-time thing))
+                             (:edit-time thing))
                     (block-properties thing)))
                 roam-json))
    :children :parent))
 
-;;; Why isn't this using parser? Argh I hate this code
+;;; Replaced, use the parser
+#_
 (defn- clean-content-entities
   [string]
   (let [content-entities-found    (utils/find-content-entities-in-string string)
@@ -91,23 +92,6 @@
                 [])))]
     (set (struct-entities (parser/parse-to-ast string)))))
 
-;;; For testing new entity extracction
-#_
-(def x
-  (remove (fn [[_ old new]]
-            (= (disj (set old) "TODO" "DONE") new))
-          (remove (comp empty? second)
-                  (map (comp (juxt identity clean-content-entities cleaner-content-entities) :content)
-                       (vals bm0)))))
-;; sometimes people put references to other page titles inside of the title of another page. So pairs of brackets inside of other brackets when they reference them. This breaks things currently, so I'm removing all those instances here TODO: Fix so this is unnecessary
-(defn- filter-broken-references
-  [pair]
-  [(first pair)
-   (filter
-    #(not (str-utils/includes? % "["))
-    (second pair))])
-
-
 (defn get-linked-references
   [block-id block-map]
   (get-in block-map [block-id :linked-by]))
@@ -119,48 +103,6 @@
   (set/union (set (filter identity (map (fn [[k v]] (when (:entry-point v) k)) block-map)))
              fixed-entry-points))
                   
-
-(defn- get-children-of-block
-  [block-id block-map]
-  (let [block-props (get block-map block-id)]
-    (remove #(get-in block-map [% :exit-point]) (:children block-props))))
-
-(defn- get-all-children-of-blocks
-  [block-ids block-map]
-  (reduce into #{} (map #(get-children-of-block % block-map) block-ids)))
-
-(defn- get-references-for-block
-  [block-id block-map]
-  (let [block-props (get block-map block-id)]
-    (:refers-to block-props)))
-
-(defn- get-children-recursively
-  [entity-id block-map]
-  (let [children (set (get-children-of-block entity-id block-map))]
-    (if (empty? (flatten (map #(get-children-of-block % block-map) children)))
-      children
-      (reduce into children (flatten (map #(get-children-recursively % block-map) children))))))
-
-(defn- get-all-children-recursively
-  [examining block-map]
-  (map #(get-children-recursively % block-map) examining))
-
-(defn- aggregate-children
-  [children-sets]
-  (reduce into #{} children-sets))
-
-(defn- get-child-content-references
-  [children block-map]
-  (map #(get-references-for-block % block-map) children))
-
-(defn- aggregate-references
-  [reference-sets]
-  (reduce into #{} reference-sets))
-
-(defn- generate-included-entities
-  [included-entities children references]
-  (reduce into included-entities [children references]))
-
 ;;; TODO included-entities
 (defn all-refs [block]
   (set/union
@@ -220,14 +162,18 @@
 
 (defn generate-hiccup
   [block block-map]
-  (let [basic (parser/block-content->hiccup (:content block) block-map)]
-    (if (> (:heading block) 0)
-      [(keyword (str "h" (:heading block))) basic]
-      basic)))
+  (if (:content block)
+    (let [basic (parser/block-content->hiccup (:content block) block-map)]
+      (if (> (:heading block) 0)
+        [(keyword (str "h" (:heading block))) basic]
+        basic))
+    (do
+      (prn "Missing content: " (:id block))
+      nil)))
 
 (defn add-hiccup-for-included-blocks
   [block-map]
-  (u/map-values #(if (:included? %)
+  (u/map-values #(if (:include? %)
                    (assoc % :hiccup (generate-hiccup % block-map))
                    %)
                 block-map))

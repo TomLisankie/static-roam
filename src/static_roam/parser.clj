@@ -164,6 +164,7 @@
          :blockquote `[:blockquote ~(ele->hiccup ele-content block-map)]
                                         ;ast-ele
          :block `[:span ~@(map #(ele->hiccup % block-map) (rest ast-ele))]
+         :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
          )))))
 
 (defn tagged?
