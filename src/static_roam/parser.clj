@@ -142,6 +142,7 @@
          :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                             (subs ele-content 0 (dec (count ele-content)))]]
          :page-link (page-link ele-content)
+         ;; NOTE this is the only thing that needs the block-map passed in, and I dont use it and it's probably broken.
          :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                      (:content
                       (get block-map

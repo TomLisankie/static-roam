@@ -3,7 +3,9 @@
             [static-roam.config :as config]
             [static-roam.utils :as utils]
             [static-roam.parser :as parser]
-            [static-roam.database :as database]))
+            [static-roam.database :as database]
+            [org.parkerici.multitool.core :as u]
+            ))
 
 ;;; TODO Note: the functions of templating and html-gen seem to overlap; not sure they should be separate.
 
@@ -18,7 +20,7 @@
         prop-val-dict (metadata-properties property-block-content)]
     prop-val-dict))
 
-(defn- nav-bar-page-dict
+(u/defn-memoized nav-bar-page-dict
   [block-map]
   (let [site-metadata-dict (site-metadata block-map)
         nav-bar-page-string (get site-metadata-dict "Nav Bar")

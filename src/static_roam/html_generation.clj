@@ -7,8 +7,6 @@
             [static-roam.recent :as recent]
             [stasis.core :as stasis]))
 
-
-
 ;;; → multitool, should replace dissoc-if
 (defn map-filter-by-value
   [f m]
@@ -38,7 +36,8 @@
 
 (defn generate-pages-html
   [block-map output-dir]
-  (let [page-map (map-filter-by-value :page? block-map)  ;Filter to pages only TODO maybe optionl
+  (let [page-map (map-filter-by-value #(and (:page? %) (:include? %)) block-map)  ;Filter to pages only TODO maybe optionl
+        _ (prn :pages (keys page-map))
         file-name-to-content
         (into {}
               (map (partial generate-page-html block-map)
@@ -77,8 +76,7 @@
 
 (defn generate-static-roam-html
   [block-map output-dir]
-  (let [included-block-map (u/clean-map block-map (comp not :included))]
-    (generate-pages-html included-block-map (str output-dir "/pages"))
-    (generate-home-page-html included-block-map output-dir)
-    (generate-recent-page included-block-map output-dir)
-    ))
+  (generate-pages-html block-map (str output-dir "/pages"))
+  (generate-home-page-html block-map output-dir)
+  (generate-recent-page block-map output-dir)
+  )

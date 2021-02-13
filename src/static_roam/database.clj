@@ -3,6 +3,7 @@
             [static-roam.utils :as utils]
             [org.parkerici.multitool.core :as u]
             [clojure.walk :as walk]
+            [clojure.set :as set]
             [clojure.string :as str-utils]))
 
 (defn- get-block-id
@@ -106,102 +107,18 @@
     #(not (str-utils/includes? % "["))
     (second pair))])
 
-#_
-(defn- generate-block-id-reference-pair
-  [pair]
-  [(first pair)
-   (clean-content-entities (second pair))])
-
-
-#_
-(defn- get-block-id-content-pair
-  [pair]
-  [(first pair) (:content (second pair))])
-
-#_
-(defn- get-block-id-content-pairs
-  [block-map]
-  (map get-block-id-content-pair block-map))
-
-#_
-(defn- get-block-id-reference-pairs
-  [block-map]
-  (let [;TODO not used, block-map-with-linked-by (map add-linked-by-property block-map)
-        block-id-content-pairs (get-block-id-content-pairs block-map)
-        block-id-reference-pairs (map generate-block-id-reference-pair block-id-content-pairs)]
-    block-id-reference-pairs))
-
-#_
-(defn- get-referenced-referer-pair
-  [referenced referer]
-  [referenced referer])
-
-#_
-(defn- get-referenced-referer-pairs
-  [referer-referenced-pairs]
-  (let [referer (first referer-referenced-pairs)
-        referenced (second referer-referenced-pairs)]
-    (map #(get-referenced-referer-pair % referer) referenced)))
-
-#_
-(defn- generate-links
-  [block-id-reference-pairs block-map-no-links]
-  (let [individual-referenced-referer-pairs (partition
-                                             2
-                                             (flatten
-                                              (map get-referenced-referer-pairs block-id-reference-pairs)))
-        grouped-by-referenced (group-by first individual-referenced-referer-pairs)
-        reference-names-stripped (map (fn [kv] [(first kv) (map second (second kv))]) grouped-by-referenced)
-        ]
-    (into (hash-map) reference-names-stripped)))
-
-#_
-(defn- attach-backlinks-to-block
-  [id-backlinks-map block]
-  (let [block-id (first block)
-        block-props (second block)]
-    [block-id (assoc block-props :linked-by (set (get id-backlinks-map block-id '())))]))
-
-#_
-(defn- attach-backlinks-to-block-map
-  [links block-map]
-  (map #(attach-backlinks-to-block links %) block-map))
-
-#_
-(defn- attach-links-to-block
-  [id-reference-map block-kv]
-  (let [block-id (first block-kv)
-        block-props (second block-kv)]
-    [block-id (assoc block-props :refers-to (set (get id-reference-map block-id '())))]))
-
-#_
-(defn- attach-links-to-block-map
-  [block-id-reference-pairs block-map-no-links]
-  (let [id-reference-map (into (hash-map) block-id-reference-pairs)]
-    (into (hash-map) (map #(attach-links-to-block id-reference-map %) block-map-no-links))))
-
-;;; Argh this is terrible code
-#_
-(defn- generate-links-and-backlinks
-  [block-map-no-links]
-  (let [block-id-reference-pairs (get-block-id-reference-pairs block-map-no-links)
-        broken-references-removed (map filter-broken-references block-id-reference-pairs)
-        block-map-with-links (attach-links-to-block-map broken-references-removed block-map-no-links)
-        backlinks (generate-links broken-references-removed block-map-no-links)
-        block-map-with-backlinks (attach-backlinks-to-block-map backlinks block-map-with-links)]
-    block-map-with-backlinks))
 
 (defn get-linked-references
   [block-id block-map]
   (get-in block-map [block-id :linked-by]))
 
-(defn- entry-point?
-  [block-kv]
-  (true? (:entry-point (second block-kv))))
+(def fixed-entry-points #{"SR Metadata"})
 
 (defn- get-entry-point-ids
   [block-map]
-  (into #{} (map first (filter entry-point? block-map))))
+  (set/union (set (filter identity (map (fn [[k v]] (when (:entry-point v) k)) block-map)))
+             fixed-entry-points))
+                  
 
 (defn- get-children-of-block
   [block-id block-map]
@@ -244,55 +161,39 @@
   [included-entities children references]
   (reduce into included-entities [children references]))
 
+;;; TODO included-entities
+(defn all-refs [block]
+  (set/union
+   (set (:children block))
+   (set (:refs block))
+   (set (:linked-by block))))
+
 ;;; TODO argh this needs to be condensed; could probably use walker.
 ;;; Or maybe not, loop is for references, children are handled by get-all-children-recursively
 ;;; We onlly care about pages anyway, right? And fuck degree
-(defn- get-content-entity-ids-to-include
+(defn- included-blocks
   [block-map]
-  (let [entry-point-ids (into (get-entry-point-ids block-map) #{"SR Metadata"})]
-    (loop [entities-to-examine entry-point-ids
-           children-for-each-entity (get-all-children-recursively entities-to-examine block-map) ;
-           all-children-of-examined (aggregate-children children-for-each-entity)
-           references-for-children (get-child-content-references all-children-of-examined block-map)
-           all-references-of-children (aggregate-references references-for-children)
-           included-entities (generate-included-entities entities-to-examine all-children-of-examined all-references-of-children)]
-        (let [entities-to-examine all-references-of-children
-              children-for-each-entity (get-all-children-recursively entities-to-examine block-map)
-              all-children-of-examined (aggregate-children children-for-each-entity)
-              references-for-children (get-child-content-references all-children-of-examined block-map)
-              all-references-of-children (aggregate-references references-for-children)
-              included-entities (generate-included-entities included-entities all-children-of-examined all-references-of-children)]
-          (recur entities-to-examine
-                 children-for-each-entity
-                 all-children-of-examined
-                 references-for-children
-                 all-references-of-children
-                 included-entities
-                 )))))
+  (loop [fringe (get-entry-point-ids block-map)
+         included (get-entry-point-ids block-map)]
+    (if (empty? fringe)
+      included
+      (let [current (get block-map (first fringe))]
+        (if (:exit-point current)
+          (recur (rest fringe)
+                 included)
+          (let [refs (all-refs current)
+                new-refs (set/difference refs included)]
+            (recur (set/union (rest fringe) new-refs)
+                   (conj included (:id current)))))))))
 
 
-
-
-;;; TODO a lot of this code looks like it could be radically condensed
-(defn- block-id-included?
-  [block-id included-block-ids]
-  (contains? included-block-ids block-id))
-
-(defn- mark-block-if-included
-  [included-block-ids block-kv]
-  (let [block-id (first block-kv)
-        block-props (second block-kv)]
-    [block-id (assoc block-props :included (block-id-included? block-id included-block-ids))]))
-
-(defn- mark-blocks-to-include-as-included
-  [included-block-ids block-map]
-  (map #(mark-block-if-included included-block-ids %) block-map))
-
-(defn- mark-content-entities-for-inclusion
+(defn mark-included-blocks
   [block-map]
-  (into (hash-map) (mark-blocks-to-include-as-included
-                    (get-content-entity-ids-to-include block-map)
-                    block-map)))
+  (let [includes (included-blocks block-map)]
+    (u/map-values (fn [block]
+                    (assoc block :include? (contains? includes (:id block))))
+                  block-map)))
+
 
 #_
 (defn- generate-hiccup-if-block-is-included
@@ -321,12 +222,12 @@
   [block block-map]
   (let [basic (parser/block-content->hiccup (:content block) block-map)]
     (if (> (:heading block) 0)
-      [(keyword (str "h" (:heading block-props))) basic]
+      [(keyword (str "h" (:heading block))) basic]
       basic)))
 
 (defn add-hiccup-for-included-blocks
   [block-map]
-  (u/map-values #(if (:included %)
+  (u/map-values #(if (:included? %)
                    (assoc % :hiccup (generate-hiccup % block-map))
                    %)
                 block-map))
@@ -375,7 +276,8 @@
   [roam-json]
   (-> roam-json
       roam-db
-      mark-content-entities-for-inclusion
+      mark-included-blocks
+#_      mark-content-entities-for-inclusion
 #_      add-children-of-block-embeds
       add-hiccup-for-included-blocks)) ;TODO this unmarks pages, too aggressivel
 
