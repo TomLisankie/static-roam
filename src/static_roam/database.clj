@@ -99,13 +99,6 @@
   [block-id block-map]
   (get-in block-map [block-id :linked-by]))
 
-(def fixed-entry-points #{"SR Metadata"})
-
-(defn- get-entry-point-ids
-  [block-map]
-  (set/union (set (filter identity (map (fn [[k v]] (when (entry-point? v) k)) block-map)))
-             fixed-entry-points))
-                  
 ;;; TODO included-entities
 (defn all-refs [block]
   (set/union
@@ -152,6 +145,13 @@
   (some #(tagged? block %)
         config/entry-tags))
 
+(def fixed-entry-points #{"SR Metadata"})
+
+(defn- get-entry-point-ids
+  [block-map]
+  (set/union (set (filter identity (map (fn [[k v]] (when (entry-point? v) k)) block-map)))
+             fixed-entry-points))
+
 (defn entry-points
   [block-map]
   (filter entry-point? (pages block-map)))
@@ -171,25 +171,24 @@
       (and config/exclude-daily-logs
            (daily-log? block-map block))))
 
-
-;;; TODO argh this needs to be condensed; could probably use walker.
-;;; Or maybe not, loop is for references, children are handled by get-all-children-recursively
-;;; We onlly care about pages anyway, right? And fuck degree
 (defn- included-blocks
   [block-map]
   (loop [fringe (get-entry-point-ids block-map)
-         included (get-entry-point-ids block-map)]
-    (if (empty? fringe)
-      included
-      (let [current (get block-map (first fringe))]
-        (if (exit-point? block-map current)
-          (recur (rest fringe)
-                 included)
-          (let [refs (all-refs current)
-                new-refs (set/difference refs included)]
-            (recur (set/union (rest fringe) new-refs)
-                   (conj included (:id current)))))))))
-
+         included #{}
+         examined #{}]
+    (cond (empty? fringe)
+          included
+          (contains? examined (first fringe))
+          (recur (rest fringe) included examined)
+          :else
+          (let [current (get block-map (first fringe))]
+            (if (exit-point? block-map current)
+              (recur (rest fringe) included (conj examined (:id current)))
+              (let [refs (all-refs current)
+                    new-refs (set/difference refs included)]
+                (recur (set/union (rest fringe) new-refs)
+                       (conj included (:id current))
+                       (conj examined (:id current)))))))))
 
 (defn mark-included-blocks
   [block-map]
@@ -250,45 +249,6 @@
   [db]
   (add-parents db :refs :linked-by))    ;I don't like this name, but easier to leave it for now
 
-;;; Stolen from incidents/ocr.
-;;; Maybe use this early on in processing. Although here I think the hypertextishness means you can't just pass around a block tree. 
-(defn direct
-  "Turns a set of json blocks into a set of trees, with PAGEs as top elements and sub-blocks on the :children attribute"
-  [block-map block-name]
-  (letfn [(direct-children [b]
-            (-> b
-                (assoc 
-                 :dchildren
-                 (map (fn [child-id]
-                        (-> child-id
-                            block-map
-                            (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
-                            direct-children
-                            ))
-                      (:children b))
-                 :dparent
-                 (and (:parent b)) (direct-children (:parent b)))))]
-    (direct-children (get block-map block-name))))
-
-(defn add-direct-children
-  [block-map]
-  (letfn [(direct-children [block]
-            (assoc block
-                   :dchildren 
-                   (map (fn [child-id]
-                          (-> child-id
-                              block-map
-                              (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
-                              direct-children
-                              ))
-                        (:children block))
-                   ;; unfortunately adding this makes bm unprintable.
-                   #_ :dparent
-                   #_ (and (:parent block)
-                           (direct-children (get block-map (:parent block))))
-                   ))]
-    (u/map-values direct-children block-map)))
-
 ;;; Trick for memoizing a local recursive fn, see https://quanttype.net/posts/2020-09-20-local-memoized-recursive-functions.html
 (defn fix [f] (fn g [& args] (apply f g args)))
 
@@ -301,6 +261,7 @@
                         (-> child-id
                             block-map
                             (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
+                            direct-children
                             ))
                       (:children block))))
         direct-children-memoized (fix (memoize direct-children))]
@@ -312,7 +273,8 @@
        create-block-map-no-links
        generate-refs
        generate-inverse-refs
-       add-direct-children              ;experimental, makes it easier to use, harder to dump
+       mark-included-blocks
+       add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
        ))
 
 (defn- lkjsafas
@@ -342,7 +304,7 @@
   [roam-json]
   (-> roam-json
       roam-db
-      mark-included-blocks
+#_      mark-included-blocks
 #_      mark-content-entities-for-inclusion
 #_      add-children-of-block-embeds
       add-hiccup-for-included-blocks)) ;TODO this unmarks pages, too aggressivel

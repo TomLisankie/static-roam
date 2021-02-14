@@ -88,7 +88,7 @@
 ;;; TODO this should prob be built into block map, or cached.
 (defn find-page
   [block-id block-map]
-  (if-let [parent (find-parent block-id block-map)]
+  (if-let [parent (database/block-parent block-map (get block-map block-id))]
     (find-page parent block-map)
     block-id))
 

@@ -22,9 +22,10 @@
   []
   (keys (u/dissoc-if (fn [[_ v]] (not (:page? v))) @last-bm)))
 
-(defn page-dump
-  [page]
-  (static-roam.database/direct @last-bm page))
+;;; SLoooow
+(defn dump
+  []
+  (ju/schppit "blocks.edn" (u/map-filter (fn [[k b]] (and (:page? b) b)) @last-bm)))
 
 (defn tap
   [bm]
@@ -37,7 +38,7 @@
       block-map
       tap
       (html-gen/generate-static-roam-html (or output-dir "output")))
-  (ju/schppit "blocks.edn" @last-bm))
+  (dump))
 
 (defn gen-page
   [page]
