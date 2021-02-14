@@ -4,6 +4,7 @@
             [static-roam.utils :as utils]
             [hiccup.core :as hiccup]
             [static-roam.templating :as templating]
+            [static-roam.database :as db]
             [static-roam.recent :as recent]
             [stasis.core :as stasis]))
 
@@ -18,6 +19,7 @@
 ;;; This is relative to output TODO probably copy into output?
 (defn generate-page-html
   [block-map block-id]
+  (prn :generate-page block-id)
   [(utils/html-file-title block-id)     ;TODO bullshit
    (hiccup/html
     (templating/page-hiccup
@@ -56,7 +58,7 @@
 
 (defn generate-home-page-html
   [block-map output-dir]
-  (let [entry-points (u/clean-map block-map (comp not :entry-point))]
+  (let [entry-points (db/entry-points block-map)]
     (export-page
      (templating/home-page-hiccup
       entry-points

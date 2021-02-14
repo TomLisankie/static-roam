@@ -97,6 +97,7 @@
   [page-title]
   (subs (page-title->html-file-title page-title :case-sensitive) 1))
 
+#_
 (defn page-link-from-title
   "Given a page and a directory for the page to go in, create Hiccup that contains the link to the HTML of that page"
   ([dir block-content]

@@ -5,7 +5,8 @@
                "../assets/proofreading.css"
                ])
 
-(def exit-tags ["Private" "charliebrowning"])
+(def entry-tags ["EntryPoint"])
+(def exit-tags ["ExitPoint" "Private" "charliebrowning"])
 
 #_ (def exit-tags []) ;; to bypass privacy mechanism entirely
 

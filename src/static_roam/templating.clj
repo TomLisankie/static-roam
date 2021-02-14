@@ -107,9 +107,9 @@
                        :case-sensitive))}
        (:content (get block-map parent-id))])))
 
-(defn page-link [page]
-  [:a {:href (utils/page-title->html-file-title page :case-sensitive)}
-   (parser/block-content->hiccup page {})]) ;TODO ugly but does the italic thing right
+(defn page-link [page-id]
+  [:a {:href (utils/page-title->html-file-title page-id :case-sensitive)}
+   (parser/block-content->hiccup page-id {})]) ;TODO ugly but does the italic thing right
 
 (defn linked-reference-template
   [block-map r]
@@ -142,28 +142,17 @@
           [:h3 "Incoming links"]
           (linked-references-template linked-refs block-map)]))]))
 
-(defn list-of-page-links
-  "Generate a Hiccup unordered list of links to pages"
-  ([page-titles]
-   (let [page-links (map utils/page-link-from-title page-titles)]
-     (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
-  ([page-titles dir]                    ;TODO dir not used
-   (let [page-links (map #(utils/page-link-from-title %) page-titles)]
-     (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links))))
-  ([page-titles dir link-class]
-   (let [page-links (map #(utils/page-link-from-title dir % link-class) page-titles)]
-     (conj [:ul.post-list ] (map (fn [a] [:li [:h3 a]]) page-links)))))
-
 (defn home-page-hiccup
   [entry-points block-map]
   (page-hiccup 
    [:main.page-content {:aria-label "Content"}
      [:div.wrapper
        [:h2.post-list-heading "Entry Points"]
-      (list-of-page-links
-       (sort (keys entry-points)) "pages" "entry-point-link")
-      ]]
-      (get (site-metadata block-map) "Title")
-      block-map))
+      [:ul.post-list
+       ;; TOD sort
+       (map (fn [page] [:li [:h3 (page-link (:id page))]]) entry-points)]]]
+   (get (site-metadata block-map) "Title")
+   block-map))
+
 
 

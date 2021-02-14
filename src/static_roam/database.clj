@@ -1,6 +1,7 @@
 (ns static-roam.database
   (:require [static-roam.parser :as parser]
             [static-roam.utils :as utils]
+            [static-roam.config :as config]
             [org.parkerici.multitool.core :as u]
             [clojure.walk :as walk]
             [clojure.set :as set]
@@ -19,8 +20,10 @@
    :content (or (:string block-json) (:title block-json))
    :heading (:heading block-json -1)
    :edit-time (or (:edit-time block-json) (:create-time block-json)) ;TODO convert to #inst 
-   :entry-point (parser/entry-point? block-json)
-   :exit-point (parser/exit-point? block-json)
+
+;;; Don' think this wants to be done here
+;   :entry-point (parser/entry-point? block-json)
+;   :exit-point (parser/exit-point? block-json)
    :page? (contains? block-json :title)
    })
 
@@ -100,7 +103,7 @@
 
 (defn- get-entry-point-ids
   [block-map]
-  (set/union (set (filter identity (map (fn [[k v]] (when (:entry-point v) k)) block-map)))
+  (set/union (set (filter identity (map (fn [[k v]] (when (entry-point? v) k)) block-map)))
              fixed-entry-points))
                   
 ;;; TODO included-entities
@@ -109,6 +112,54 @@
    (set (:children block))
    (set (:refs block))
    (set (:linked-by block))))
+
+;;; Some new accessors
+
+(defn block-parent
+  [block-map block]
+  (and (:parent block)
+       (get-in block-map (:parent block))))
+
+(defn pages
+  [block-map]
+  (filter :page? (vals block-map)))
+
+(defn tagged?
+  [block tag]
+  (or (contains? (:refs block) tag)
+      ;; This implements the somewhat weird convention that tags are done in contained elts, eg
+      ;; - Some private stuff
+      ;;   - #Private
+      ;; partly for historical reasons and partly so pages can be tagged
+      (some #(contains? (:refs %) tag)
+            (:dchildren block))))
+
+(defn tagged-or-contained?
+  [block-map block tag]
+  (and block
+       (or (tagged? block tag)
+           (tagged-or-contained? block-map (block-parent block-map block) tag))))
+
+(defn entry-point?
+  "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
+  [block]
+  (some #(tagged? block %)
+        config/entry-tags))
+
+(defn entry-points
+  [block-map]
+  (filter entry-point? (pages block-map)))
+
+(defn exit-point?
+  [block-map block]
+  (some #(tagged-or-contained? block-map block %)
+        config/exit-tags))
+
+
+
+
+
+
 
 ;;; TODO argh this needs to be condensed; could probably use walker.
 ;;; Or maybe not, loop is for references, children are handled by get-all-children-recursively
@@ -120,7 +171,7 @@
     (if (empty? fringe)
       included
       (let [current (get block-map (first fringe))]
-        (if (:exit-point current)
+        (if (exit-point? block-map current)
           (recur (rest fringe)
                  included)
           (let [refs (all-refs current)
@@ -203,21 +254,28 @@
                             (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
                             direct-children
                             ))
-                      (:children b)))
-                ))]
+                      (:children b))
+                 :dparent
+                 (and (:parent b)) (direct-children (:parent b)))))]
     (direct-children (get block-map block-name))))
 
 (defn add-direct-children
   [block-map]
   (letfn [(direct-children [block]
-            (assoc block :dchildren 
+            (assoc block
+                   :dchildren 
                    (map (fn [child-id]
                           (-> child-id
                               block-map
                               (or (prn :not-found child-id)) ;Should't happen if all parts have been downloaded
                               direct-children
                               ))
-                        (:children block))))]
+                        (:children block))
+                   ;; unfortunately adding this makes bm unprintable.
+                   #_ :dparent
+                   #_ (and (:parent block)
+                           (direct-children (get block-map (:parent block))))
+                   ))]
     (u/map-values direct-children block-map)))
 
 ;;; Trick for memoizing a local recursive fn, see https://quanttype.net/posts/2020-09-20-local-memoized-recursive-functions.html

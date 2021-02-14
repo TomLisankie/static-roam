@@ -167,24 +167,7 @@
          :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
          )))))
 
-(defn tagged?
-  [block tag]
-  (or (contains? (:refs block) tag)
-      (some #(contains? (:refs %) tag))
-  (if (= (count (:children block)) 0)
-    false
-    (str-utils/includes?
-     (:string (first (:children block))) tag)))
-
-(defn entry-point?
-  "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
-  [page]
-  (or (tagged? page "#EntryPoint")      ;TODO config 
-      (tagged? page "#Homepage")))
-
-(defn exit-point?
-  [block]
-  (and config/exit-tag (tagged? block config/exit-tag)))      ;#Private
+      ;#Private
 
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
