@@ -106,13 +106,14 @@
   [:a {:href (utils/page-title->html-file-title page-id :case-sensitive)}
    (parser/block-content->hiccup page-id {})]) ;TODO ugly but does the italic thing right
 
+;;; Annoying amount of id/block switcheroo
 (defn linked-reference-template
   [block-map r]
   (if (nil? (get block-map r))
     ""                                  ;TODO ugly
-    (let [page (database/block-page block-map r)]
+    (let [page (database/block-page block-map (get block-map r))]
       [:div
-       "From " (page-link page)
+       "From " (page-link (:id page))
        [:div (block-template r block-map)]])))
 
 (defn linked-references-template
@@ -131,7 +132,7 @@
        [:div.missing
         "This page does not yet exist!"] ;TODO ok this is sucky UX, the links themselves should look or act differently.
        [:div.page-content (block-template block-id block-map)])
-     (let [linked-refs (database/get-linked-references block-id block-map)]
+     (let [linked-refs (database/get-included-linked-references block-id block-map)]
        (when-not (empty? linked-refs)
          [:div.incoming
           [:h3 "Incoming links"]

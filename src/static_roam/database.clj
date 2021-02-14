@@ -95,9 +95,14 @@
                 [])))]
     (set (struct-entities (parser/parse-to-ast string)))))
 
-(defn get-linked-references
+(defn- get-linked-references
   [block-id block-map]
   (get-in block-map [block-id :linked-by]))
+
+(defn get-included-linked-references
+  [block-id block-map]
+  (filter #(get-in block-map [% :include?])
+          (get-linked-references block-id block-map)))
 
 ;;; TODO included-entities
 (defn all-refs [block]
