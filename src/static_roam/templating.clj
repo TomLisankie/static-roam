@@ -85,11 +85,6 @@
          ;; otherwise, evaluate to empty div
          [:div]))]))
 
-(defn- find-parent
-  [block-id block-map]
-                                        ; (first (filter #(not (nil? %)) (map #(is-parent block-id %) block-map)))
-  (get-in block-map [block-id :parent]))
-
 ;;; TODO this should prob be built into block map, or cached.
 (defn find-page
   [block-id block-map]
@@ -99,7 +94,7 @@
 
 (defn- get-parent
   [block-id block-map]
-  (let [parent-id (find-parent block-id block-map)]
+  (let [parent-id (database/block-parent (get block-map block-id) block-map)]
     (if (nil? parent-id)
       ""
       [:a {:href (str (utils/page-title->html-file-title
@@ -115,7 +110,7 @@
   [block-map r]
   (if (nil? (get block-map r))
     ""                                  ;TODO ugly
-    (let [page (find-page r block-map)]
+    (let [page (database/block-page block-map r)]
       [:div
        "From " (page-link page)
        [:div (block-template r block-map)]])))

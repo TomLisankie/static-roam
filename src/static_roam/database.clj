@@ -118,7 +118,13 @@
 (defn block-parent
   [block-map block]
   (and (:parent block)
-       (get-in block-map (:parent block))))
+       (get block-map (:parent block))))
+
+(defn block-page
+  [block-map block]
+    (if-let [parent (block-parent block-map block)]
+      (block-page block-map parent)
+      block))
 
 (defn pages
   [block-map]
@@ -150,15 +156,20 @@
   [block-map]
   (filter entry-point? (pages block-map)))
 
+(def daily-log-regex #"(?:January|February|March|April|May|June|July|August|September|October|November|December) \d+.., \d+")
+
+(defn daily-log?
+  [block-map block]
+  (let [page (block-page block-map block)
+        title (or (:title page) (:content page))]
+    (when title (re-matches daily-log-regex title))))
+
 (defn exit-point?
   [block-map block]
-  (some #(tagged-or-contained? block-map block %)
-        config/exit-tags))
-
-
-
-
-
+  (or (some #(tagged-or-contained? block-map block %)
+            config/exit-tags)
+      (and config/exclude-daily-logs
+           (daily-log? block-map block))))
 
 
 ;;; TODO argh this needs to be condensed; could probably use walker.
