@@ -109,7 +109,8 @@
   (set/union
    (set (:children block))
    (set (:refs block))
-   (set (:linked-by block))))
+   (set (:linked-by block))
+   (set (list (:parent block)))))
 
 ;;; Some new accessors
 

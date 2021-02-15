@@ -2,7 +2,7 @@
   )
 
 (def site-css ["../assets/hyper-roam.css"
-               "../assets/proofreading.css"
+;               "../assets/proofreading.css"
                ])
 
 (def entry-tags ["EntryPoint"])

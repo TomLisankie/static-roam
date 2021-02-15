@@ -38,7 +38,8 @@
       block-map
       tap
       (html-gen/generate-static-roam-html (or output-dir "output")))
-  (dump))
+  #_  (dump)
+  )
 
 (defn gen-page
   [page]
