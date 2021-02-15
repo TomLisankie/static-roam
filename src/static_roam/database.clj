@@ -114,6 +114,13 @@
 
 ;;; Some new accessors
 
+(def descendents
+  (u/transitive-closure :dchildren))
+
+(defn page-refs
+  [block]
+  (set (mapcat :refs (descendents block))))
+
 (defn block-parent
   [block-map block]
   (and (:parent block)
