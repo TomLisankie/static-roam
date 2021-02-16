@@ -125,6 +125,10 @@
   (and (:parent block)
        (get block-map (:parent block))))
 
+(defn block-children
+  [block-map block]
+  (map block-map (:children block)))
+
 (defn block-page
   [block-map block]
   {:pre [(have? block? block)]}
@@ -137,37 +141,37 @@
   (filter :page? (vals block-map)))
 
 (defn tagged?
-  [block tag]
+  [block-map block tag]
   (or (contains? (:refs block) tag)
       ;; This implements the somewhat weird convention that tags are done in contained elts, eg
       ;; - Some private stuff
       ;;   - #Private
       ;; partly for historical reasons and partly so pages can be tagged
       (some #(contains? (:refs %) tag)
-            (:dchildren block))))
+            (block-children block-map block))))
 
 (defn tagged-or-contained?
   [block-map block tag]
   (and block
-       (or (tagged? block tag)
+       (or (tagged? block-map block tag)
            (tagged-or-contained? block-map (block-parent block-map block) tag))))
 
 (defn entry-point?
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
-  [block]
-  (some #(tagged? block %)
+  [block-map block]
+  (some #(tagged? block-map block %)
         config/entry-tags))
 
 (def fixed-entry-points #{"SR Metadata"})
 
 (defn- get-entry-point-ids
   [block-map]
-  (set/union (set (filter identity (map (fn [[k v]] (when (entry-point? v) k)) block-map)))
+  (set/union (set (filter identity (map (fn [[k v]] (when (entry-point? block-map v) k)) block-map)))
              fixed-entry-points))
 
 (defn entry-points
   [block-map]
-  (filter entry-point? (pages block-map)))
+  (filter (partial entry-point? block-map) (pages block-map)))
 
 (def daily-log-regex #"(?:January|February|March|April|May|June|July|August|September|October|November|December) \d+.., \d+")
 
@@ -185,7 +189,7 @@
       (and config/exclude-daily-logs
            (daily-log? block-map block))))
 
-(defn- included-blocks
+(defn included-blocks
   [block-map]
   (loop [fringe (get-entry-point-ids block-map)
          included #{}
