@@ -5,6 +5,7 @@
             [org.parkerici.multitool.core :as u]
             [clojure.walk :as walk]
             [clojure.set :as set]
+            [taoensso.truss :as truss :refer (have have! have?)]
             [clojure.string :as str-utils]))
 
 (defn- get-block-id
@@ -110,9 +111,14 @@
    (set (:children block))
    (set (:refs block))
    (set (:linked-by block))
-   (set (list (:parent block)))))
+   (set (and (:parent block) (list (:parent block))))))
 
 ;;; Some new accessors
+
+;;; TODO use this as precondition in more places (and/or easy coerce)
+(defn block? [x]
+  (and (map? x)
+       (string? (:id x))))
 
 (defn block-parent
   [block-map block]
@@ -121,9 +127,10 @@
 
 (defn block-page
   [block-map block]
-    (if-let [parent (block-parent block-map block)]
-      (block-page block-map parent)
-      block))
+  {:pre [(have? block? block)]}
+  (if-let [parent (block-parent block-map block)]
+    (block-page block-map parent)
+    block))
 
 (defn pages
   [block-map]
@@ -172,6 +179,7 @@
 
 (defn exit-point?
   [block-map block]
+  {:pre [(have? block? block)]}
   (or (some #(tagged-or-contained? block-map block %)
             config/exit-tags)
       (and config/exclude-daily-logs

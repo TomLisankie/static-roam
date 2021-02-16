@@ -76,7 +76,12 @@
      (if (or (nil? (:hiccup properties))
              (= (:content properties) block-id))
        ""
-       [:li.block {:onclick (when config/dev-mode (str "location.href='" (roam-url block-id) "'"))}
+       [:li.block {:onclick (when config/dev-mode
+                              #_ (str "location.href='" (roam-url block-id) "'")
+                              (format "window.open('%s', _blank', 'location=yes,scrollbars=yes,status=yes;"
+                                      (roam-url block-id) ;TODO prob want page url
+                                      )
+                              )}
         (:hiccup properties)])
      (let [children (:children properties)]
        (if (not= 0 (count children))
@@ -84,13 +89,6 @@
          (map #(block-template % block-map) children)
          ;; otherwise, evaluate to empty div
          [:div]))]))
-
-;;; TODO this should prob be built into block map, or cached.
-(defn find-page
-  [block-id block-map]
-  (if-let [parent (database/block-parent block-map (get block-map block-id))]
-    (find-page parent block-map)
-    block-id))
 
 (defn- get-parent
   [block-id block-map]

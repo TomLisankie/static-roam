@@ -11,8 +11,8 @@
 (defn recents
   [block-map]
   "Groups recently changed blocks by page, returns rev chron seq of seqs"
-  (->> (take 100 (reverse (sort-by :edit-time (filter :included (vals block-map)))))
-       (map #(assoc % :page (templating/find-page (:id %) block-map)))
+  (->> (take 100 (reverse (sort-by :edit-time (filter :include? (vals block-map)))))
+       (map #(assoc % :page (:id (database/block-page block-map %))))
        (group-by :page)
        vals
        (sort-by (fn [blocks] (reduce max 0 (map :edit-time blocks))))

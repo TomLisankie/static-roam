@@ -50,11 +50,10 @@
 
 (defn export-page
   "Write out a single page. Content is hiccup. TODO use this more" 
-  [content name output-dir]
-  (let [fname (utils/html-file-title name)]
+  [content fname output-dir]
     (stasis/export-pages
      {fname (hiccup/html content)}
-     output-dir)))
+     output-dir))
 
 (defn generate-home-page-html
   [block-map output-dir]
@@ -63,7 +62,7 @@
      (templating/home-page-hiccup
       entry-points
       block-map)
-     "/index.html"
+     "/pages/index.html"
      output-dir)))
 
 (defn generate-recent-page
