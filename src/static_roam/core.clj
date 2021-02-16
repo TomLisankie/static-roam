@@ -8,6 +8,7 @@
 
 (defn block-map
   [path-to-zip]
+  (prn :reading-from path-to-zip)       ;TODO I suppose real logger is called for
   (-> path-to-zip
       utils/read-roam-json-from-zip
       (database/setup-static-roam-block-map)))
@@ -38,13 +39,14 @@
       block-map
       tap
       (html-gen/generate-static-roam-html (or output-dir "output")))
-  #_  (dump)
-  )
+  #_ (dump))
 
 (defn gen-page
   [page]
   (html-gen/export-page
-   (html-gen/generate-page-hiccup @last-bm page) page "output/pages"))
+   (html-gen/generate-page-hiccup @last-bm page)
+   (utils/html-file-title page)
+   "output/pages"))
 
 
 

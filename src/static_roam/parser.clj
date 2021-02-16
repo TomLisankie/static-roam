@@ -132,6 +132,17 @@
     (second hiccup)
     hiccup))
 
+(defn generate-hiccup
+  [block block-map]
+  (if (:content block)
+    (let [basic (block-content->hiccup (:content block) block-map)]
+      (if (> (:heading block) 0)
+        [(keyword (str "h" (:heading block))) basic]
+        basic))
+    (do
+      (prn "Missing content: " (:id block))
+      nil)))
+
 (defn ele->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
   (if (string? ast-ele)
@@ -142,11 +153,11 @@
          :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                             (subs ele-content 0 (dec (count ele-content)))]]
          :page-link (page-link ele-content)
-         ;; NOTE this is the only thing that needs the block-map passed in, and I dont use it and it's probably broken.
-         :block-ref [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                     (:content
-                      (get block-map
-                           (utils/remove-double-delimiters ele-content)))]
+         ;; NOTE this is the only thing that needs the block-map passed in
+         :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))
+                          ref-page nil] ;TODO database/block-page but namespace problem
+                      [:div.block-ref #_ {:onclick (format "location.href='%s';" (page-url ref-page))}
+                        (generate-hiccup ref-block block-map)])
          :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                    (utils/format-hashtag ele-content)]
          :strikethrough [:s (utils/remove-double-delimiters ele-content)]

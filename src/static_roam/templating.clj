@@ -78,7 +78,7 @@
        ""
        [:li.block {:onclick (when config/dev-mode
                               #_ (str "location.href='" (roam-url block-id) "'")
-                              (format "window.open('%s', _blank', 'location=yes,scrollbars=yes,status=yes;"
+                              (format "window.open('%s', '_blank', 'location=yes,scrollbars=yes,status=yes');"
                                       (roam-url block-id) ;TODO prob want page url
                                       )
                               )}

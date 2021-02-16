@@ -114,3 +114,8 @@ blockquote {
     border: 5px solid red;
     padding: 20px;
 }
+
+.block-ref {
+     border: 1px solid gray;
+     padding: 5px;
+}

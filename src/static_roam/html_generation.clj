@@ -39,7 +39,6 @@
 (defn generate-pages-html
   [block-map output-dir]
   (let [page-map (map-filter-by-value #(and (:page? %) (:include? %)) block-map)  ;Filter to pages only TODO maybe optionl
-        _ (prn :pages (keys page-map))
         file-name-to-content
         (into {}
               (map (partial generate-page-html block-map)

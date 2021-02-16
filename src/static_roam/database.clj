@@ -215,48 +215,12 @@
                     (assoc block :include? (contains? includes (:id block))))
                   block-map)))
 
-
-#_
-(defn- generate-hiccup-if-block-is-included
-  [block-kv block-map]
-  (let [block-id (first block-kv)
-        block-props (second block-kv)]
-    [block-id
-     (when (:included block-props)
-       (assoc block-props
-              :hiccup
-              (let [the-hiccup (parser/block-content->hiccup (:content block-props) block-map)]
-                (if (> (:heading block-props) 0)
-                  (give-header the-hiccup block-props)
-                  the-hiccup)))
-       block-props)]))
-
-#_
-(defn generate-hiccup-for-included-blocks
-  [block-map]
-  (into (hash-map)
-        (filter #(not= nil (:content (second %)))
-                (map #(generate-hiccup-if-block-is-included % block-map)
-                     block-map))))
-
-(defn generate-hiccup
-  [block block-map]
-  (if (:content block)
-    (let [basic (parser/block-content->hiccup (:content block) block-map)]
-      (if (> (:heading block) 0)
-        [(keyword (str "h" (:heading block))) basic]
-        basic))
-    (do
-      (prn "Missing content: " (:id block))
-      nil)))
-
 (defn add-hiccup-for-included-blocks
   [block-map]
   (u/map-values #(if (:include? %)
-                   (assoc % :hiccup (generate-hiccup % block-map))
+                   (assoc % :hiccup (parser/generate-hiccup % block-map))
                    %)
                 block-map))
-
 
 ;;; TODO this does a parse but throws away the structure, probably shgould be saved so we don't have to do it again
 (defn generate-refs
