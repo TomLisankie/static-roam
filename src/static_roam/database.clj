@@ -414,6 +414,8 @@
 
 (defn- get-parent-eids
   [roam-db sr-info-eid entity-tag-eid]
+  (println "SR Info EID" sr-info-eid)
+  (println "entity tag eid" entity-tag-eid)
   (let [query-result (ds/q '[:find ?parent-eid
                              :in $ ?entity-tag-eid ?sr-info-eid
                              :where
@@ -453,8 +455,10 @@
 (defn- get-descendant-eids
   [roam-db eid]
   ;; This is a very important function and will be used in further steps
-  (println eid)
-  (let [children (map first
+  (let [eid (if (vector? eid)
+              (first eid)
+              eid)
+        children (map first
                       (ds/q '[:find ?children-eids
                               :in $ ?parent-eid
                               :where
@@ -586,8 +590,8 @@
 
 (defn- exclude-refs
   [roam-db refs]
-  (let [explicitly-excluded-ref-eids (get-eids-of-entities-with-refs-to roam-db refs)
-        children-of-entities-eids (get-descendant-eids-for-eids roam-db explicitly-excluded-ref-eids)
+  (let [explicitly-excluded-ref-eids (flatten (get-eids-of-entities-with-refs-to roam-db refs))
+        children-of-entities-eids (flatten (get-descendant-eids-for-eids roam-db explicitly-excluded-ref-eids))
         parent-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) explicitly-excluded-ref-eids))
         children-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) children-of-entities-eids))]
     (ds/transact! roam-db parent-transactions)

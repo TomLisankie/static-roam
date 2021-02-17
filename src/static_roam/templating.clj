@@ -195,8 +195,8 @@
 (defn- children-of-block-hiccup
   [roam-db block-eid]
   [:ul {:style "list-style-type:none; padding-left:0;"}
-   [:li (:static-roam/hiccup (ds/pull roam-db [:static-roam/hiccup] block-eid))]
-   (let [children-eids (:block/children (ds/pull roam-db [:block/children] block-eid))]
+   [:li (:static-roam/hiccup (ds/entity (ds/db roam-db) block-eid))]
+   (let [children-eids (:block/children (ds/entity (ds/db roam-db) block-eid))]
      (if (not= 0 (count children-eids))
        ;; recurse on each of the children
        (map #(children-of-block-hiccup roam-db %) children-eids)
@@ -214,15 +214,19 @@
                                    :in $ ?tag
                                    :where
                                    [?eid :node/title ?tag]]
-                                  @roam-db tag)))
-        eids-of-tagged-blocks (reduce into []
-                                      (map first (ds/q '[:find ?parent-eid
-                                                         :in $ ?tag-eid
-                                                         :where
-                                                         [?eid :block/refs sr-info-eid]
-                                                         [?eid :block/refs ?tag-eid]
-                                                         [?eid :block/parents ?parent-eid]]
-                                                       @roam-db eid-of-tag)))]
+                                 @roam-db tag)))
+        query-result (ds/q '[:find ?parent-eid
+                             :in $ ?tag-eid ?sr-info-eid
+                             :where
+                             [?eid :block/refs ?sr-info-eid]
+                             [?eid :block/refs ?tag-eid]
+                             [?eid :block/parents ?parent-eid]]
+                           @roam-db eid-of-tag sr-info-eid)
+        empty (println query-result)
+        eids-of-tagged-blocks (filter (complement nil?)
+                                      (reduce into []
+                                              (map first query-result)))]
+    (println eids-of-tagged-blocks)
     eids-of-tagged-blocks))
 
 (defn- get-about-content-hiccup
@@ -231,7 +235,7 @@
                                                :where
                                                [?eid :node/title "About Page"]]
                                               @roam-db)))
-        children-eids (:block/children (ds/pull roam-db [:block/children] about-page-eid))]
+        children-eids (:block/children (ds/entity (ds/db roam-db) about-page-eid))]
     [:section {:id "about-content"}
      [:div
       [:h1 "About Me"]]
@@ -256,7 +260,7 @@
                                                :where
                                                [?eid :node/title "Contact Page"]]
                                               @roam-db)))
-        children-eids (:block/children (ds/pull roam-db [:block/children] contact-page-eid))]
+        children-eids (:block/children (ds/entity (ds/db roam-db) contact-page-eid))]
     [:section {:id "contact-content"}
      [:div
       [:h1 "Contact Me"]]
@@ -281,7 +285,7 @@
                                                :where
                                                [?eid :node/title "Now Page"]]
                                               @roam-db)))
-        children-eids (:block/children (ds/pull roam-db [:block/children] now-page-eid))]
+        children-eids (:block/children (ds/entity (ds/db roam-db) now-page-eid))]
     [:section {:id "contact-content"}
      [:div
       [:h1 "What I'm Up To"]]
@@ -302,14 +306,14 @@
 
 (defn- path-for-post
   [roam-db post-eid]
-  (let [uid (:block/uid (ds/pull roam-db [:block/uid] post-eid))
+  (let [uid (:block/uid (ds/entity (ds/db roam-db) post-eid))
         path (str "/nodes/" uid ".html")]
     path))
 
 (defn- get-post-content-hiccup
   [roam-db post-eid]
-  (let [children-eids (:block/children (ds/pull roam-db [:block/children] post-eid))
-        post-title (:node/title (ds/pull roam-db [:node/title] post-eid))]
+  (let [children-eids (:block/children (ds/entity (ds/db roam-db) post-eid))
+        post-title (:node/title (ds/entity (ds/db roam-db) post-eid))]
     [:section {:id "post-content"}
      [:div
       [:h1 post-title]]
@@ -319,7 +323,7 @@
 (defn- hiccup-for-post
   [roam-db post-eid]
   (let [post-content (get-post-content-hiccup roam-db post-eid)
-        post-title (:node/title (ds/pull roam-db [:node/title] post-eid))]
+        post-title (:node/title (ds/entity (ds/db roam-db) post-eid))]
     [:html {:lang "en-US"}
      (head post-title)
      [:body
@@ -339,8 +343,8 @@
 
 (defn- link-li-ele
   [roam-db eid]
-  (let [page-title (:node/title (ds/pull roam-db [:node/title] eid))
-        uid (:block/uid (ds/pull roam-db [:block/uid] eid))
+  (let [page-title (:node/title (ds/entity (ds/db roam-db) eid))
+        uid (:block/uid (ds/entity (ds/db roam-db) eid))
         path (str "../nodes/" uid ".html")]
     [:li
      [:a {:href path} page-title]]))
@@ -351,7 +355,7 @@
 
 (defn- get-page-title-links-for-tagged
   [roam-db tag]
-  (let [eids-of-tagged-blocks (get-eids-for-tagged-blocks tag)
+  (let [eids-of-tagged-blocks (get-eids-for-tagged-blocks roam-db tag)
         link-li-eles (get-links-for-eids roam-db eids-of-tagged-blocks)]
     link-li-eles))
 
@@ -390,8 +394,8 @@
   [:ul
    [:li {:onclick (str "location.href='" ;;path
                        "'")}
-    (:static-roam/hiccup (ds/pull roam-db [:static-roam/hiccup] block-eid))]
-   (let [children-eids (:block/children (ds/pull roam-db [:block/children] block-eid))]
+    (:static-roam/hiccup (ds/entity (ds/db roam-db) block-eid))]
+   (let [children-eids (:block/children (ds/entity (ds/db roam-db) block-eid))]
      (if (not= 0 (count children-eids))
        ;; recurse on each of the children
        (map #(children-of-node-hiccup roam-db %) children-eids)
@@ -400,11 +404,11 @@
 
 (defn- get-node-content-hiccup
   [roam-db node-eid]
-  (let [children-eids (:block/children (ds/pull roam-db [:block/children] node-eid))
-        node-title (if (:node/title (ds/pull roam-db [:node/title] node-eid))
-                     (:node/title (ds/pull roam-db [:node/title] node-eid))
-                     (:block/content (ds/pull roam-db [:block/content] node-eid)))
-        uid (:block/uid (ds/pull roam-db [:block/uid] node-eid))
+  (let [children-eids (:block/children (ds/entity (ds/db roam-db) node-eid))
+        node-title (if (:node/title (ds/entity (ds/db roam-db) node-eid))
+                     (:node/title (ds/entity (ds/db roam-db) node-eid))
+                     (:block/content (ds/entity (ds/db roam-db) node-eid)))
+        uid (:block/uid (ds/entity (ds/db roam-db) node-eid))
         path (str "./nodes/" uid ".html")]
     [:section {:id "post-content"}
      [:div
@@ -415,9 +419,9 @@
 (defn- hiccup-for-node
   [roam-db node-eid]
   (let [node-content (get-node-content-hiccup roam-db node-eid)
-        node-title (if (:node/title (ds/pull roam-db [:node/title] node-eid))
-                     (:node/title (ds/pull roam-db [:node/title] node-eid))
-                     (:block/content (ds/pull roam-db [:block/content] node-eid)))]
+        node-title (if (:node/title (ds/entity (ds/db roam-db) node-eid))
+                     (:node/title (ds/entity (ds/db roam-db) node-eid))
+                     (:block/content (ds/entity (ds/db roam-db) node-eid)))]
     [:html {:lang "en-US"}
      (head node-title)
      [:body
@@ -491,7 +495,7 @@
                           }
         :let [template-name (first template-fn-pair)
               template-fn (second template-fn-pair)]]
-    (template-fn roam-db (get template-info template-name))))
+    (template-fn roam-db)))
 
 (defn- aggregate-templates
   [template-maps]

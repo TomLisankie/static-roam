@@ -236,12 +236,13 @@
 (defn parse-entities-in-db-to-hiccup
   [roam-db]
   (let [eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db))
+        transactions-seq (map
+                          (fn [eid]
+                            [:db/add
+                             eid
+                             :static-roam/hiccup
+                             (roam-markdown->hiccup roam-db (:block/string (ds/entity (ds/db roam-db) eid)))])
+                          eids)
         transactions (vec
-                      (map
-                       (fn [eid]
-                         [:db/add
-                          eid
-                          :static-roam/hiccup
-                          (roam-markdown->hiccup roam-db (:block/string (ds/pull roam-db [:block/string] eid)))])
-                       eids))]
+                      transactions-seq)]
     (ds/transact! roam-db transactions)))

@@ -2,7 +2,7 @@
  :site-title "Thomas Lisankie"
  :twitter-username "TomLisankie"
  :github-username "TomLisankie"
- :entry-point-tags ["EntryPoint"]
+ :entry-point-tags ["EntryPoint" "Post"]
  :include-tagged ["Include"]
  :include-refs []
  :exclude-tagged ["Exclude"]
