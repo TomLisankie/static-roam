@@ -140,7 +140,7 @@
    "GitHub Profile" "TomLisankie"
    })
 
-(defn- head
+(defn- homepage-head
   [page-title]
   [:head
    [:title page-title]
@@ -151,7 +151,47 @@
    [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
    [:link {:href "https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" :rel "stylesheet"}]])
 
+(defn- head
+  [page-title]
+  [:head
+   [:title page-title]
+   [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1"}]
+   [:link {:rel "shortcut icon" :href "../assets/favicon.ico" :type "image/x-icon"}]
+   [:meta {:charset "utf-8"}]
+   [:link {:rel "stylesheet" :type "text/css" :href "../assets/style.css"}]
+   [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
+   [:link {:href "https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" :rel "stylesheet"}]])
+
 (defn- header
+  []
+  [:header
+   [:h1 {:id "site-title-link"}
+    [:a {:href "../"} (get general-site-info "Site Title")]]
+   [:nav {:id "nav-bar"}
+    [:input {:type "checkbox" :name "nav-trigger" :id "nav-trigger"}]
+    [:label {:for "nav-trigger"}
+     [:svg {:viewBox "0 0 100 80" :width "40" :height "40"}
+      [:rect {:width "100" :height "20"}]
+      [:rect {:y "30" :width "100" :height "20"}]
+      [:rect {:y "60" :width "100" :height "20"}]]]
+    [:div {:id "nav-links"}
+     [:a {:class "nav-bar-link" :href "../about"} "About"]
+     [:span {:class "link-separator"} " | "]
+     [:a {:class "nav-bar-link" :href "../now"} "Now"]
+     [:span {:class "link-separator"} " | "]
+     [:a {:class "nav-bar-link" :href "../posts"} "Posts"]
+     [:span {:class "link-separator"} " | "]
+     [:a {:class "nav-bar-link" :href "../mind"} "My Mind"]
+     [:span {:class "link-separator"} " | "]
+     [:a {:class "nav-bar-link" :href "../contact"} "Contact"]
+     [:span {:class "link-separator"} " | "]
+     [:a {:class "social-icon" :href (str "https://twitter.com/" (get general-site-info "Twitter Profile"))}
+      [:img {:src "../assets/twitter.svg" :width "20" :height "20"}]]
+     " "
+     [:a {:class "social-icon" :href (str "https://github.com/" (get general-site-info "GitHub Profile"))}
+      [:img {:src "../assets/github.svg" :width "20" :height "20"}]]]]])
+
+(defn- homepage-header
   []
   [:header
    [:h1 {:id "site-title-link"}
@@ -451,9 +491,9 @@
         entry-point-list (into [:ul {:id "entry-points"}] (get-page-title-links-for-tagged roam-db "EntryPoint"))]
     {"/index.html"
      [:html {:lang "en-US"}
-      (head "Thomas Lisankie")
+      (homepage-head "Thomas Lisankie")
       [:body
-       (header)
+       (homepage-header)
        [:main {:id "homepage"}
         [:section {:id "about-me"}
          [:div
