@@ -10,11 +10,16 @@
 
 (defn generate-static-roam!
   [path-to-zip output-dir degree]
+  (println "---Loading export---")
   (let [roam-db-conn (time (utils/create-roam-edn-db-from-zip path-to-zip))
         config (edn-utils/read-string (slurp (io/resource "config.edn")))]
+    (println "---Determining content to include---")
     (time (database/determine-which-content-to-include roam-db-conn degree config))
+    (println "---Parsing---")
     (time (parser/parse-entities-in-db-to-hiccup roam-db-conn))
+    (println "---Making templates---")
     (let [templates (time (templating/generate-templates roam-db-conn (:template-info config)))]
+      (println "---Generating templates---")
       (time (html-gen/generate-site templates output-dir)))))
 
 (defn -main
