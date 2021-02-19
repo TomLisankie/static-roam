@@ -389,9 +389,27 @@
     [:li
      [:a {:href path} page-title]]))
 
+(defn- link-li-ele-homepage
+  [roam-db eid]
+  (let [page-title (:node/title (ds/entity (ds/db roam-db) eid))
+        uid (:block/uid (ds/entity (ds/db roam-db) eid))
+        path (str "./nodes/" uid ".html")]
+    [:li
+     [:a {:href path} page-title]]))
+
 (defn- get-links-for-eids
   [roam-db eids]
   (map #(link-li-ele roam-db %) eids))
+
+(defn- get-links-for-eids-homepage
+  [roam-db eids]
+  (map #(link-li-ele-homepage roam-db %) eids))
+
+(defn- get-page-title-links-for-tagged-homepage
+  [roam-db tag]
+  (let [eids-of-tagged-blocks (get-eids-for-tagged-blocks roam-db tag)
+        link-li-eles (get-links-for-eids-homepage roam-db eids-of-tagged-blocks)]
+    link-li-eles))
 
 (defn- get-page-title-links-for-tagged
   [roam-db tag]
@@ -487,8 +505,8 @@
 
 (defn homepage-template
   [roam-db]
-  (let [post-list (into [:ul {:id "posts"}] (get-page-title-links-for-tagged roam-db "Post"))
-        entry-point-list (into [:ul {:id "entry-points"}] (get-page-title-links-for-tagged roam-db "EntryPoint"))]
+  (let [post-list (into [:ul {:id "posts"}] (get-page-title-links-for-tagged-homepage roam-db "Post"))
+        entry-point-list (into [:ul {:id "entry-points"}] (get-page-title-links-for-tagged-homepage roam-db "EntryPoint"))]
     {"/index.html"
      [:html {:lang "en-US"}
       (homepage-head "Thomas Lisankie")
