@@ -222,11 +222,9 @@
                              [?eid :block/refs ?tag-eid]
                              [?eid :block/parents ?parent-eid]]
                            @roam-db eid-of-tag sr-info-eid)
-        empty (println query-result)
         eids-of-tagged-blocks (filter (complement nil?)
                                       (reduce into []
                                               (map first query-result)))]
-    (println eids-of-tagged-blocks)
     eids-of-tagged-blocks))
 
 (defn- get-about-content-hiccup
@@ -234,7 +232,9 @@
   (let [about-page-eid (first (first (ds/q '[:find ?eid
                                                :where
                                                [?eid :node/title "About Page"]]
-                                              @roam-db)))
+                                           @roam-db)))
+        ;; abt-pg (get-eids-for-tagged-blocks roam-db "About")
+        ;; about-eid-print (println abt-pg)
         children-eids (:block/children (ds/entity (ds/db roam-db) about-page-eid))]
     [:section {:id "about-content"}
      [:div

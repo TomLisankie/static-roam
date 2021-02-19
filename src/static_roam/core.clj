@@ -10,11 +10,12 @@
 
 (defn generate-static-roam!
   [path-to-zip output-dir degree]
-  (let [roam-db-conn (utils/create-roam-edn-db-from-zip path-to-zip)
+  (let [roam-db-conn (time (utils/create-roam-edn-db-from-zip path-to-zip))
         config (edn-utils/read-string (slurp (io/resource "config.edn")))]
-    (database/determine-which-content-to-include roam-db-conn degree config)
-    (parser/parse-entities-in-db-to-hiccup roam-db-conn)
-    (html-gen/generate-site (templating/generate-templates roam-db-conn (:template-info config)) output-dir)))
+    (time (database/determine-which-content-to-include roam-db-conn degree config))
+    (time (parser/parse-entities-in-db-to-hiccup roam-db-conn))
+    (let [templates (time (templating/generate-templates roam-db-conn (:template-info config)))]
+      (time (html-gen/generate-site templates output-dir)))))
 
 (defn -main
   [path-to-zip output-dir degree]

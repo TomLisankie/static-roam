@@ -179,21 +179,23 @@
   [roam-db node-title]
   (first (first (ds/q '[:find
                         ?eid
+                        :in $ ?node-title
                         :where
-                        [?eid :node/title node-title]]
-                      @roam-db))))
+                        [?eid :node/title ?node-title]]
+                      @roam-db node-title))))
 
 (defn- get-eid-for-block-uid
   [roam-db block-uid]
   (first (first (ds/q '[:find
                         ?eid
+                        :in $ ?block-uid
                         :where
-                        [?eid :block/uid block-uid]]
-                      @roam-db))))
+                        [?eid :block/uid ?block-uid]]
+                      @roam-db block-uid))))
 
 (defn- html-file-name-for-uid
   [roam-db uid]
-  (str (:block/uid (ds/pull roam-db [:block/uid] (get-eid-for-node-title roam-db uid))) ".html"))
+  (str (:block/uid (ds/entity (ds/db roam-db) (get-eid-for-node-title roam-db uid))) ".html"))
 
 (defn element-vec->hiccup ;; TODO: have code to change behavior if page/block is not included
   [roam-db ast-ele]
@@ -205,7 +207,7 @@
                   (remove-double-delimiters ele-content)]
       :block-ref [:a {:href (str (remove-double-delimiters ele-content) ".html")}
                   (:block/string
-                   (ds/pull roam-db [:block/string]
+                   (ds/entity (ds/db roam-db)
                             (get-eid-for-block-uid roam-db (remove-double-delimiters ele-content))))]
       :hashtag [:a {:href (html-file-name-for-uid roam-db (remove-double-delimiters ele-content))}
                 (format-hashtag ele-content)]

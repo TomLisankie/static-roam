@@ -414,8 +414,6 @@
 
 (defn- get-parent-eids
   [roam-db sr-info-eid entity-tag-eid]
-  (println "SR Info EID" sr-info-eid)
-  (println "entity tag eid" entity-tag-eid)
   (let [query-result (ds/q '[:find ?parent-eid
                              :in $ ?entity-tag-eid ?sr-info-eid
                              :where
