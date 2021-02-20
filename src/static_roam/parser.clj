@@ -16,16 +16,11 @@
   "In a sequence of strings mixed with other values, returns the same sequence with adjacent strings concatenated.
    (If the sequence contains only strings, use clojure.string/join instead.)"
   [coll]
-  (reduce
-    (fn [elements-so-far elmt]
-      (if (and (string? elmt) (string? (peek elements-so-far)))
-        (let [previous-elements (pop elements-so-far)
-              combined-last-string (str (peek elements-so-far) elmt)]
-          (conj previous-elements combined-last-string))
-        (conj elements-so-far elmt)))
-    []
-    coll))
-
+  (mapcat (fn [subseq]
+            (if (string? (first subseq))
+              (list (apply str subseq))
+              subseq))
+          (partition-by string? coll)))
 
 (defn- transform-to-ast
   "Transforms the Instaparse output tree to an abstract syntax tree for SR markup."
@@ -40,8 +35,8 @@
                                (combine-adjacent-strings raw-contents))
      :url-link-url-parts     (fn [& chars]
                                (clojure.string/join chars))
-     :any-chars              (fn [& chars]
-                               (clojure.string/join chars))}
+     :text                   (fn [s] s)
+     }
     tree))
 
 (def parser-file (io/resource "parser.ebnf"))
@@ -52,9 +47,8 @@
 (defn parse-to-ast
   "Converts a string of block syntax to an abstract syntax tree for SR markup."
   [block-content]
-  (transform-to-ast (try
-                      (block-parser block-content)
-                      (catch Exception e (str "Exception when parsing content: " block-content)))))
+  {:pre [(string? block-content)]}
+  (transform-to-ast (block-parser block-content)))
 
 (declare block-content->hiccup)         ;allow recursion on this
 
@@ -145,38 +139,40 @@
 
 (defn ele->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
-  (if (string? ast-ele)
-    ast-ele
-    (let [ele-content (second ast-ele)]
-      (unspan
-       (case (first ast-ele)
-         :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                            (subs ele-content 0 (dec (count ele-content)))]]
-         :page-link (page-link ele-content)
-         ;; NOTE this is the only thing that needs the block-map passed in
-         :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))
-                          ref-page nil] ;TODO database/block-page but namespace problem
-                      [:div.block-ref #_ {:onclick (format "location.href='%s';" (page-url ref-page))}
-                        (generate-hiccup ref-block block-map)])
-         :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                   (utils/format-hashtag ele-content)]
-         :strikethrough [:s (utils/remove-double-delimiters ele-content)]
-         :highlight [:mark (utils/remove-double-delimiters ele-content)]
-         :italic [:i (utils/remove-double-delimiters ele-content)]
-         :bold [:b (utils/remove-double-delimiters ele-content)]
-         :alias (format-alias ele-content)
-         :image (format-image ele-content)
-         :todo [:input {:type "checkbox" :disabled "disabled"}]
-         :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
-         :code-line [:code (utils/remove-n-surrounding-delimiters 1 ele-content)]
-         :code-block [:code.codeblock (utils/remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
-         :youtube (get-youtube-vid-embed ele-content)
-         :bare-url (make-content-from-url ele-content)
-         :blockquote `[:blockquote ~(ele->hiccup ele-content block-map)]
+  (let [recurse (fn [s]                 ;TODO probably needs a few more uses
+                  (ele->hiccup (parse-to-ast s) block-map))]
+    (if (string? ast-ele)
+      ast-ele
+      (let [ele-content (second ast-ele)]
+        (unspan
+         (case (first ast-ele)
+           :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                              (subs ele-content 0 (dec (count ele-content)))]]
+           :page-link (page-link ele-content)
+           ;; NOTE this is the only thing that needs the block-map passed in
+           :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))
+                            ref-page nil] ;TODO database/block-page but namespace problem
+                        [:div.block-ref #_ {:onclick (format "location.href='%s';" (page-url ref-page))}
+                         (generate-hiccup ref-block block-map)])
+           :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                     (utils/format-hashtag ele-content)]
+           :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
+           :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]
+           :italic [:i (recurse (utils/remove-double-delimiters ele-content))]
+           :bold [:b (recurse (utils/remove-double-delimiters ele-content))]
+           :alias (format-alias ele-content)
+           :image (format-image ele-content)
+           :todo [:input {:type "checkbox" :disabled "disabled"}]
+           :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
+           :code-line [:code (utils/remove-n-surrounding-delimiters 1 ele-content)]
+           :code-block [:code.codeblock (utils/remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
+           :youtube (get-youtube-vid-embed ele-content)
+           :bare-url (make-content-from-url ele-content)
+           :blockquote [:blockquote (ele->hiccup ele-content block-map)]
                                         ;ast-ele
-         :block `[:span ~@(map #(ele->hiccup % block-map) (rest ast-ele))]
-         :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
-         )))))
+           :block `[:span ~@(map #(ele->hiccup % block-map) (rest ast-ele))]
+           :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
+           ))))))
 
       ;#Private
 

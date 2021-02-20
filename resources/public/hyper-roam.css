@@ -52,7 +52,6 @@ li {
     color: #B23D37;
   /* color: #4E176E; 		 */
     display: inline-block; 
-    width: 1em; 
     vertical-align: top;
     margin-right: 0.5em;
 }
@@ -88,6 +87,7 @@ blockquote {
     padding-top: 10px;
     padding-bottom: 10px;
     border-left: 3px solid black;
+    width: 90%;
 }
 
 /* aka linked references */

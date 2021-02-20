@@ -1,5 +1,5 @@
 (* Parser for block content *)
-block = blockquote | (syntax-in-block / any-chars)*
+block = blockquote | (syntax-in-block / text)*
 
 <syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | metadata-tag | code-line | code-block | youtube | bold | italic | strikethrough | highlight | bare-url ) (* add query later*)
 image = #"!\[(.*?)\]\(.*?\)"
@@ -22,4 +22,4 @@ block-embed = #"\{\{embed: .*?\}\}" | #"\{\{\[\[embed\]\]: .*?\}\}"
 bare-url = #"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
 blockquote = <"> "> block
 
-any-chars = #'[A-Za-z0-9]+|[\s\W_]+?'
+text = #'[A-Za-z0-9]+|[\s\W_]+?'

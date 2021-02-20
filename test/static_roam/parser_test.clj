@@ -126,4 +126,18 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
   (is (= '[:block "I was under the " [:hashtag "#influence"] ", officer"]
          (parse-to-ast "I was under the #influence, officer"))))
 
-       
+(deftest italic-link-bug
+  (testing "link inside italics"
+    (is (= [:span
+            "  – Wiliam S. Burroughs,  "
+            [:i [:a {:href "http://books.google.com/books?id=Vg-ns2orYBMC&pg=PA479"} "The Western Lands"]]
+            "."]
+           (block-content->hiccup
+            "  – Wiliam S. Burroughs,  __[The Western Lands](http://books.google.com/books?id=Vg-ns2orYBMC&pg=PA479)__." {}))))
+  (testing "italic inside link"
+    (is (= [:span
+            "  – Wiliam S. Burroughs,  "
+            [:a {:href "http://books.google.com/books?id=Vg-ns2orYBMC&pg=PA479"} [:i "The Western Lands"]]
+            "."]
+           (block-content->hiccup
+            "  – Wiliam S. Burroughs,  [__The Western Lands__](http://books.google.com/books?id=Vg-ns2orYBMC&pg=PA479)." {})))))
