@@ -164,11 +164,6 @@
 
 (def fixed-entry-points #{"SR Metadata"})
 
-(defn- get-entry-point-ids
-  [block-map]
-  (set/union (set (filter identity (map (fn [[k v]] (when (entry-point? block-map v) k)) block-map)))
-             fixed-entry-points))
-
 (defn entry-points
   [block-map]
   (filter (partial entry-point? block-map) (pages block-map)))
@@ -191,7 +186,7 @@
 
 (defn included-blocks
   [block-map]
-  (loop [fringe (get-entry-point-ids block-map)
+  (loop [fringe (map :id (entry-points block-map))
          included #{}
          examined #{}]
     (cond (empty? fringe)
@@ -259,6 +254,8 @@
        add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
        ))
 
+;;; Currently unused.
+
 (defn- lkjsafas
   [pair block-map]
   (let [block-id (first pair)
@@ -286,9 +283,6 @@
   [roam-json]
   (-> roam-json
       roam-db
-#_      mark-included-blocks
-#_      mark-content-entities-for-inclusion
-#_      add-children-of-block-embeds
       add-hiccup-for-included-blocks)) ;TODO this unmarks pages, too aggressivel
 
 

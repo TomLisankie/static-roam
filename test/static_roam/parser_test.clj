@@ -114,12 +114,12 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
 
 (deftest blockquote-parse-bug
   (is (= [:block                        ;Ugly. The point is to not gen a blockquote
-          [:any-chars " "]
-          [:any-chars "why"]
-          [:any-chars " "]
-          [:any-chars "me"]
-          [:any-chars ">"]
-          [:any-chars " "]]
+          [:text " "]
+          [:text "why"]
+          [:text " "]
+          [:text "me"]
+          [:text ">"]
+          [:text " "]]
          (block-parser " why me> "))))
 
 (deftest hashtag-parse-bug

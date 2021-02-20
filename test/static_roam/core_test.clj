@@ -3,65 +3,55 @@
             [clojure.java.io :as io]
             [static-roam.core :refer :all]
             [static-roam.database :as database]
-            [static-roam.utils :as utils]))
+            [static-roam.utils :as utils]
+            [org.parkerici.multitool.core :as u]
+            ))
 
 (def test1-block-map
   '{"rXJ2WYFqL"
-    {:children (),
+    {:include? false,
+     :edit-time 1609457456508,
+     :children (),
      :parent "December 31st, 2020",
      :content "#EntryPoint",
-     :refers-to #{"EntryPoint"},
-     :included true,
-     :page false,
-     :hiccup [:span [:a {:href "./EntryPoint.html"} "EntryPoint"]],
-     :exit-point false,
-     :entry-point false,
-     :linked-by #{},
+     :refs #{"EntryPoint"},
+     :page? false,
+     :id "rXJ2WYFqL",
      :heading -1},
     "mJSusMwjf"
-    {:children (),
+    {:include? false,
+     :edit-time 1609457408947,
+     :children (),
      :parent "December 31st, 2020",
      :content "```And this is a multiline\ncode block```",
-     :refers-to #{},
-     :included true,
-     :page false,
-     :hiccup
-     [:span
-      [:code "``"]
-      "`And this is a multiline\ncode block"
-      [:code "``"]
-      "`"],
-     :exit-point false,
-     :entry-point false,
-     :linked-by #{},
+     :refs #{},
+     :page? false,
+     :id "mJSusMwjf",
      :heading -1},
     "87EsDvI3Y"
-    {:children (),
+    {:include? false,
+     :edit-time 1609457290335,
+     :children (),
      :parent "December 31st, 2020",
      :content "> This one is a quote with some **bold** text",
-     :refers-to #{},
-     :included true,
-     :page false,
-     :hiccup
-     [:span [:blockquote "This one is a quote with some **bold** text"]],
-     :exit-point false,
-     :entry-point false,
-     :linked-by #{},
+     :refs #{},
+     :page? false,
+     :id "87EsDvI3Y",
      :heading -1},
     "OfUnEBdQ9"
-    {:children (),
+    {:include? false,
+     :edit-time 1609457263983,
+     :children (),
      :parent "December 31st, 2020",
      :content "> This one is a quote",
-     :refers-to #{},
-     :included true,
-     :page false,
-     :hiccup [:span [:blockquote "This one is a quote"]],
-     :exit-point false,
-     :entry-point false,
-     :linked-by #{},
+     :refs #{},
+     :page? false,
+     :id "OfUnEBdQ9",
      :heading -1},
     "December 31st, 2020"
-    {:children
+    {:include? false,
+     :edit-time 1609457218846,
+     :children
      ("rXJ2WYFqL"
       "W-1MSc0EE"
       "tf_y48ZZ5"
@@ -70,76 +60,60 @@
       "87EsDvI3Y"
       "GZcQmDYyg"
       "mJSusMwjf"),
-     :parent nil,
      :content "December 31st, 2020",
-     :refers-to #{},
-     :included true,
-     :page true,
-     :hiccup [:span "December 31st, 2020"],
-     :exit-point false,
-     :entry-point true,
-     :linked-by #{},
+     :refs #{},
+     :page? true,
+     :id "December 31st, 2020",
      :heading -1},
     "DRNzZGApK"
-    {:children (),
+    {:include? false,
+     :edit-time 1609457273037,
+     :children (),
      :parent "December 31st, 2020",
      :content "> This one is a quote\nwith line breaks",
-     :refers-to #{},
-     :included true,
-     :page false,
-     :hiccup
-     [:span [:blockquote "This one is a quote"] "\nwith line breaks"],
-     :exit-point false,
-     :entry-point false,
-     :linked-by #{},
+     :refs #{},
+     :page? false,
+     :id "DRNzZGApK",
      :heading -1},
     "tf_y48ZZ5"
-    {:children (),
+    {:include? false,
+     :edit-time 1609457306153,
+     :children (),
      :parent "December 31st, 2020",
      :content "This one has some **bold** text",
-     :refers-to #{},
-     :included true,
-     :page false,
-     :hiccup [:span "This one has some " [:b "bold"] " text"],
-     :exit-point false,
-     :entry-point false,
-     :linked-by #{},
+     :refs #{},
+     :page? false,
+     :id "tf_y48ZZ5",
      :heading -1},
     "GZcQmDYyg"
-    {:children (),
+    {:include? false,
+     :edit-time 1609457384542,
+     :children (),
      :parent "December 31st, 2020",
      :content "This has `inline code`",
-     :refers-to #{},
-     :included true,
-     :page false,
-     :hiccup [:span "This has " [:code "inline code"]],
-     :exit-point false,
-     :entry-point false,
-     :linked-by #{},
+     :refs #{},
+     :page? false,
+     :id "GZcQmDYyg",
      :heading -1},
     "EntryPoint"
-    {:children (),
-     :parent nil,
+    {:include? false,
+     :edit-time 1609457456519,
+     :children (),
      :content "EntryPoint",
-     :refers-to #{},
-     :included true,
-     :page true,
-     :hiccup [:span "EntryPoint"],
-     :exit-point false,
-     :entry-point false,
-     :linked-by #{"rXJ2WYFqL"},
+     :refs #{},
+     :page? true,
+     :id "EntryPoint",
+     :linked-by ("rXJ2WYFqL"),
      :heading -1},
     "W-1MSc0EE"
-    {:children (),
+    {:include? false,
+     :edit-time 1609457245754,
+     :children (),
      :parent "December 31st, 2020",
      :content "This is a boring line",
-     :refers-to #{},
-     :included true,
-     :page false,
-     :hiccup [:span "This is a boring line"],
-     :exit-point false,
-     :entry-point false,
-     :linked-by #{},
+     :refs #{},
+     :page? false,
+     :id "W-1MSc0EE",
      :heading -1}})
 
 (deftest test-unzip-roam-json-archive
@@ -149,10 +123,11 @@
       (is (vector? roam-json))
       (is (= 2 (count roam-json)))
       (testing "block map"
-        (let [block-map (database/setup-static-roam-block-map roam-json nil)]
+        (let [block-map (database/setup-static-roam-block-map roam-json)
+              clean-block-map (u/map-values #(dissoc % :dchildren) block-map)]
           (is (map? block-map))
           (is (= 10 (count block-map)))
-          (is (= test1-block-map block-map))
+          (is (= test1-block-map clean-block-map))
           )))))
 
 
