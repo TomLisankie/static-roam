@@ -453,7 +453,7 @@
    [:li {:onclick (str "location.href='" ;;path
                        "'")}
     (:static-roam/hiccup (ds/entity (ds/db roam-db) block-eid))]
-   (let [children-eids (:block/children (ds/entity (ds/db roam-db) block-eid))]
+   (let [children-eids (map #(:db/id %) (:block/children (ds/entity (ds/db roam-db) block-eid)))]
      (if (not= 0 (count children-eids))
        ;; recurse on each of the children
        (map #(children-of-node-hiccup roam-db %) children-eids)
@@ -462,10 +462,10 @@
 
 (defn- get-node-content-hiccup
   [roam-db node-eid]
-  (let [children-eids (:block/children (ds/entity (ds/db roam-db) node-eid))
+  (let [children-eids (map #(:db/id %) (:block/children (ds/entity (ds/db roam-db) node-eid)))
         node-title (if (:node/title (ds/entity (ds/db roam-db) node-eid))
                      (:node/title (ds/entity (ds/db roam-db) node-eid))
-                     (:block/content (ds/entity (ds/db roam-db) node-eid)))
+                     (:block/string (ds/entity (ds/db roam-db) node-eid)))
         uid (:block/uid (ds/entity (ds/db roam-db) node-eid))
         path (str "./nodes/" uid ".html")]
     [:section {:id "post-content"}
@@ -479,7 +479,7 @@
   (let [node-content (get-node-content-hiccup roam-db node-eid)
         node-title (if (:node/title (ds/entity (ds/db roam-db) node-eid))
                      (:node/title (ds/entity (ds/db roam-db) node-eid))
-                     (:block/content (ds/entity (ds/db roam-db) node-eid)))]
+                     (:block/string (ds/entity (ds/db roam-db) node-eid)))]
     [:html {:lang "en-US"}
      (head node-title)
      [:body

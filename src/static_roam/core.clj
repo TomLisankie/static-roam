@@ -18,7 +18,11 @@
     (println "---Parsing---")
     (time (parser/parse-entities-in-db-to-hiccup roam-db-conn))
     (println "---Making templates---")
-    (let [templates (time (templating/generate-templates roam-db-conn (:template-info config)))]
+    (let [templates (time
+                     (templating/generate-templates
+                      roam-db-conn
+                      (:template-info
+                       config)))]
       (println "---Generating templates---")
       (time (html-gen/generate-site templates output-dir)))))
 

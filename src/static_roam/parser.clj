@@ -246,5 +246,6 @@
                              (roam-markdown->hiccup roam-db (:block/string (ds/entity (ds/db roam-db) eid)))])
                           eids)
         transactions (vec
-                      transactions-seq)]
-    (ds/transact! roam-db transactions)))
+                      transactions-seq)
+        transaction-report (ds/transact! roam-db transactions)]
+    transaction-report))
