@@ -453,7 +453,7 @@
    [:li {:onclick (str "location.href='" ;;path
                        "'")}
     (:static-roam/hiccup (ds/entity (ds/db roam-db) block-eid))]
-   (let [children-eids (map #(:db/id %) (:block/children (ds/entity (ds/db roam-db) block-eid)))]
+   (let [children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] block-eid))))]
      (if (not= 0 (count children-eids))
        ;; recurse on each of the children
        (map #(children-of-node-hiccup roam-db %) children-eids)
@@ -462,7 +462,7 @@
 
 (defn- get-node-content-hiccup
   [roam-db node-eid]
-  (let [children-eids (map #(:db/id %) (:block/children (ds/entity (ds/db roam-db) node-eid)))
+  (let [children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] node-eid))))
         node-title (if (:node/title (ds/entity (ds/db roam-db) node-eid))
                      (:node/title (ds/entity (ds/db roam-db) node-eid))
                      (:block/string (ds/entity (ds/db roam-db) node-eid)))
@@ -474,6 +474,25 @@
      [:ul
       (map #(children-of-node-hiccup roam-db %) children-eids)]]))
 
+(defn- get-linked-ref-hiccup
+  [roam-db eid]
+  [:li {:class "graph-page-li"}
+   (:static-roam/hiccup (ds/entity (ds/db roam-db) eid))])
+
+(defn- get-linked-refs-hiccup
+  [roam-db node-eid]
+  (let [ref-eids (map first (ds/q '[:find ?linked-ref-eids
+                                    :in $ ?eid
+                                    :where
+                                    [?linked-ref-eids :block/refs ?eid]] @roam-db node-eid))]
+    (when (= node-eid 17324)
+      (println ref-eids))
+    (map #(get-linked-ref-hiccup roam-db %) ref-eids)))
+
+(defn- get-linked-references-for-node
+  [roam-db node-eid]
+  (into [:ul] (get-linked-refs-hiccup roam-db node-eid)))
+
 (defn- hiccup-for-node
   [roam-db node-eid]
   (let [node-content (get-node-content-hiccup roam-db node-eid)
@@ -484,8 +503,11 @@
      (head node-title)
      [:body
       (header)
-      [:main {:id "content"}
-       node-content]
+      [:main {:id "graph-page-content"}
+       node-content
+       [:div {:class "linked-references"}
+        [:h3 {:style "padding-left: 1em;"} "Linked References"]
+        (get-linked-references-for-node roam-db node-eid)]]
       (footer)]]))
 
 (defn- get-eids-for-included-blocks
