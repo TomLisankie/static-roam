@@ -1,7 +1,9 @@
 (* Parser for block content *)
+(* TODO should make more use of instaparse compositionality *)
+
 block = blockquote | (syntax-in-block / text)*
 
-<syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | metadata-tag | code-line | code-block | youtube | bold | italic | strikethrough | highlight | bare-url ) (* add query later*)
+<syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | metadata-tag | code-line | code-block | youtube | bold | italic | strikethrough | highlight | bare-url | page-alias ) (* add query later*)
 image = #"!\[(.*?)\]\(.*?\)"
 page-link = #"\[\[.*?\]\]"
 alias = #"\[([^\[\]]+?)\]\(.+?\)"  (* Note this hairy but correct char class that means everything but square brackets *)
@@ -12,6 +14,7 @@ code-line = #"\`.*?\`"
 code-block = #"(?is)^```.*```"
 (* query = #"\{\{query: .*?:.*?\}\}" | #"\{\{[[query]]: .*?:.*?\}\}" *)
 youtube = #"\{\{youtube: .*?\}\}" | #"\{\{\[\[youtube\]\]: .*?:.*?\}\}" | #"\{\{\[\[video\]\]: .*?:.*?\}\}"
+page-alias = #"\{\{alias\:\[\[.+\]\].*\}\}"
 bold = #"\*\*.*?\*\*"
 italic = #"\_\_.*?\_\_"
 strikethrough = #"\~\~.*?\~\~"

@@ -141,3 +141,8 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
             "."]
            (block-content->hiccup
             "  – Wiliam S. Burroughs,  [__The Western Lands__](http://books.google.com/books?id=Vg-ns2orYBMC&pg=PA479)." {})))))
+
+
+(deftest page-alias-test
+  (is (= [:span "A show about " [:a {:href "./nihilism.html"} "The Big Nada"] ]
+         (block-content->hiccup "A show about {{alias:[[nihilism]]The Big Nada}}" {}))))
