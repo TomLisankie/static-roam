@@ -1,5 +1,22 @@
+:root {
+    --deep-space-sparkle: #335c67ff;
+    --medium-champagne: #fff3b0ff;
+    --indian-yellow: #e09f3eff;
+    --auburn: #9e2a2bff;
+    --rosewood: #540b0eff;
+    --white: #FFFFFFFF;
+
+    --background: #FFFFFF;
+    --navbar-background: #e09f3eff;
+    –-navbar-foreground: #540b0eff;
+    --link: #9e2a2bff;
+    --blockquote: #fffce9  /*   #fff3b0ff; */
+    --incoming: #d2e7ec;  	/* picked this myself, and dont want it relgated to botton of page */
+}
+
+
 body {
-    background-color: #FEFEFF;
+    background-color: var(--background);
     /* font-family: Georgia; */
     /* font-family: 'Martel', serif; */
     font-family: Lato;
@@ -22,11 +39,11 @@ body {
 }
 
 .navbar {
-    background-color: #F0DC97;
+    background-color: var(--navbar-background);
 }
 
 .nav-link {
-    color: #4E176E !important;		/* Hyperphor purple */
+    color: var(--navbar-foreground) !important;	
     font-weight: bold;
     padding-right: 1rem;
     padding-left: 1rem;
@@ -48,8 +65,9 @@ li {
 /* Gyrations to get colored list bullets */
 .main ul li::before {
     /* content: "\2022";  bullet */
-    content: "\2aa2";  
-    color: #B23D37;
+    /* content: "\2aa2";  my fave ⪢ */
+    content: "\30fb";   
+    color: var(--link);
   /* color: #4E176E; 		 */
     display: inline-block; 
     vertical-align: top;
@@ -57,13 +75,13 @@ li {
 }
 
 a {
-    color: #B23D37; /* Hyperphor color 2 */
+    color: var(--link); /* Hyperphor color 2 */
     font-weight: bold;
 }
 
 a:hover {
     background-color: #eeeee0; 
-    color: #B23D37; /* Hyperphor color 2 */
+    color: var(--link); /* Hyperphor color 2 */
     text-decoration: none;
     box-shadow: 0 0 0 5px #eeeee0;
 }
@@ -81,7 +99,7 @@ h2 {
 
 blockquote {
     white-space: break-spaces;
-    background: #eeeee0;
+    background: var(--blockquote);
     padding-left: 20px;
     padding-right: 10px;
     padding-top: 10px;
@@ -93,7 +111,7 @@ blockquote {
 /* aka linked references */
 .incoming {
     padding: 10px;
-    background: #eeeee0;
+    background: var(--incoming);
 }
 
 .incoming h3 {
