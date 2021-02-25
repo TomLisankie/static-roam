@@ -445,8 +445,8 @@
                                            [?eid :node/title ?tag]]
                                          @roam-db %)
                                   tags))
-        eids-of-entities-with-tags (reduce into []
-                                           (map first
+        eids-of-entities-with-tags (map first
+                                        (reduce into []
                                                 (get-all-queries roam-db sr-info-eid entity-tag-eids)))]
     eids-of-entities-with-tags))
 

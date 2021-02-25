@@ -263,8 +263,10 @@
                              [?eid :block/parents ?parent-eid]]
                            @roam-db eid-of-tag sr-info-eid)
         eids-of-tagged-blocks (filter (complement nil?)
-                                      (into []
-                                            (map first query-result)))]
+                                      (map first
+                                           (into [] query-result)))]
+    (println tag)
+    (println eid-of-tag)
     eids-of-tagged-blocks))
 
 (defn- get-about-content-hiccup
