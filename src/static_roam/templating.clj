@@ -265,8 +265,6 @@
         eids-of-tagged-blocks (filter (complement nil?)
                                       (map first
                                            (into [] query-result)))]
-    (println tag)
-    (println eid-of-tag)
     eids-of-tagged-blocks))
 
 (defn- get-about-content-hiccup

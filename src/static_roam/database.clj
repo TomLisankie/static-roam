@@ -514,8 +514,24 @@
     (mark-refs-as-included roam-db degree entry-point-eids)
     (include-children-of-included-pages roam-db)))
 
+(defn- get-children-recursively
+  [roam-db eid]
+  (let [children-eids (map #(:db/id %) (:block/children (ds/entity (ds/db roam-db) eid)))]
+    (if (not= 0 (count children-eids))
+      (reduce into children-eids (map #(get-children-recursively roam-db %) children-eids))
+      nil)))
+
 (defn- mark-included-entity-children-as-included
-  [roam-db])
+  [roam-db]
+  (let [entities-marked-for-inclusion (map first
+                                           (ds/q '[:find ?included-eids
+                                                   :where
+                                                   [?included-eids :static-roam/included true]]
+                                                 @roam-db))
+        entity-children-seqs (map #(get-children-recursively roam-db %) entities-marked-for-inclusion)
+        entity-children-eids (filter (complement nil?) (flatten entity-children-seqs))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) entity-children-eids))]
+    (ds/transact! roam-db transactions)))
 
 (defn- mark-entry-point-and-ref-pages-as-included
   [roam-db degree entry-point-tags]
