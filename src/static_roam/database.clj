@@ -68,22 +68,8 @@
                 roam-json))
    :children :parent))
 
-;;; Replaced, use the parser
-#_
-(defn- clean-content-entities
-  [string]
-  (let [content-entities-found    (utils/find-content-entities-in-string string)
-        hashtags-found            (utils/find-hashtags-in-string string) ;TODO needs work; will return #foo in urls
-        metadata-found            (utils/find-metadata-in-string string)
-        extra-paren-removed       (utils/remove-heading-parens content-entities-found)
-        cleaned-content-entities  (map utils/remove-double-delimiters extra-paren-removed)
-        cleaned-hashtags          (map utils/remove-leading-char hashtags-found)
-        cleaned-metadata          (map utils/remove-double-colon metadata-found)
-        all-cleaned-entities      (concat cleaned-content-entities cleaned-hashtags cleaned-metadata)]
-    all-cleaned-entities))
-
 ;;; TODO "((foobar))"
-(defn- cleaner-content-entities
+(defn- content-refs
   [string]
   (letfn [(struct-entities [struct] 
             (if (string? struct)
@@ -185,6 +171,7 @@
            (daily-log? block-map block))))
 
 (defn included-blocks
+  "Computes which blocks to include"
   [block-map]
   (loop [fringe (map :id (entry-points block-map))
          included #{}
@@ -195,13 +182,34 @@
           (recur (rest fringe) included examined)
           :else
           (let [current (get block-map (first fringe))]
-            (if (exit-point? block-map current)
-              (recur (rest fringe) included (conj examined (:id current)))
-              (let [refs (all-refs current)
-                    new-refs (set/difference refs included)]
-                (recur (set/union (rest fringe) new-refs)
-                       (conj included (:id current))
-                       (conj examined (:id current)))))))))
+            (cond (not (:id current))
+                  (do (prn :missing-reference (first fringe))
+                      (recur (rest fringe) included (conj examined (first fringe))))                      
+                  (exit-point? block-map current)
+                  (recur (rest fringe) included (conj examined (first fringe)))
+                  :else
+                  (let [refs (all-refs current)
+                        new-refs (set/difference refs included)]
+                    (recur (set/union (rest fringe) new-refs)
+                           (conj included (:id current))
+                           (conj examined (:id current)))))))))
+
+
+;;; New version computes degree as well as acctually the map
+;;; TODO not hooked up yet                        
+(defn omcluded-blocks
+  "Computes which blocks to include"
+  [block-map]
+  (letfn [(propagate [depth block-map from]
+            (let [current-depth (or (get-in block-map [from :depth]) 1000)]
+              (if (and (< depth current-depth) (not (exit-point? block-map (get block-map from))))
+                  (reduce (fn [bm r]
+                            (propagate (+ depth 1) bm r))
+                          (assoc-in block-map [from :depth] depth)
+                          (all-refs (get block-map from)))
+                  block-map)))]
+    (reduce (partial propagate 0) block-map (map :id (entry-points block-map)))))
+
 
 (defn mark-included-blocks
   [block-map]
@@ -220,7 +228,7 @@
 ;;; TODO this does a parse but throws away the structure, probably shgould be saved so we don't have to do it again
 (defn generate-refs
   [db]
-  (u/map-values #(assoc % :refs (cleaner-content-entities (:content %))) db))
+  (u/map-values #(assoc % :refs (content-refs (:content %))) db))
 
 (defn generate-inverse-refs
   [db]
