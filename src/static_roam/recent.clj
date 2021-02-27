@@ -24,7 +24,7 @@
 
 (defn recent-page-content
   [block-map]
-  `[:div
+  `[:div.main
     ~@(for [group (recents block-map)
             :let [page (:page (first group))
                   edit-time (reduce max 0 (map :edit-time group))]]

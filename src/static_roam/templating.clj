@@ -154,7 +154,7 @@
   [:body
    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
     [:div.container
-     [:a.navbar-brand {:href "#"} "Agency Made Me Do it"]
+     [:a.navbar-brand {:href "./Agency-Made-Me-Do-It.html"} "Agency Made Me Do it"] ;TODO config
      [:button.navbar-toggler
       {:type "button",
        :data-toggle "collapse",
@@ -165,12 +165,12 @@
       [:span.navbar-toggler-icon]]
      [:div.collapse.navbar-collapse
       {:id "navbarResponsive"}
+      ;; TODO config and maybe make active page machinery mork
       [:ul.navbar-nav.ml-auto
-       [:li.nav-item.active
-        [:a.nav-link {:href "#"} "Home\n              " [:span.sr-only "(current)"]]]
-       [:li.nav-item [:a.nav-link {:href "#"} "About"]]
-       [:li.nav-item [:a.nav-link {:href "#"} "Services"]]
-       [:li.nav-item [:a.nav-link {:href "#"} "Contact"]]]]]]
+       [:li.nav-item [:a.nav-link {:href "./index.html"} "Home"]]
+       [:li.nav-item [:a.nav-link {:href "./recent-changes.html"} "Recent Changes"]]
+       [:li.nav-item [:a.nav-link {:href "./About.html"} "About"]]
+       #_ [:li.nav-item [:a.nav-link {:href "#"} "Contact"]]]]]]
    [:div.container
     ~body-hiccup]
    "<!-- Footer -->"
@@ -236,7 +236,7 @@
 (defn home-page-hiccup
   [entry-points block-map]
   (page-hiccup 
-   [:main.page-content {:aria-label "Content"}
+   [:div.main.page-content {:aria-label "Content"}
      [:div.wrapper
        [:h2.post-list-heading "Entry Points"]
       [:ul.post-list

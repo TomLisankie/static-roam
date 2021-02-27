@@ -48,6 +48,10 @@
    (utils/html-file-title page)
    "output/pages"))
 
+(defn gen-pages
+  []
+  (html-gen/generate-static-roam-html @last-bm "output"))
+
 
 
 
