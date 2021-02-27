@@ -25,8 +25,7 @@ body {
 }
 
 .main {
-    margin-top: 12px;
-    width: 800px;
+    margin-top: 100px;
 }
 
 .block {
@@ -136,4 +135,13 @@ blockquote {
 .block-ref {
      border: 1px solid gray;
      padding: 5px;
+}
+
+.nondent {
+    padding-inline-start: 0;
+}
+
+.ptitle {
+    /* gets title left-aligned with text, but a kludge and not sure it will work with different fonts etc  */
+    padding-left: 26px;
 }
