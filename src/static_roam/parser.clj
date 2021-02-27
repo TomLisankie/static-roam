@@ -69,24 +69,22 @@
     [:img {:src image-source :alt alt-text :style "max-width: 90%"}]))
 
 ;;; TODO this really belongs in html gen, not in parsing, yes?
-(defn get-youtube-vid-embed
+
+(defn youtube-vid-embed
   "Returns an iframe for a YouTube embedding"
-  [string]
+  [youtube-id]
   [:iframe {:width "560"
             :height "315"
-            :src (str "https://www.youtube-nocookie.com/embed/"
-                      (if (re-find #"\[\[youtube\]\]" string)
-                        (cond
-                          (re-find #"youtube\.com" string) (subs string 47 (- (count string) 2))
-                          (re-find #"youtu\.be" string) (subs string 32 (- (count string) 2))
-                          :else "NO VALID ID FOUND")
-                        (cond
-                          (re-find #"youtube\.com" string) (subs string 43 (- (count string) 2))
-                          (re-find #"youtu\.be" string) (subs string 28 (- (count string) 2))
-                          :else "NO VALID ID FOUND")))
+            :src (str "https://www.youtube.com/embed/" youtube-id)
             :frameborder "0"
             :allow "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
             :allowfullscreen ""}])
+
+(defn get-youtube-id
+  [string]
+  (or (second (re-find #"https\:\/\/youtu\.be/([\w_-]*)" string))
+      (second (re-find #"https\:\/\/www.youtube.com\/watch\?v=([\w_-]*)" string))
+      (throw (ex-info "Couldn't find youtube id" {:string string}))))
 
 (defn- make-link-from-url
   [string]
@@ -169,7 +167,7 @@
            :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
            :code-line [:code (utils/remove-n-surrounding-delimiters 1 ele-content)]
            :code-block [:code.codeblock (utils/remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
-           :youtube (get-youtube-vid-embed ele-content)
+           :youtube (youtube-vid-embed (get-youtube-id ele-content))
            :bare-url (make-content-from-url ele-content)
            :blockquote [:blockquote (ele->hiccup ele-content block-map)]
                                         ;ast-ele

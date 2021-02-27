@@ -146,3 +146,17 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
 (deftest page-alias-test
   (is (= [:span "A show about " [:a {:href "./nihilism.html"} "The Big Nada"] ]
          (block-content->hiccup "A show about {{alias:[[nihilism]]The Big Nada}}" {}))))
+
+
+(deftest youtube-id-test
+  (is (= "rrstrOrJxOc"
+         (get-youtube-id "pretty good video https://www.youtube.com/watch?v=rrstrOrJxOc")))
+  (is (= "dO6v_tZtyu0"
+         (get-youtube-id "– The Who, [__The Seeker__](https://youtu.be/dO6v_tZtyu0)")))
+  (is (= "PwuckTkE7T4"
+         (get-youtube-id "https://youtu.be/PwuckTkE7T4")))
+  (is (= "-Jq0lohh_5U"
+         (get-youtube-id "LA Open School {{[[video]]: https://youtu.be/-Jq0lohh_5U}}")))
+  (is (= "0nU4EnB6wiE"
+         (get-youtube-id "Dennett et al debate free will https://www.youtube.com/watch?v=0nU4EnB6wiE&feature=youtu.be"))))
+  
