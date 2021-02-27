@@ -109,8 +109,7 @@ blockquote {
 
 /* aka linked references */
 .incoming {
-    padding: 10px;
-    background: var(--incoming);
+    /* background: var(--incoming);  */
 }
 
 .incoming h3 {
@@ -144,4 +143,10 @@ blockquote {
 .ptitle {
     /* gets title left-aligned with text, but a kludge and not sure it will work with different fonts etc  */
     padding-left: 26px;
+}
+
+img {
+    /* center images */
+    margin-left: auto;
+    margin-right: auto;
 }

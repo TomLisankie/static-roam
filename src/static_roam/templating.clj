@@ -197,7 +197,9 @@
        ]
       "<!-- Sidebar Widgets Column -->"
       [:div.col-md-4
+       ;; TODO might be nice!
        "<!-- Search Widget -->"
+       #_
        [:div.card.my-4
         [:h5.card-header "Search"]
         [:div.card-body
@@ -205,6 +207,7 @@
           [:input.form-control {:type "text", :placeholder "Search for..."}]
           [:span.input-group-append [:button.btn.btn-secondary {:type "button"} "Go!"]]]]]
        "<!-- Categories Widget -->"
+       #_
        [:div.card.my-4
         [:h5.card-header "Categories"]
         [:div.card-body
@@ -219,14 +222,16 @@
             [:li {} [:a {:href "#"} "JavaScript"]]
             [:li {} [:a {:href "#"} "CSS"]]
             [:li {} [:a {:href "#"} "Tutorials"]]]]]]]
-       "<!-- Side Widget -->"
-       [:div.card.my-4
-        [:h5.card-header "Side Widget"]
-        [:div.card-body
-         "You can put anything you want inside of these side widgets. They are easy to use, and feature the new Bootstrap 4 card containers!        "]]]]
-     "<!-- /.row -->"]
+       ;; incoming
+       (let [linked-refs (database/get-included-linked-references block-id block-map)]
+         (when-not (empty? linked-refs)
+           [:div.card.my-4
+            [:h5.card-header "Incoming links"]
+            [:div.card-body
+             [:div.incoming
+              (linked-references-template linked-refs block-map)]]]))
+       ]]]
     ))
-
 
 (defn home-page-hiccup
   [entry-points block-map]
