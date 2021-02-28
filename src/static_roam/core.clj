@@ -8,6 +8,7 @@
 
 (defn block-map
   [path-to-zip]
+  (prn :reading-from path-to-zip)       ;TODO I suppose real logger is called for
   (-> path-to-zip
       utils/read-roam-json-from-zip
       (database/setup-static-roam-block-map)))
@@ -22,10 +23,11 @@
   []
   (keys (u/dissoc-if (fn [[_ v]] (not (:page? v))) @last-bm)))
 
-;;; SLoooow
+;;; SLoooow. Dumps pages including dchildren
 (defn dump
   []
-  (ju/schppit "blocks.edn" (u/map-filter (fn [[k b]] (and (:page? b) b)) @last-bm)))
+  (ju/schppit "blocks.edn" (u/map-filter (fn [[k b]] (and (:page? b) b))
+                                         @last-bm)))
 
 (defn tap
   [bm]
@@ -38,14 +40,22 @@
       block-map
       tap
       (html-gen/generate-static-roam-html (or output-dir "output")))
-  #_  (dump)
-  )
+  #_ (dump))
 
 (defn gen-page
   [page]
   (html-gen/export-page
-   (html-gen/generate-page-hiccup @last-bm page) page "output/pages"))
+   (html-gen/generate-page-hiccup @last-bm page)
+   (utils/html-file-title page)
+   "output/pages"))
 
+(defn gen-pages
+  []
+  (html-gen/generate-static-roam-html @last-bm "output"))
 
+#_
+(def pages (map #(select-keys % [:content :depth :refs :linked-by]) (filter :page? (vals bm))))
+#_
+(def g (group-by :depth pages))
 
 

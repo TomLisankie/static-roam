@@ -35,6 +35,8 @@
         nav-bar-page-dict (zipmap nav-bar-hrefs nav-bar-pages-r)]
     nav-bar-page-dict))
 
+;;; Old version
+#_
 (defn page-hiccup
   [body-hiccup page-title block-map]
   [:html
@@ -68,29 +70,30 @@
   [block-id]
   (str config/roam-base-url block-id))
 
-
 (defn block-template
-  [block-id block-map]
-  (let [properties (get block-map block-id)]
-    [:ul {:id block-id}
+  [block-id block-map & [depth]]
+  (let [depth (or depth 0)
+        properties (get block-map block-id)]
+    [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
      (if (or (nil? (:hiccup properties))
              (= (:content properties) block-id))
-       ""
-       [:li.block {:onclick (when config/dev-mode (str "location.href='" (roam-url block-id) "'"))}
-        (:hiccup properties)])
-     (let [children (:children properties)]
-       (if (not= 0 (count children))
-         ;; recurse on each of the children
-         (map #(block-template % block-map) children)
-         ;; otherwise, evaluate to empty div
-         [:div]))]))
+       nil
+       [:li.block
+        (when config/dev-mode
+          [:a {:href (roam-url block-id)
+               :target "_roam"
+               ;; argh
+               :style "background-color: lightgray; margin-left: 5px;"
+               }
+           "[e]"])
+        (:hiccup properties)
+        ])
 
-;;; TODO this should prob be built into block map, or cached.
-(defn find-page
-  [block-id block-map]
-  (if-let [parent (database/block-parent block-map (get block-map block-id))]
-    (find-page parent block-map)
-    block-id))
+
+                                        ;TODO prettify
+     (map #(block-template % block-map (inc depth))
+          (:children properties))
+     ]))
 
 (defn- get-parent
   [block-id block-map]
@@ -121,6 +124,8 @@
   (concat []
           (map (partial linked-reference-template block-map) references)))
 
+;;; Old version 
+#_
 (defn block-page-template
   [block-id block-map]
   (let [block (get block-map block-id)
@@ -138,10 +143,108 @@
           [:h3 "Incoming links"]
           (linked-references-template linked-refs block-map)]))]))
 
+;;; Boostrap template version
+(defn page-hiccup
+  [body-hiccup page-title block-map]
+  `[:html
+    [:head
+     [:meta {:charset "utf-8"}]
+     [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
+     [:title ~page-title]               ;TODO might want to prepend a site title
+     [:link {:rel "stylesheet"
+             :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+             :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+             :crossorigin "anonymous"}]
+     ~@(for [css config/site-css]
+         `[:link {:rel "stylesheet" :href ~css}])
+     [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
+     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap"}]]
+  [:body
+   [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
+    [:div.container
+     [:a.navbar-brand {:href "./Agency-Made-Me-Do-It.html"} "Agency Made Me Do it"] ;TODO config
+     [:button.navbar-toggler
+      {:type "button",
+       :data-toggle "collapse",
+       :data-target "#navbarResponsive",
+       :aria-controls "navbarResponsive",
+       :aria-expanded "false",
+       :aria-label "Toggle navigation"}
+      [:span.navbar-toggler-icon]]
+     [:div.collapse.navbar-collapse
+      {:id "navbarResponsive"}
+      ;; TODO config and maybe make active page machinery mork
+      [:ul.navbar-nav.ml-auto
+       [:li.nav-item [:a.nav-link {:href "./index.html"} "Home"]]
+       [:li.nav-item [:a.nav-link {:href "./recent-changes.html"} "Recent Changes"]]
+       [:li.nav-item [:a.nav-link {:href "./About.html"} "About"]]
+       #_ [:li.nav-item [:a.nav-link {:href "#"} "Contact"]]]]]]
+   [:div.container
+    ~body-hiccup]
+   "<!-- Footer -->"
+   [:footer.py-5.bg-dork
+    [:div.container [:p.m-0.text-center.text-white "Copyright © Hyperphor 2020"]]
+    ]]])
+
+
+;;; Boostrap version
+(defn block-page-template
+  [block-id block-map]
+  (let [block (get block-map block-id)
+        title (parser/block-content->hiccup (get block :content) block-map) ;no this makes no sense
+        contents (block-template block-id block-map)]
+    [:div.main
+     [:div.row
+      "<!-- Post Content Column -->"
+      [:div.col-lg-8
+       "<!-- Title -->"
+       [:h1.ptitle title]
+       [:hr {}]
+       contents
+       [:hr {}]
+       ]
+      "<!-- Sidebar Widgets Column -->"
+      [:div.col-md-4
+       ;; TODO might be nice!
+       "<!-- Search Widget -->"
+       #_
+       [:div.card.my-4
+        [:h5.card-header "Search"]
+        [:div.card-body
+         [:div.input-group
+          [:input.form-control {:type "text", :placeholder "Search for..."}]
+          [:span.input-group-append [:button.btn.btn-secondary {:type "button"} "Go!"]]]]]
+       "<!-- Categories Widget -->"
+       #_
+       [:div.card.my-4
+        [:h5.card-header "Categories"]
+        [:div.card-body
+         [:div.row
+          [:div.col-lg-6
+           [:ul.list-unstyled.mb-0
+            [:li {} [:a {:href "#"} "Web Design"]]
+            [:li {} [:a {:href "#"} "HTML"]]
+            [:li {} [:a {:href "#"} "Freebies"]]]]
+          [:div.col-lg-6
+           [:ul.list-unstyled.mb-0
+            [:li {} [:a {:href "#"} "JavaScript"]]
+            [:li {} [:a {:href "#"} "CSS"]]
+            [:li {} [:a {:href "#"} "Tutorials"]]]]]]]
+       ;; incoming
+       (let [linked-refs (database/get-included-linked-references block-id block-map)]
+         (when-not (empty? linked-refs)
+           [:div.card.my-4
+            [:h5.card-header "Incoming links"]
+            [:div.card-body
+             [:div.incoming
+              (linked-references-template linked-refs block-map)]]]))
+       ]]]
+    ))
+
 (defn home-page-hiccup
   [entry-points block-map]
   (page-hiccup 
-   [:main.page-content {:aria-label "Content"}
+   [:div.main.page-content {:aria-label "Content"}
      [:div.wrapper
        [:h2.post-list-heading "Entry Points"]
       [:ul.post-list

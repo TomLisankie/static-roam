@@ -5,6 +5,7 @@
             [org.parkerici.multitool.core :as u]
             [clojure.walk :as walk]
             [clojure.set :as set]
+            [taoensso.truss :as truss :refer (have have! have?)]
             [clojure.string :as str-utils]))
 
 (defn- get-block-id
@@ -67,22 +68,8 @@
                 roam-json))
    :children :parent))
 
-;;; Replaced, use the parser
-#_
-(defn- clean-content-entities
-  [string]
-  (let [content-entities-found    (utils/find-content-entities-in-string string)
-        hashtags-found            (utils/find-hashtags-in-string string) ;TODO needs work; will return #foo in urls
-        metadata-found            (utils/find-metadata-in-string string)
-        extra-paren-removed       (utils/remove-heading-parens content-entities-found)
-        cleaned-content-entities  (map utils/remove-double-delimiters extra-paren-removed)
-        cleaned-hashtags          (map utils/remove-leading-char hashtags-found)
-        cleaned-metadata          (map utils/remove-double-colon metadata-found)
-        all-cleaned-entities      (concat cleaned-content-entities cleaned-hashtags cleaned-metadata)]
-    all-cleaned-entities))
-
 ;;; TODO "((foobar))"
-(defn- cleaner-content-entities
+(defn- content-refs
   [string]
   (letfn [(struct-entities [struct] 
             (if (string? struct)
@@ -110,7 +97,7 @@
    (set (:children block))
    (set (:refs block))
    (set (:linked-by block))
-   (set (list (:parent block)))))
+   (set (and (:parent block) (list (:parent block))))))
 
 ;;; Some new accessors
 
@@ -126,48 +113,58 @@
   (and (:parent block)
        (get block-map (:parent block))))
 
+(defn block-children
+  [block-map block]
+  (map block-map (:children block)))
+
+(defn block-descendents
+  [block]
+  ((u/transitive-closure :dchildren) block))
+
+(defn page-refs
+  [block-map page]
+  (apply clojure.set/union
+         (map :refs (block-descendents page))))
+
+
 (defn block-page
   [block-map block]
-    (if-let [parent (block-parent block-map block)]
-      (block-page block-map parent)
-      block))
+  {:pre [(have? block? block)]}
+  (if-let [parent (block-parent block-map block)]
+    (block-page block-map parent)
+    block))
 
 (defn pages
   [block-map]
   (filter :page? (vals block-map)))
 
 (defn tagged?
-  [block tag]
+  [block-map block tag]
   (or (contains? (:refs block) tag)
       ;; This implements the somewhat weird convention that tags are done in contained elts, eg
       ;; - Some private stuff
       ;;   - #Private
       ;; partly for historical reasons and partly so pages can be tagged
       (some #(contains? (:refs %) tag)
-            (:dchildren block))))
+            (block-children block-map block))))
 
 (defn tagged-or-contained?
   [block-map block tag]
   (and block
-       (or (tagged? block tag)
+       (or (tagged? block-map block tag)
            (tagged-or-contained? block-map (block-parent block-map block) tag))))
 
 (defn entry-point?
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
-  [block]
-  (some #(tagged? block %)
+  [block-map block]
+  (some #(tagged? block-map block %)
         config/entry-tags))
 
 (def fixed-entry-points #{"SR Metadata"})
 
-(defn- get-entry-point-ids
-  [block-map]
-  (set/union (set (filter identity (map (fn [[k v]] (when (entry-point? v) k)) block-map)))
-             fixed-entry-points))
-
 (defn entry-points
   [block-map]
-  (filter entry-point? (pages block-map)))
+  (filter (partial entry-point? block-map) (pages block-map)))
 
 (def daily-log-regex #"(?:January|February|March|April|May|June|July|August|September|October|November|December) \d+.., \d+")
 
@@ -179,14 +176,17 @@
 
 (defn exit-point?
   [block-map block]
+  {:pre [(have? block? block)]}
   (or (some #(tagged-or-contained? block-map block %)
             config/exit-tags)
       (and config/exclude-daily-logs
            (daily-log? block-map block))))
 
-(defn- included-blocks
+#_
+(defn included-blocks
+  "Computes which blocks to include"
   [block-map]
-  (loop [fringe (get-entry-point-ids block-map)
+  (loop [fringe (map :id (entry-points block-map))
          included #{}
          examined #{}]
     (cond (empty? fringe)
@@ -195,14 +195,20 @@
           (recur (rest fringe) included examined)
           :else
           (let [current (get block-map (first fringe))]
-            (if (exit-point? block-map current)
-              (recur (rest fringe) included (conj examined (:id current)))
-              (let [refs (all-refs current)
-                    new-refs (set/difference refs included)]
-                (recur (set/union (rest fringe) new-refs)
-                       (conj included (:id current))
-                       (conj examined (:id current)))))))))
+            (cond (not (:id current))
+                  (do (prn :missing-reference (first fringe))
+                      (recur (rest fringe) included (conj examined (first fringe))))                      
+                  (exit-point? block-map current)
+                  (recur (rest fringe) included (conj examined (first fringe)))
+                  :else
+                  (let [refs (all-refs current)
+                        new-refs (set/difference refs included)]
+                    (recur (set/union (rest fringe) new-refs)
+                           (conj included (:id current))
+                           (conj examined (:id current)))))))))
 
+
+#_
 (defn mark-included-blocks
   [block-map]
   (let [includes (included-blocks block-map)]
@@ -210,53 +216,38 @@
                     (assoc block :include? (contains? includes (:id block))))
                   block-map)))
 
-
-#_
-(defn- generate-hiccup-if-block-is-included
-  [block-kv block-map]
-  (let [block-id (first block-kv)
-        block-props (second block-kv)]
-    [block-id
-     (when (:included block-props)
-       (assoc block-props
-              :hiccup
-              (let [the-hiccup (parser/block-content->hiccup (:content block-props) block-map)]
-                (if (> (:heading block-props) 0)
-                  (give-header the-hiccup block-props)
-                  the-hiccup)))
-       block-props)]))
-
-#_
-(defn generate-hiccup-for-included-blocks
+;;; New version computes degree as well as acctually the map
+;;; TODO not hooked up yet                        
+;;; Seems to compute the same set as other method
+(defn compute-depths
+  "Computes depths from entry points"
   [block-map]
-  (into (hash-map)
-        (filter #(not= nil (:content (second %)))
-                (map #(generate-hiccup-if-block-is-included % block-map)
-                     block-map))))
+  (let [exit-point? (memoize #(exit-point? block-map (get block-map %)))] ;performance hack
+    (letfn [(propagate [depth block-map from]
+              (let [current-depth (or (get-in block-map [from :depth]) 1000)]
+                (if (and (< depth current-depth) (not (exit-point? from)))
+                  (reduce (fn [bm r]
+                            (propagate (+ depth 1) bm r))
+                          (assoc-in block-map [from :depth] depth)
+                          (all-refs (get block-map from)))
+                  block-map)))]
+      (reduce (partial propagate 0) block-map (map :id (entry-points block-map))))))
 
-(defn generate-hiccup
-  [block block-map]
-  (if (:content block)
-    (let [basic (parser/block-content->hiccup (:content block) block-map)]
-      (if (> (:heading block) 0)
-        [(keyword (str "h" (:heading block))) basic]
-        basic))
-    (do
-      (prn "Missing content: " (:id block))
-      nil)))
+(defn compute-includes
+  [block-map]
+  (u/map-values #(assoc % :include? (not (nil? (:depth %)))) block-map))
 
 (defn add-hiccup-for-included-blocks
   [block-map]
   (u/map-values #(if (:include? %)
-                   (assoc % :hiccup (generate-hiccup % block-map))
+                   (assoc % :hiccup (parser/generate-hiccup % block-map))
                    %)
                 block-map))
-
 
 ;;; TODO this does a parse but throws away the structure, probably shgould be saved so we don't have to do it again
 (defn generate-refs
   [db]
-  (u/map-values #(assoc % :refs (cleaner-content-entities (:content %))) db))
+  (u/map-values #(assoc % :refs (content-refs (:content %))) db))
 
 (defn generate-inverse-refs
   [db]
@@ -286,9 +277,12 @@
        create-block-map-no-links
        generate-refs
        generate-inverse-refs
-       mark-included-blocks
+       compute-depths
+       compute-includes
        add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
        ))
+
+;;; Currently unused.
 
 (defn- lkjsafas
   [pair block-map]
@@ -317,9 +311,5 @@
   [roam-json]
   (-> roam-json
       roam-db
-#_      mark-included-blocks
-#_      mark-content-entities-for-inclusion
-#_      add-children-of-block-embeds
       add-hiccup-for-included-blocks)) ;TODO this unmarks pages, too aggressivel
-
 

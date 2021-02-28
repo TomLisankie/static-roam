@@ -39,7 +39,6 @@
 (defn generate-pages-html
   [block-map output-dir]
   (let [page-map (map-filter-by-value #(and (:page? %) (:include? %)) block-map)  ;Filter to pages only TODO maybe optionl
-        _ (prn :pages (keys page-map))
         file-name-to-content
         (into {}
               (map (partial generate-page-html block-map)
@@ -50,11 +49,10 @@
 
 (defn export-page
   "Write out a single page. Content is hiccup. TODO use this more" 
-  [content name output-dir]
-  (let [fname (utils/html-file-title name)]
+  [content fname output-dir]
     (stasis/export-pages
      {fname (hiccup/html content)}
-     output-dir)))
+     output-dir))
 
 (defn generate-home-page-html
   [block-map output-dir]
@@ -63,7 +61,7 @@
      (templating/home-page-hiccup
       entry-points
       block-map)
-     "/index.html"
+     "/pages/index.html"
      output-dir)))
 
 (defn generate-recent-page

@@ -114,16 +114,49 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
 
 (deftest blockquote-parse-bug
   (is (= [:block                        ;Ugly. The point is to not gen a blockquote
-          [:any-chars " "]
-          [:any-chars "why"]
-          [:any-chars " "]
-          [:any-chars "me"]
-          [:any-chars ">"]
-          [:any-chars " "]]
+          [:text " "]
+          [:text "why"]
+          [:text " "]
+          [:text "me"]
+          [:text ">"]
+          [:text " "]]
          (block-parser " why me> "))))
 
 (deftest hashtag-parse-bug
   (is (= '[:block "I was under the " [:hashtag "#influence"] ", officer"]
          (parse-to-ast "I was under the #influence, officer"))))
 
-       
+(deftest italic-link-bug
+  (testing "link inside italics"
+    (is (= [:span
+            "  – Wiliam S. Burroughs,  "
+            [:i [:a {:href "http://books.google.com/books?id=Vg-ns2orYBMC&pg=PA479"} "The Western Lands"]]
+            "."]
+           (block-content->hiccup
+            "  – Wiliam S. Burroughs,  __[The Western Lands](http://books.google.com/books?id=Vg-ns2orYBMC&pg=PA479)__." {}))))
+  (testing "italic inside link"
+    (is (= [:span
+            "  – Wiliam S. Burroughs,  "
+            [:a {:href "http://books.google.com/books?id=Vg-ns2orYBMC&pg=PA479"} [:i "The Western Lands"]]
+            "."]
+           (block-content->hiccup
+            "  – Wiliam S. Burroughs,  [__The Western Lands__](http://books.google.com/books?id=Vg-ns2orYBMC&pg=PA479)." {})))))
+
+
+(deftest page-alias-test
+  (is (= [:span "A show about " [:a {:href "./nihilism.html"} "The Big Nada"] ]
+         (block-content->hiccup "A show about {{alias:[[nihilism]]The Big Nada}}" {}))))
+
+
+(deftest youtube-id-test
+  (is (= "rrstrOrJxOc"
+         (get-youtube-id "pretty good video https://www.youtube.com/watch?v=rrstrOrJxOc")))
+  (is (= "dO6v_tZtyu0"
+         (get-youtube-id "– The Who, [__The Seeker__](https://youtu.be/dO6v_tZtyu0)")))
+  (is (= "PwuckTkE7T4"
+         (get-youtube-id "https://youtu.be/PwuckTkE7T4")))
+  (is (= "-Jq0lohh_5U"
+         (get-youtube-id "LA Open School {{[[video]]: https://youtu.be/-Jq0lohh_5U}}")))
+  (is (= "0nU4EnB6wiE"
+         (get-youtube-id "Dennett et al debate free will https://www.youtube.com/watch?v=0nU4EnB6wiE&feature=youtu.be"))))
+  

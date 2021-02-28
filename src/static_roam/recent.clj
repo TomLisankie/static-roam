@@ -11,20 +11,25 @@
 (defn recents
   [block-map]
   "Groups recently changed blocks by page, returns rev chron seq of seqs"
-  (->> (take 100 (reverse (sort-by :edit-time (filter :included (vals block-map)))))
-       (map #(assoc % :page (templating/find-page (:id %) block-map)))
+  (->> (take 100 (reverse (sort-by :edit-time (filter :include? (vals block-map)))))
+       (map #(assoc % :page (:id (database/block-page block-map %))))
        (group-by :page)
        vals
        (sort-by (fn [blocks] (reduce max 0 (map :edit-time blocks))))
        reverse))
 
+(def date-formatter
+  (java.text.SimpleDateFormat. "dd/MM/yyyy hh:mm"))
+
 (defn render-time
   [time]
-  (str (java.util.Date. time)))         ;crude for now
+  (.format date-formatter (java.util.Date. time)))         ;crude for now
 
 (defn recent-page-content
   [block-map]
-  `[:div
+  `[:div.main
+    ;; TODO prob needs row/col stuff
+    [:h1.ptitle "Recent changes"]
     ~@(for [group (recents block-map)
             :let [page (:page (first group))
                   edit-time (reduce max 0 (map :edit-time group))]]
