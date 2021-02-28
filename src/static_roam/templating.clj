@@ -77,12 +77,20 @@
     [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
      (if (or (nil? (:hiccup properties))
              (= (:content properties) block-id))
-       ""
-       [:li.block {:onclick (when config/dev-mode
-                              #_ (str "location.href='" (roam-url block-id) "'")
-                              (format "window.open('%s', '_blank', 'location=yes,scrollbars=yes,status=yes');" (roam-url block-id)) ;TODO prob want page url
-                              )}
-        (:hiccup properties)])
+       nil
+       [:li.block
+        (when config/dev-mode
+          [:a {:href (roam-url block-id)
+               :target "_roam"
+               ;; argh
+               :style "background-color: lightgray; margin-left: 5px;"
+               }
+           "[e]"])
+        (:hiccup properties)
+        ])
+
+
+                                        ;TODO prettify
      (map #(block-template % block-map (inc depth))
           (:children properties))
      ]))

@@ -115,6 +115,16 @@
   [block-map block]
   (map block-map (:children block)))
 
+(defn block-descendents
+  [block]
+  ((u/transitive-closure :dchildren) block))
+
+(defn page-refs
+  [block-map page]
+  (apply clojure.set/union
+         (map :refs (block-descendents page))))
+
+
 (defn block-page
   [block-map block]
   {:pre [(have? block? block)]}
@@ -170,6 +180,7 @@
       (and config/exclude-daily-logs
            (daily-log? block-map block))))
 
+#_
 (defn included-blocks
   "Computes which blocks to include"
   [block-map]
@@ -195,28 +206,34 @@
                            (conj examined (:id current)))))))))
 
 
-;;; New version computes degree as well as acctually the map
-;;; TODO not hooked up yet                        
-(defn omcluded-blocks
-  "Computes which blocks to include"
-  [block-map]
-  (letfn [(propagate [depth block-map from]
-            (let [current-depth (or (get-in block-map [from :depth]) 1000)]
-              (if (and (< depth current-depth) (not (exit-point? block-map (get block-map from))))
-                  (reduce (fn [bm r]
-                            (propagate (+ depth 1) bm r))
-                          (assoc-in block-map [from :depth] depth)
-                          (all-refs (get block-map from)))
-                  block-map)))]
-    (reduce (partial propagate 0) block-map (map :id (entry-points block-map)))))
-
-
+#_
 (defn mark-included-blocks
   [block-map]
   (let [includes (included-blocks block-map)]
     (u/map-values (fn [block]
                     (assoc block :include? (contains? includes (:id block))))
                   block-map)))
+
+;;; New version computes degree as well as acctually the map
+;;; TODO not hooked up yet                        
+;;; Seems to compute the same set as other method
+(defn compute-depths
+  "Computes depths from entry points"
+  [block-map]
+  (let [exit-point? (memoize #(exit-point? block-map (get block-map %)))] ;performance hack
+    (letfn [(propagate [depth block-map from]
+              (let [current-depth (or (get-in block-map [from :depth]) 1000)]
+                (if (and (< depth current-depth) (not (exit-point? from)))
+                  (reduce (fn [bm r]
+                            (propagate (+ depth 1) bm r))
+                          (assoc-in block-map [from :depth] depth)
+                          (all-refs (get block-map from)))
+                  block-map)))]
+      (reduce (partial propagate 0) block-map (map :id (entry-points block-map))))))
+
+(defn compute-includes
+  [block-map]
+  (u/map-values #(assoc % :include? (not (nil? (:depth %)))) block-map))
 
 (defn add-hiccup-for-included-blocks
   [block-map]
@@ -258,7 +275,8 @@
        create-block-map-no-links
        generate-refs
        generate-inverse-refs
-       mark-included-blocks
+       compute-depths
+       compute-includes
        add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
        ))
 
@@ -292,5 +310,4 @@
   (-> roam-json
       roam-db
       add-hiccup-for-included-blocks)) ;TODO this unmarks pages, too aggressivel
-
 

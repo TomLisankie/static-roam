@@ -23,10 +23,11 @@
   []
   (keys (u/dissoc-if (fn [[_ v]] (not (:page? v))) @last-bm)))
 
-;;; SLoooow
+;;; SLoooow. Dumps pages including dchildren
 (defn dump
   []
-  (ju/schppit "blocks.edn" (u/map-filter (fn [[k b]] (and (:page? b) b)) @last-bm)))
+  (ju/schppit "blocks.edn" (u/map-filter (fn [[k b]] (and (:page? b) b))
+                                         @last-bm)))
 
 (defn tap
   [bm]
@@ -52,6 +53,9 @@
   []
   (html-gen/generate-static-roam-html @last-bm "output"))
 
-
+#_
+(def pages (map #(select-keys % [:content :depth :refs :linked-by]) (filter :page? (vals bm))))
+#_
+(def g (group-by :depth pages))
 
 
