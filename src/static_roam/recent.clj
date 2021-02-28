@@ -29,7 +29,7 @@
   [block-map]
   `[:div.main
     ;; TODO prob needs row/col stuff
-    [:h1.mt-4.ptitle "Recent changes"]
+    [:h1.ptitle "Recent changes"]
     ~@(for [group (recents block-map)
             :let [page (:page (first group))
                   edit-time (reduce max 0 (map :edit-time group))]]

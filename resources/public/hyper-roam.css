@@ -7,11 +7,11 @@
     --white: #FFFFFFFF;
 
     --background: #FFFFFF;
-    --navbar-background: #e09f3eff;
+    --navbar-background: #407492;
     --link: #9e2a2bff;
     --blockquote: #fffce9;  /*   #fff3b0ff */
     --incoming: #d2e7ec;  	/* picked this myself, and dont want it relgated to botton of page */
-    --navbar-foreground: #540b0eff;
+    --navbar-foreground: #e09f3eff;
 }
 
 
@@ -143,6 +143,7 @@ blockquote {
 .ptitle {
     /* gets title left-aligned with text, but a kludge and not sure it will work with different fonts etc  */
     padding-left: 26px;
+    display: inline-block;
 }
 
 img {

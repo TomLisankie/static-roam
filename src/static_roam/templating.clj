@@ -198,7 +198,7 @@
       "<!-- Post Content Column -->"
       [:div.col-lg-8
        "<!-- Title -->"
-       [:h1.mt-4.ptitle title]
+       [:h1.ptitle title]
        [:hr {}]
        contents
        [:hr {}]
