@@ -68,7 +68,7 @@
 
 (defn roam-url
   [block-id]
-  (str config/roam-base-url block-id))
+  (str (:roam-base-url config/config) block-id))
 
 (defn block-template
   [block-id block-map & [depth]]
@@ -79,7 +79,7 @@
              (= (:content properties) block-id))
        nil
        [:li.block
-        (when config/dev-mode
+        (when (:dev-mode config/config)
           [:a {:href (roam-url block-id)
                :target "_roam"
                ;; argh
@@ -155,7 +155,7 @@
              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
              :crossorigin "anonymous"}]
-     ~@(for [css config/site-css]
+     ~@(for [css (:site-css config/config)]
          `[:link {:rel "stylesheet" :href ~css}])
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap"}]]

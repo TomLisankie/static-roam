@@ -126,6 +126,9 @@
   (apply clojure.set/union
          (map :refs (block-descendents page))))
 
+(defn block? [x]
+  (and (map? x)
+       (string? (:id x))))
 
 (defn block-page
   [block-map block]
@@ -158,7 +161,7 @@
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
   [block-map block]
   (some #(tagged? block-map block %)
-        config/entry-tags))
+        (:entry-tags config/config)))
 
 (def fixed-entry-points #{"SR Metadata"})
 
@@ -178,8 +181,8 @@
   [block-map block]
   {:pre [(have? block? block)]}
   (or (some #(tagged-or-contained? block-map block %)
-            config/exit-tags)
-      (and config/exclude-daily-logs
+            (:exit-tags config/config))
+      (and (:exclude-daily-logs config/config)
            (daily-log? block-map block))))
 
 #_
@@ -312,4 +315,17 @@
   (-> roam-json
       roam-db
       add-hiccup-for-included-blocks)) ;TODO this unmarks pages, too aggressivel
+
+;;; Temp
+(def min* (partial u/min-by identity))
+(def max* (partial u/max-by identity))
+
+;;; Prob needs to deal with missing data
+;;; Also, to be proper, :create-time should be used as well
+;;; I suppose the median time might be more informative
+(defn date-range [page]
+  (let [visible-blocks (filter :include? (block-descendents page))
+        visible-dates (map :edit-time visible-blocks)]
+    [(java.util.Date. (min* visible-dates)) (java.util.Date. (max* visible-dates))]))
+
 

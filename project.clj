@@ -5,12 +5,13 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [me.raynes/fs "1.4.6"]
-                 [org.parkerici/multitool "0.0.11"]
+                 [org.parkerici/multitool "0.0.12"]
                  [org.clojure/data.json "1.0.0"]
                  [com.taoensso/truss "1.6.0"]
                  [hiccup "1.0.5"]
                  [stasis "2.5.0"]
                  [instaparse "1.4.10"]
+                 [aero "1.1.6"]
                  [metasoarous/oz "1.6.0-alpha6"]]
   :resource-paths ["resources"]
   :main static-roam.core)

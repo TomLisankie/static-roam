@@ -1,0 +1,4 @@
+{:exit-tags ["ExitPoint" "Private" "charliebrowning"]
+ :roam-base-url "https://roamresearch.com/#/app/hyperphor/page/"
+ :dev-mode #boolean #or [#env ROAM_DEV_MODE "false"]
+ }
