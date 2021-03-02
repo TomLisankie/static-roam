@@ -6,6 +6,7 @@
             [static-roam.templating :as templating]
             [static-roam.database :as db]
             [static-roam.recent :as recent]
+            [static-roam.index :as index]
             [stasis.core :as stasis]))
 
 ;;; → multitool, should replace dissoc-if
@@ -74,9 +75,22 @@
    "/pages/recent-changes.html"         ;TODO should be up a level, but links need adjusting
    output-dir))
 
+
+(defn generate-index-pages
+  [block-map output-dir]
+  (export-page
+   (templating/page-hiccup (index/index-page block-map :content "Index") "Index" block-map)
+   "/pages/actual-index.html"         ;TODO should be up a level, but links need adjusting
+   output-dir)
+  (export-page
+   (templating/page-hiccup (index/index-page block-map (comp - inst-ms index/edit-time) "Index by edit time") "Index by edit time" block-map)
+   "/pages/time-index.html"         ;TODO should be up a level, but links need adjusting
+   output-dir))
+
 (defn generate-static-roam-html
   [block-map output-dir]
   (generate-pages-html block-map (str output-dir "/pages"))
   (generate-home-page-html block-map output-dir)
   (generate-recent-page block-map output-dir)
+  (generate-index-pages block-map output-dir)
   )

@@ -322,7 +322,7 @@
 
 ;;; Prob needs to deal with missing data
 ;;; Also, to be proper, :create-time should be used as well
-;;; I suppose the median time might be more informative
+;;; I suppose the median time might be more informative – or an Ed Tufte minigraph
 (defn date-range [page]
   (let [visible-blocks (filter :include? (block-descendents page))
         visible-dates (map :edit-time visible-blocks)]

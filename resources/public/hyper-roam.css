@@ -9,7 +9,7 @@
     --background: #FFFFFF;
     --navbar-background: #407492;
     --link: #9e2a2bff;
-    --blockquote: #fffce9;  /*   #fff3b0ff */
+    --blockquote: #efe9c9;  /*   #fff3b0ff #fffce9 */
     --incoming: #d2e7ec;  	/* picked this myself, and dont want it relgated to botton of page */
     --navbar-foreground: #e09f3eff;
 }
@@ -75,7 +75,7 @@ li {
 
 a {
     color: var(--link); /* Hyperphor color 2 */
-    font-weight: bold;
+    font-weight: 500;	/* slightly bold */
 }
 
 a:hover {
@@ -156,4 +156,12 @@ img {
 iframe {
     margin-left: auto;
     margin-right: auto;
+}
+
+.date {
+    font-size: small;
+}
+
+.navbar-brand {
+    padding-left: 26px;
 }

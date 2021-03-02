@@ -18,7 +18,7 @@
                    (filter :page?)
                    (map (fn [index block] (assoc block
                                                  :index index
-                                                 :page-refs (db/page-refs block)))
+                                                 :page-refs (db/page-refs block-map block)))
                         (range)))
         indexed (u/index-by :id pages)] ;make a new block map...
     indexed))
@@ -31,11 +31,12 @@
                    (filter :page?)
                    (map (fn [index block] (assoc block
                                                  :index index
-                                                 :page-refs (db/page-refs block)))
+                                                 :page-refs (db/page-refs block-map block)))
                         (range)))
         indexed (u/index-by :id pages)] ;make a new block map...
     [{:name "node-data"
       :values (map (fn [b]
+                     ;;  :size (- 20 (or (:depth b) 0)) (not working)
                      {:name (:id b) :group (if (:include? b) 1 8) :index (:index b)})
                    pages)}
      {:name "link-data"
@@ -73,8 +74,9 @@
         :values "fix === true ? {fx: node.x, fy: node.y} : {fx: fix[0], fy: fix[1]}"}
        {:trigger "!fix", :modify "node", :values "{fx: null, fy: null}"}],
       :encode
-      {:enter {:fill {:scale "color", :field "group"}, :stroke {:value "white"}},
-       :update {:size {:signal "2 * nodeRadius * nodeRadius"}, :cursor {:value "pointer"}}},
+      {:enter {:fill {:scale "color", :field "group"}, :stroke {:value "white"}, :size {:field "size"}},
+       :update {:size {:signal "2 * nodeRadius * nodeRadius"}, :cursor {:value "pointer"}}
+       },
       :transform
       [{:type "force",
         :iterations 300,

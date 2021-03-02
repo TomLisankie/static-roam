@@ -132,3 +132,17 @@
       (subs % 1)
       %)
    strings))
+
+
+(def date-formatter
+  (java.text.SimpleDateFormat. "dd MMM yyyy hh:mm"))
+
+(defn coerce-time [x]
+  (if (inst? x)
+    x
+    (java.util.Date. x)))
+
+(defn render-time
+  [time]
+  (.format date-formatter (coerce-time time)))         ;crude for now
+

@@ -124,26 +124,8 @@
   (concat []
           (map (partial linked-reference-template block-map) references)))
 
-;;; Old version 
-#_
-(defn block-page-template
-  [block-id block-map]
-  (let [block (get block-map block-id)
-        block-content (get block :content)]
-    [:div
-     [:h1.title (parser/block-content->hiccup block-content block-map)]    
-     (if (or (:exit-point block)
-             (empty? (:children block)))
-       [:div.missing
-        "This page does not yet exist!"] ;TODO ok this is sucky UX, the links themselves should look or act differently.
-       [:div.page-content (block-template block-id block-map)])
-     (let [linked-refs (database/get-included-linked-references block-id block-map)]
-       (when-not (empty? linked-refs)
-         [:div.incoming
-          [:h3 "Incoming links"]
-          (linked-references-template linked-refs block-map)]))]))
 
-;;; TODO customization
+;;; TODO configurability
 (defn analytics
   []
   [[:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=UA-345282-1"}]
@@ -157,6 +139,7 @@
   )
 
 ;;; Boostrap template version
+;;; TODO much of this should be configurable
 (defn page-hiccup
   [body-hiccup page-title block-map]
   `[:html
@@ -172,7 +155,8 @@
      ~@(for [css (:site-css config/config)]
          `[:link {:rel "stylesheet" :href ~css}])
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
-     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap"}]]
+     ;; Using slightly-bold font for links for whatever reason.
+     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;500&display=swap"}]]
   [:body
    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
     [:div.container
@@ -201,6 +185,10 @@
     ]]])
 
 
+(defn render-date-range
+  [[from to]]
+  [:div.date (utils/render-time from) " - " (utils/render-time to)])
+
 ;;; Boostrap version
 (defn block-page-template
   [block-id block-map]
@@ -212,7 +200,9 @@
       "<!-- Post Content Column -->"
       [:div.col-lg-8
        "<!-- Title -->"
-       [:h1.ptitle title]
+       [:div.ptitle
+        [:h1 title]
+        (render-date-range (database/date-range block))]
        [:hr {}]
        contents
        [:hr {}]

@@ -18,13 +18,6 @@
        (sort-by (fn [blocks] (reduce max 0 (map :edit-time blocks))))
        reverse))
 
-(def date-formatter
-  (java.text.SimpleDateFormat. "dd/MM/yyyy hh:mm"))
-
-(defn render-time
-  [time]
-  (.format date-formatter (java.util.Date. time)))         ;crude for now
-
 (defn recent-page-content
   [block-map]
   `[:div.main
@@ -36,7 +29,7 @@
         `[:div
           "From " ~(templating/page-link page)
           " "
-          [:span ~(render-time edit-time)]
+          [:span ~(utils/render-time edit-time)]
           ~@(for [block (take 3 group)] ;limit to 3 chunks
               [:div (templating/block-template (:id block) block-map)])])])
 
