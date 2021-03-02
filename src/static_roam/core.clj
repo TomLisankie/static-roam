@@ -40,6 +40,7 @@
       block-map
       tap
       (html-gen/generate-static-roam-html (or output-dir "output")))
+  (prn (database/stats @last-bm))
   #_ (dump))
 
 (defn gen-page

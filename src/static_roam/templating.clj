@@ -143,11 +143,25 @@
           [:h3 "Incoming links"]
           (linked-references-template linked-refs block-map)]))]))
 
+;;; TODO customization
+(defn analytics
+  []
+  [[:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=UA-345282-1"}]
+   [:script "
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-345282-1');
+"]]
+  )
+
 ;;; Boostrap template version
 (defn page-hiccup
   [body-hiccup page-title block-map]
   `[:html
     [:head
+     ~@(analytics)
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
      [:title ~page-title]               ;TODO might want to prepend a site title

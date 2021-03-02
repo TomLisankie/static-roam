@@ -329,3 +329,8 @@
     [(java.util.Date. (min* visible-dates)) (java.util.Date. (max* visible-dates))]))
 
 
+(defn stats [bm]
+  {:blocks {:total (count bm)
+            :published (count (filter :include? (vals bm)))}
+   :pages {:total (count (pages bm))
+           :published (count (filter :include? (pages bm)))}})
