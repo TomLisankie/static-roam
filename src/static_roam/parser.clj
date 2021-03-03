@@ -1,5 +1,6 @@
 (ns static-roam.parser
   (:require [instaparse.core :as insta :refer [defparser]]
+            [taoensso.truss :as truss :refer (have have! have?)]
             [clojure.string :as str-utils]
             [clojure.data.json :as json]
             [static-roam.config :as config]
@@ -47,7 +48,7 @@
 (defn parse-to-ast
   "Converts a string of block syntax to an abstract syntax tree for SR markup."
   [block-content]
-  {:pre [(string? block-content)]}
+  {:pre [(have? string? block-content)]}
   (transform-to-ast (block-parser block-content)))
 
 (declare block-content->hiccup)         ;allow recursion on this
@@ -60,13 +61,13 @@
         alias-link (if (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
                      (utils/page-title->html-file-title alias-dest :case-sensitive)
                      alias-dest)]
-    [:a {:href alias-link} (block-content->hiccup alias-text {})])) 
+    [:a.external {:href alias-link} (block-content->hiccup alias-text {})])) 
 
 (defn- format-image
   [image-ref-content]
   (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))
         image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))]
-    [:img {:src image-source :alt alt-text :style "max-width: 90%"}]))
+    [:img {:src image-source :alt alt-text}]))
 
 ;;; TODO this really belongs in html gen, not in parsing, yes?
 
@@ -88,7 +89,7 @@
 
 (defn- make-link-from-url
   [string]
-  [:a {:href string} string])
+  [:a.external {:href string} string])
 
 ;;; Tried to build this into instaparse parser, but couldn't make it take precedence over :bare-url
 (defn- twitter-url?

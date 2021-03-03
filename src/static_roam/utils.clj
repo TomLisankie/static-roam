@@ -1,5 +1,6 @@
 (ns static-roam.utils
   (:require [me.raynes.fs :as fs]
+            [taoensso.truss :as truss :refer (have have! have?)]
             [clojure.java.io :as io]
             [clojure.string :as s]
             [clojure.data.json :as json])
@@ -77,14 +78,14 @@
 (defn page-title->html-file-title
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   ([string]
-   {:pre [(string? string)]}
+   {:pre [(have? string? string)]}
    (->> string
         (s/lower-case)
         (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
         (#(s/replace % #"\s" "-"))
         (#(str "/" % ".html"))))
   ([string case-sensitive?]
-   {:pre [(string? string)]}
+   {:pre [(have? string? string)]}
    (->> string
         (#(if case-sensitive?
             %

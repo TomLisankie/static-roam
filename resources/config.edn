@@ -1,4 +1,8 @@
-{:exit-tags ["ExitPoint" "Private" "charliebrowning"]
+;;; Not sure I see what value Aero supplies honestly
+
+{:exit-tags #or [#split [#env ROAM_EXIT_TAGS] ["ExitPoint" "Private" "charliebrowning"]]
  :roam-base-url "https://roamresearch.com/#/app/hyperphor/page/"
  :dev-mode #boolean #or [#env ROAM_DEV_MODE "false"]
+ :daily-logs #boolean #or [#env ROAM_DAILY_LOGS "false"]
+ :output-dir #or [#env ROAM_OUTPUT_DIR "output"]
  }

@@ -85,6 +85,12 @@ a:hover {
     box-shadow: 0 0 0 5px #eeeee0;
 }
 
+.external {
+    background-image: url(external-link.svg);
+    background-position: center right;
+    background-repeat: no-repeat;
+    padding-right: 13px;
+}
 /* TODO highlighting needs to match */
 
 
@@ -150,6 +156,7 @@ img {
     /* center images */
     margin-left: auto;
     margin-right: auto;
+    max-width: 90%;
 }
 
 /* center videos (TODO not working, I think because they are within a <span>?a) */
@@ -164,4 +171,9 @@ iframe {
 
 .navbar-brand {
     padding-left: 26px;
+}
+
+.edit {
+    background-color: #f1eded;
+    margin-left: 5px;
 }

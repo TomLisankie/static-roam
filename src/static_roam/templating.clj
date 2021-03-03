@@ -35,37 +35,6 @@
         nav-bar-page-dict (zipmap nav-bar-hrefs nav-bar-pages-r)]
     nav-bar-page-dict))
 
-;;; Old version
-#_
-(defn page-hiccup
-  [body-hiccup page-title block-map]
-  [:html
-   `[:head
-     [:meta {:charset "utf-8"}]
-     [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-     [:title ~page-title]               ;TODO might want to prepend a site title
-     [:link {:rel "stylesheet"
-             :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-             :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
-             :crossorigin "anonymous"}]
-     ~@(for [css config/site-css]
-         `[:link {:rel "stylesheet" :href ~css}])
-     [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
-     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap"}]]
-   [:body
-    [:header.site-header
-     [:div.wrapper
-      [:nav.navbar.navbar-expand-lg.navbar-light ; .bg-dark.navbar-dark
-       (into
-        [:ul.navbar-nav.mr-auto]
-        (map (fn [[url title]] [:li.nav-item 
-                                [:a.nav-link {:href url}
-                                 title
-                                 ]])
-             (nav-bar-page-dict block-map)))]]]
-    [:div.container.main
-     body-hiccup]]])
-
 (defn roam-url
   [block-id]
   (str (:roam-base-url config/config) block-id))
@@ -80,15 +49,11 @@
        nil
        [:li.block
         (when (:dev-mode config/config)
-          [:a {:href (roam-url block-id)
-               :target "_roam"
-               ;; argh
-               :style "background-color: lightgray; margin-left: 5px;"
-               }
+          [:a.edit {:href (roam-url block-id)
+                    :target "_roam"}
            "[e]"])
         (:hiccup properties)
         ])
-
 
                                         ;TODO prettify
      (map #(block-template % block-map (inc depth))
@@ -138,7 +103,6 @@
 "]]
   )
 
-;;; Boostrap template version
 ;;; TODO much of this should be configurable
 (defn page-hiccup
   [body-hiccup page-title block-map]
@@ -147,7 +111,7 @@
      ~@(analytics)
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-     [:title ~page-title]               ;TODO might want to prepend a site title
+     [:title ~(str "AMMDI: " page-title)] ;TODO config site prefix
      [:link {:rel "stylesheet"
              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
