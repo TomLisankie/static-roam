@@ -69,7 +69,7 @@
    :children :parent))
 
 ;;; TODO "((foobar))"
-(defn- content-refs
+(defn content-refs-0
   [string]
   (letfn [(struct-entities [struct] 
             (if (string? struct)
@@ -80,7 +80,11 @@
                 :page-link [(utils/remove-double-delimiters (second struct))]
                 :blockquote (struct-entities (second struct))
                 [])))]
-    (set (struct-entities (parser/parse-to-ast string)))))
+    (struct-entities (parser/parse-to-ast string))))
+
+(defn content-refs
+  [string]
+  (set (content-refs-0 string)))
 
 (defn- get-linked-references
   [block-id block-map]

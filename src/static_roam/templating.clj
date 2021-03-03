@@ -137,9 +137,10 @@
       {:id "navbarResponsive"}
       ;; TODO config and maybe make active page machinery mork
       [:ul.navbar-nav.ml-auto
-       [:li.nav-item [:a.nav-link {:href "./index.html"} "Home"]]
-       [:li.nav-item [:a.nav-link {:href "./recent-changes.html"} "Recent Changes"]]
+       #_ [:li.nav-item [:a.nav-link {:href "./index.html"} "Home"]]
        [:li.nav-item [:a.nav-link {:href "./About.html"} "About"]]
+       [:li.nav-item [:a.nav-link {:href "./actual-index.html"} "Index"]]
+       [:li.nav-item [:a.nav-link {:href "./recent-changes.html"} "New"]]
        #_ [:li.nav-item [:a.nav-link {:href "#"} "Contact"]]]]]]
    [:div.container
     ~body-hiccup]

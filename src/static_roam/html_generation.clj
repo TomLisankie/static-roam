@@ -1,5 +1,5 @@
 (ns static-roam.html-generation
-  (:require [clojure.string :as str-utils]
+  (:require [clojure.string :as s]
             [org.parkerici.multitool.core :as u]
             [static-roam.utils :as utils]
             [hiccup.core :as hiccup]
@@ -48,8 +48,17 @@
      file-name-to-content
      output-dir)))
 
+(defn export-hiccup-pages
+  "Write out pages. Content is map of filenames → hiccup." 
+  [content output-dir]
+  (prn :foo (keys content))
+  (stasis/export-pages
+   (u/map-values #(hiccup/html %) content)
+   output-dir))
+
+
 (defn export-page
-  "Write out a single page. Content is hiccup. TODO use this more" 
+  "Write out a single page. Content is hiccup. " 
   [content fname output-dir]
     (stasis/export-pages
      {fname (hiccup/html content)}
@@ -75,16 +84,10 @@
    "/pages/recent-changes.html"         ;TODO should be up a level, but links need adjusting
    output-dir))
 
-
 (defn generate-index-pages
   [block-map output-dir]
-  (export-page
-   (templating/page-hiccup (index/index-page block-map :content "Index") "Index" block-map)
-   "/pages/actual-index.html"         ;TODO should be up a level, but links need adjusting
-   output-dir)
-  (export-page
-   (templating/page-hiccup (index/index-page block-map (comp - inst-ms index/edit-time) "Index by edit time") "Index by edit time" block-map)
-   "/pages/time-index.html"         ;TODO should be up a level, but links need adjusting
+  (export-hiccup-pages
+   (index/make-index-pages block-map)
    output-dir))
 
 (defn generate-static-roam-html
