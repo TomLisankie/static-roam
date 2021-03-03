@@ -182,42 +182,8 @@
   {:pre [(have? block? block)]}
   (or (some #(tagged-or-contained? block-map block %)
             (:exit-tags config/config))
-      (and (:exclude-daily-logs config/config)
+      (and (not (:daily-logs config/config))
            (daily-log? block-map block))))
-
-#_
-(defn included-blocks
-  "Computes which blocks to include"
-  [block-map]
-  (loop [fringe (map :id (entry-points block-map))
-         included #{}
-         examined #{}]
-    (cond (empty? fringe)
-          included
-          (contains? examined (first fringe))
-          (recur (rest fringe) included examined)
-          :else
-          (let [current (get block-map (first fringe))]
-            (cond (not (:id current))
-                  (do (prn :missing-reference (first fringe))
-                      (recur (rest fringe) included (conj examined (first fringe))))                      
-                  (exit-point? block-map current)
-                  (recur (rest fringe) included (conj examined (first fringe)))
-                  :else
-                  (let [refs (all-refs current)
-                        new-refs (set/difference refs included)]
-                    (recur (set/union (rest fringe) new-refs)
-                           (conj included (:id current))
-                           (conj examined (:id current)))))))))
-
-
-#_
-(defn mark-included-blocks
-  [block-map]
-  (let [includes (included-blocks block-map)]
-    (u/map-values (fn [block]
-                    (assoc block :include? (contains? includes (:id block))))
-                  block-map)))
 
 ;;; New version computes degree as well as acctually the map
 ;;; TODO not hooked up yet                        

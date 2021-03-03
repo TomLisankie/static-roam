@@ -1,5 +1,6 @@
 (ns static-roam.core
-  (:require [static-roam.utils :as utils]
+  (:require [static-roam.config :as config]
+            [static-roam.utils :as utils]
             [static-roam.database :as database]
             [static-roam.html-generation :as html-gen]
             [org.parkerici.multitool.core :as u]
@@ -26,6 +27,7 @@
 ;;; SLoooow. Dumps pages including dchildren
 (defn dump
   []
+  ;; TODO output-dir
   (ju/schppit "blocks.edn" (u/map-filter (fn [[k b]] (and (:page? b) b))
                                          @last-bm)))
 
@@ -35,11 +37,12 @@
   bm)
 
 (defn -main
-  [& [path-to-zip output-dir]]
+  [& [path-to-zip]]
+  (prn config/config)
   (-> (or path-to-zip (utils/latest-export))
       block-map
       tap
-      (html-gen/generate-static-roam-html (or output-dir "output")))
+      (html-gen/generate-static-roam-html (:output-dir config/config)))
   (prn (database/stats @last-bm))
   #_ (dump))
 
@@ -48,11 +51,11 @@
   (html-gen/export-page
    (html-gen/generate-page-hiccup @last-bm page)
    (utils/html-file-title page)
-   "output/pages"))
+   "output/pages"))                     ;TODO
 
 (defn gen-pages
   []
-  (html-gen/generate-static-roam-html @last-bm "output"))
+  (html-gen/generate-static-roam-html @last-bm (:output-dir config/config)))
 
 #_
 (def pages (map #(select-keys % [:content :depth :refs :linked-by]) (filter :page? (vals bm))))

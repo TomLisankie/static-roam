@@ -1,5 +1,6 @@
 (ns static-roam.config
   (:require [aero.core :as aero]
+            [clojure.string :as s]
             [clojure.java.io :as io]
             [org.parkerici.multitool.core :as u]
   ))
@@ -19,11 +20,15 @@
    ;; Some of these want to be customized by extension, not replacement
    :entry-tags ["EntryPoint"]
    :exit-tags ["ExitPoint" "Private"] 
-   :exclude-daily-logs true
+   :daily-logs false
    :dev-mode false              ;true turns on links into Roam itself
+   :output-path "output"
    }
   )
 
+(defmethod aero/reader 'split
+  [_ tag [s]]
+  (and s (s/split s #",")))
 
 (def config
   (merge-recursive
@@ -32,23 +37,4 @@
     (io/resource "config.edn"))))
 
 
-(comment
-(def site-css ["../assets/hyper-roam.css"
-;               "../assets/proofreading.css"
-               ])
 
-(def entry-tags ["EntryPoint"])
-(def exit-tags ["ExitPoint" "Private" "charliebrowning"])
-(def exclude-daily-logs true)
-
-(def dev-mode true)                    ;true turns on links into Roam itself
-(def roam-base-url "https://roamresearch.com/#/app/hyperphor/page/")
-
-;;; No privacy!
-
-#_
-(def exit-tags []) ;; to bypass privacy mechanism entirely
-#_
-(def exclude-daily-logs false)
-
-)
