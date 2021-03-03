@@ -11,6 +11,14 @@
      [page]
      (second (db/date-range page)))))
 
+(def size
+  (memoize
+   (fn [page]
+     (reduce +
+             (count (or (:content page) 0))
+             (map size
+                  (filter :include? (:dchildren page)))))))
+
 ;;; depth tree
 ;;; by size, # of refs (incoming/outgoing/both)
 
@@ -25,9 +33,9 @@
    {:title "Depth"
     :sort-key :depth
     :render :depth}
-   #_
    {:title "Size"
-    :sort-key (comp - :size) }
+    :sort-key (comp - size)
+    :render #(format "%.1fK" (double (/ (size %) 1000)))}
    ])
 
 
@@ -40,21 +48,24 @@
      (for [{:keys [title sort-key] :as index} indexes]
        (let [hiccup
              [:div.main
-              ;; TODO prob needs row/col stuff
-              [:h1.ptitle title]
-              [:table
-               ;; col headers
-               [:tr
-                (for [col indexes]
-                  [:th
-                   (if (= (:title col) title)
-                     (:title col)
-                     [:a {:href (page-loc col)} (:title col)])])]
-               (for [page (sort-by sort-key pages)]
-                 [:tr
-                  (for [col indexes]
-                    [:td
-                     ((:render col) page)])])]]]
+              [:div.ptitle
+               [:h1 (str "Index by " title)]]
+              [:table.table.table-sm.table-hover 
+               [:thead
+                ;; col headers
+                [:tr
+                 (for [col indexes]
+                   [:th {:scope "col"}
+                    (if (= (:title col) title)
+                      (:title col)
+                      [:a {:href (page-loc col)} (:title col)])])]]
+               [:tbody 
+                (for [page (sort-by sort-key pages)]
+                  [:tr
+                   (for [col indexes]
+                     [:td
+                      ((:render col) page)])])
+                ]]]]
          {(str "/pages/" (page-loc index))    ;pkm
           (templating/page-hiccup hiccup (format "Index by %s" title) bm)}
          )))))

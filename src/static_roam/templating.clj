@@ -139,7 +139,7 @@
       [:ul.navbar-nav.ml-auto
        #_ [:li.nav-item [:a.nav-link {:href "./index.html"} "Home"]]
        [:li.nav-item [:a.nav-link {:href "./About.html"} "About"]]
-       [:li.nav-item [:a.nav-link {:href "./actual-index.html"} "Index"]]
+       [:li.nav-item [:a.nav-link {:href "./Title-index.html"} "Index"]]
        [:li.nav-item [:a.nav-link {:href "./recent-changes.html"} "New"]]
        #_ [:li.nav-item [:a.nav-link {:href "#"} "Contact"]]]]]]
    [:div.container

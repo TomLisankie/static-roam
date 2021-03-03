@@ -51,7 +51,6 @@
 (defn export-hiccup-pages
   "Write out pages. Content is map of filenames → hiccup." 
   [content output-dir]
-  (prn :foo (keys content))
   (stasis/export-pages
    (u/map-values #(hiccup/html %) content)
    output-dir))
