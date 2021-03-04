@@ -49,7 +49,9 @@
   [db children-att parent-att]
   (reduce-kv (fn [acc key item]
                (reduce (fn [acc child]
-                         (update-in acc [child parent-att] conj key))
+                         (if (contains? acc child)
+                           (update-in acc [child parent-att] conj key)
+                           acc))
                        acc
                        (children-att item)))
              db
@@ -88,7 +90,8 @@
 
 (defn- get-linked-references
   [block-id block-map]
-  (get-in block-map [block-id :linked-by]))
+  (filter #(get-in block-map [% :id])      ;trying to filter out bogus entries, not working
+          (get-in block-map [block-id :linked-by])))
 
 (defn get-included-linked-references
   [block-id block-map]
@@ -183,7 +186,6 @@
 
 (defn exit-point?
   [block-map block]
-  {:pre [(have? block? block)]}
   (or (some #(tagged-or-contained? block-map block %)
             (:exit-tags config/config))
       (and (not (:daily-logs config/config))
@@ -210,6 +212,7 @@
   [block-map]
   (u/map-values #(assoc % :include? (not (nil? (:depth %)))) block-map))
 
+;;; TODO not the way to do this
 (defn add-hiccup-for-included-blocks
   [block-map]
   (u/map-values #(if (:include? %)
@@ -304,3 +307,26 @@
             :published (count (filter :include? (vals bm)))}
    :pages {:total (count (pages bm))
            :published (count (filter :include? (pages bm)))}})
+
+
+;;; These could be part of the map but it's easier this way
+
+(def edit-time
+  (memoize
+   (fn 
+     [page]
+     (second (date-range page)))))
+
+(def size
+  (memoize
+   (fn [page]
+     (reduce +
+             (count (or (:content page) 0))
+             (map size
+                  (filter :include? (:dchildren page)))))))
+
+(defn page-empty?
+  [page]
+  (< (- (size page)
+        (count (:id page)))
+        10))

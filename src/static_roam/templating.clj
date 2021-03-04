@@ -60,20 +60,6 @@
           (:children properties))
      ]))
 
-(defn- get-parent
-  [block-id block-map]
-  (let [parent-id (database/block-parent (get block-map block-id) block-map)]
-    (if (nil? parent-id)
-      ""
-      [:a {:href (str (utils/page-title->html-file-title
-                       parent-id
-                       :case-sensitive))}
-       (:content (get block-map parent-id))])))
-
-(defn page-link [page-id]
-  [:a {:href (utils/page-title->html-file-title page-id :case-sensitive)}
-   (parser/block-content->hiccup page-id {})]) ;TODO ugly but does the italic thing right
-
 ;;; Annoying amount of id/block switcheroo
 (defn linked-reference-template
   [block-map r]
@@ -81,7 +67,7 @@
     ""                                  ;TODO ugly
     (let [page (database/block-page block-map (get block-map r))]
       [:div
-       "From " (page-link (:id page))
+       "From " (parser/page-link page)
        [:div (block-template r block-map)]])))
 
 (defn linked-references-template
@@ -218,7 +204,7 @@
        [:h2.post-list-heading "Entry Points"]
       [:ul.post-list
        ;; TOD sort
-       (map (fn [page] [:li [:h3 (page-link (:id page))]]) entry-points)]]]
+       (map (fn [page] [:li [:h3 (parser/page-link page)]]) entry-points)]]]
    (get (site-metadata block-map) "Title")
    block-map))
 

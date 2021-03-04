@@ -110,11 +110,26 @@
     (embed-twitter url)
     (make-link-from-url url)))
 
-(defn page-link [page-title & [alias]]
-  [:a {:href (utils/page-title->html-file-title page-title :case-sensitive)}
-   (block-content->hiccup               ;ensure formatting in links works
-    (or alias page-title)
-    {})])
+;;; Following 2 fns dup from database until I can untangle the ns mess
+(def size
+  (memoize
+   (fn [page]
+     (reduce +
+             (count (or (:content page) 0))
+             (map size
+                  (filter :include? (:dchildren page)))))))
+
+(defn page-empty?
+  [page]
+  (< (- (size page)
+        (count (:id page)))
+        10))
+
+(defn page-link [page & [alias]]
+  (let [page-id (:id page)]
+    [:a {:href (utils/page-title->html-file-title page-id :case-sensitive)
+         :class (if (page-empty? page) "empty" "")}
+     (block-content->hiccup (or alias page-id) {})]))
 
 (defn unspan
   "Remove :span elts that are basically no-ops. Would be cleaner to not generate"
@@ -147,10 +162,10 @@
          (case (first ast-ele)
            :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                               (subs ele-content 0 (dec (count ele-content)))]]
-           :page-link (page-link (utils/remove-double-delimiters ele-content))
+           :page-link (page-link (get block-map (utils/remove-double-delimiters ele-content)))
            :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
                                                         ele-content)]
-                         (page-link page alias))
+                         (page-link (get block-map page) alias))
            ;; NOTE this is the only thing that needs the block-map passed in
            :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))
                             ref-page nil] ;TODO database/block-page but namespace problem

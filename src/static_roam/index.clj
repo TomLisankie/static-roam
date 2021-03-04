@@ -2,22 +2,11 @@
   (:require [static-roam.utils :as utils]
             [static-roam.database :as db]
             [static-roam.templating :as templating]
+            [static-roam.parser :as parser]
             [clojure.string :as s]
             [clojure.pprint :as pprint]))
 
-(def edit-time
-  (memoize
-   (fn 
-     [page]
-     (second (db/date-range page)))))
 
-(def size
-  (memoize
-   (fn [page]
-     (reduce +
-             (count (or (:content page) 0))
-             (map size
-                  (filter :include? (:dchildren page)))))))
 
 ;;; depth tree
 ;;; by size, # of refs (incoming/outgoing/both)
@@ -25,17 +14,17 @@
 (def indexes
   [{:title "Title"
     :sort-key (comp s/upper-case :content)
-    :render (comp templating/page-link :content)
+    :render parser/page-link
     }
    {:title "Date"
-    :sort-key (comp - inst-ms edit-time)
-    :render (comp utils/render-time edit-time)}
+    :sort-key (comp - inst-ms db/edit-time)
+    :render (comp utils/render-time db/edit-time)}
    {:title "Depth"
     :sort-key :depth
     :render :depth}
    {:title "Size"
-    :sort-key (comp - size)
-    :render #(format "%.1fK" (double (/ (size %) 1000)))}
+    :sort-key (comp - db/size)
+    :render #(format "%.1fK" (double (/ (db/size %) 1000)))}
    ])
 
 

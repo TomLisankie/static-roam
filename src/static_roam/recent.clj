@@ -1,6 +1,7 @@
 (ns static-roam.recent
   (:require [static-roam.utils :as utils]
             [static-roam.database :as database]
+            [static-roam.parser :as parser]
             [static-roam.templating :as templating]
             [clojure.pprint :as pprint]))
 
@@ -24,10 +25,10 @@
     ;; TODO prob needs row/col stuff
     [:h1.ptitle "Recent changes"]
     ~@(for [group (recents block-map)
-            :let [page (:page (first group))
+            :let [page-id (:page (first group))
                   edit-time (reduce max 0 (map :edit-time group))]]
         `[:div
-          "From " ~(templating/page-link page)
+          "From " ~(parser/page-link (get block-map page-id))
           " "
           [:span ~(utils/render-time edit-time)]
           ~@(for [block (take 3 group)] ;limit to 3 chunks

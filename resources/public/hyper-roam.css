@@ -91,7 +91,10 @@ a:hover {
     background-repeat: no-repeat;
     padding-right: 13px;
 }
-/* TODO highlighting needs to match */
+
+.empty {
+    text-decoration: line-through;
+}
 
 
 h1, h2, h3 {
