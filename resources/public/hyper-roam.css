@@ -180,3 +180,9 @@ iframe {
     background-color: #f1eded;
     margin-left: 5px;
 }
+
+/* header of recent chenges sections */
+.pheader {
+    background-color: #f1eded;
+    padding: 2px;
+}
