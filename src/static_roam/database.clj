@@ -419,7 +419,7 @@
                              :where
                              [?eid :block/refs ?sr-info-eid]
                              [?eid :block/refs ?entity-tag-eid]
-                             [?eid :block/parents ?parent-eid]]
+                             [?parent-eid :block/children ?eid]]
                            @roam-db entity-tag-eid sr-info-eid)]
     query-result))
 
