@@ -18,7 +18,16 @@
   [path-template-map]
   (into {} (map get-path-html-pair path-template-map)))
 
+(defn- clean-up-nodes-directory!
+  [output-dir]
+  ;; This is necessary to cover the case where a block that was previously included is now excluded. Without this, the block URL will still be valid
+  (let [nodes-dir-str (str output-dir "/nodes")
+        nodes-dir (io/file nodes-dir-str)]
+    (doseq [file (.listFiles nodes-dir)]
+      (io/delete-file file))))
+
 (defn generate-site
   [filled-out-templates output-dir]
+  (clean-up-nodes-directory! output-dir) 
   (let [path-html-map (get-path-html-map filled-out-templates)]
     (stasis/export-pages path-html-map output-dir)))
