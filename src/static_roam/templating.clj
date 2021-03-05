@@ -77,32 +77,34 @@
 
 
 ;;; TODO configurability
-(defn analytics
+(defn analytics-1
   []
-  [[:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=UA-345282-1"}]
-   [:script "
+  [:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=UA-345282-1"}])
+
+(defn analytics-2
+  []
+  [:script "
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
   gtag('config', 'UA-345282-1');
-"]]
-  )
+"]  )
 
 ;;; TODO much of this should be configurable
 (defn page-hiccup
   [body-hiccup page-title block-map]
-  `[:html
+  [:html
     [:head
-     ~@(analytics)
+     (analytics-1) (analytics-2)
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-     [:title ~(str "AMMDI: " page-title)] ;TODO config site prefix
+     [:title (str "AMMDI: " page-title)] ;TODO config site prefix
      [:link {:rel "stylesheet"
              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
              :crossorigin "anonymous"}]
-     ~@(for [css (:site-css config/config)]
+     (for [css (:site-css config/config)]
          `[:link {:rel "stylesheet" :href ~css}])
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
      ;; Using slightly-bold font for links for whatever reason.
@@ -129,10 +131,12 @@
        [:li.nav-item [:a.nav-link {:href "./recent-changes.html"} "New"]]
        #_ [:li.nav-item [:a.nav-link {:href "#"} "Contact"]]]]]]
    [:div.container
-    ~body-hiccup]
+    body-hiccup]
    "<!-- Footer -->"
-   [:footer.py-5.bg-dork
-    [:div.container [:p.m-0.text-center.text-white "Copyright © Hyperphor 2020"]]
+   [:footer.py-5.footer
+    [:div.container
+     [:p.m-0.text-center.text-white "Copyright © Hyperphor 2020-2021"]
+     [:p.m-0.text-center.text-white "Exported " (utils/render-time @utils/latest-export-time)]]
     ]]])
 
 

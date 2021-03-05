@@ -186,3 +186,7 @@ iframe {
     background-color: #f1eded;
     padding: 2px;
 }
+
+.footer {
+    background-color: var(--auburn);
+}

@@ -3,6 +3,7 @@
             [taoensso.truss :as truss :refer (have have! have?)]
             [clojure.java.io :as io]
             [clojure.string :as s]
+            [org.parkerici.multitool.core :as u]
             [clojure.data.json :as json])
   (:import (java.util.zip ZipFile)))
 
@@ -16,6 +17,15 @@
        (sort-by fs/mod-time)
        last
        str))
+
+(u/def-lazy latest-export-time
+  (->> (latest-export)
+       fs/base-name
+       (re-find #"-(\d*)\.")
+       second
+       u/coerce-numeric
+       java.util.Date.
+       ))
 
 (defn unzip-roam-json
   "Takes the path to a zipfile `source` and unzips it to `target-dir`, returning the path of the target file"
