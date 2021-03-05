@@ -28,6 +28,6 @@
 
 (defn generate-site
   [filled-out-templates output-dir]
-  (clean-up-nodes-directory! output-dir) 
+  (clean-up-nodes-directory! output-dir)
   (let [path-html-map (get-path-html-map filled-out-templates)]
     (stasis/export-pages path-html-map output-dir)))
