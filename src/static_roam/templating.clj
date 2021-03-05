@@ -450,8 +450,8 @@
 (defn- children-of-node-hiccup
   [roam-db block-eid]
   [:ul
-   [:li {:onclick (str "location.href='" ;;path
-                       "'")}
+   [:li {:onclick (str "location.href='./" (:block/uid (ds/entity (ds/db roam-db) block-eid)) ".html'")
+         :class "graph-page-li"}
     (:static-roam/hiccup (ds/entity (ds/db roam-db) block-eid))]
    (let [children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] block-eid))))]
      (if (not= 0 (count children-eids))
@@ -465,7 +465,7 @@
   (let [children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] node-eid))))
         node-title (if (:node/title (ds/entity (ds/db roam-db) node-eid))
                      (:node/title (ds/entity (ds/db roam-db) node-eid))
-                     (:block/string (ds/entity (ds/db roam-db) node-eid)))
+                     (:static-roam/hiccup (ds/entity (ds/db roam-db) node-eid)))
         uid (:block/uid (ds/entity (ds/db roam-db) node-eid))
         path (str "./nodes/" uid ".html")]
     [:section {:id "post-content"}
@@ -476,7 +476,8 @@
 
 (defn- get-linked-ref-hiccup
   [roam-db eid]
-  [:li {:class "graph-page-li"}
+  [:li {:onclick (str "location.href='./" (:block/uid (ds/entity (ds/db roam-db) eid)) ".html'")
+        :class "graph-page-li"}
    (:static-roam/hiccup (ds/entity (ds/db roam-db) eid))])
 
 (defn- get-linked-refs-hiccup

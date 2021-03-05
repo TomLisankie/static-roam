@@ -507,8 +507,8 @@
       (mark-refs-as-included roam-db (dec degree) linked-eids))))
 
 (defn- mark-entry-points-and-refs-as-included
-  [roam-db degree entry-point-tags]
-  (let [entry-point-eids (get-eids-of-entities-with-tags roam-db entry-point-tags)
+  [roam-db degree entry-point-tags other-page-tags]
+  (let [entry-point-eids (get-eids-of-entities-with-tags roam-db (into entry-point-tags (filter (complement nil?) other-page-tags)))
         transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) entry-point-eids))]
     (ds/transact! roam-db transactions) ;; mark entry points as included
     (mark-refs-as-included roam-db degree entry-point-eids)
@@ -534,8 +534,8 @@
     (ds/transact! roam-db transactions)))
 
 (defn- mark-entry-point-and-ref-pages-as-included
-  [roam-db degree entry-point-tags]
-  (mark-entry-points-and-refs-as-included roam-db degree entry-point-tags)
+  [roam-db degree entry-point-tags other-page-tags]
+  (mark-entry-points-and-refs-as-included roam-db degree entry-point-tags other-page-tags)
   (mark-included-entity-children-as-included roam-db))
 
 (defn- mark-all-entities-as-included
@@ -629,7 +629,7 @@
   [roam-db degree config]
   (mark-all-entities-as-excluded roam-db)
   (if (int? degree)
-    (mark-entry-point-and-ref-pages-as-included roam-db degree (:entry-point-tags config))
+    (mark-entry-point-and-ref-pages-as-included roam-db degree (:entry-point-tags config) (map :tagged-as (:template-info config)))
     (mark-all-entities-as-included roam-db))
   (include-explicitly-included roam-db (:include-tagged config) (:include-refs config))
   (exclude-explicitly-excluded roam-db (:exclude-tagged config) (:exclude-refs config))

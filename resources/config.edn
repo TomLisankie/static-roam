@@ -23,7 +23,6 @@
                  "graph-page-example"
                  {
                   :folder "/nodes"
-                  :exclude-tagged-as ["Post" "About" "Homepage" "Contact" "Now"]
                   }
                  "index"
                  {
