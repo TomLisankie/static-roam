@@ -74,13 +74,13 @@ li {
 }
 
 a {
-    color: var(--link); /* Hyperphor color 2 */
+    color: var(--link); 
     font-weight: 500;	/* slightly bold */
 }
 
 a:hover {
     background-color: #eeeee0; 
-    color: var(--link); /* Hyperphor color 2 */
+    color: var(--link) !important; 
     text-decoration: none;
     box-shadow: 0 0 0 5px #eeeee0;
 }
@@ -173,7 +173,7 @@ iframe {
 }
 
 .navbar-brand {
-    padding-left: 26px;
+    margin-left: 26px;
 }
 
 .edit {
@@ -185,6 +185,7 @@ iframe {
 .pheader {
     background-color: #f1eded;
     padding: 2px;
+    margin-bottom: 3px;
 }
 
 .footer {

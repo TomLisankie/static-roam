@@ -67,7 +67,7 @@
     ""                                  ;TODO ugly
     (let [page (database/block-page block-map (get block-map r))]
       [:div
-       "From " (parser/page-link page)
+       "from " (parser/page-link page)
        [:div (block-template r block-map)]])))
 
 (defn linked-references-template
@@ -89,7 +89,7 @@
   gtag('js', new Date());
 
   gtag('config', 'UA-345282-1');
-"]  )
+"])
 
 ;;; TODO much of this should be configurable
 (defn page-hiccup
@@ -136,9 +136,8 @@
    [:footer.py-5.footer
     [:div.container
      [:p.m-0.text-center.text-white "Copyright © Hyperphor 2020-2021"]
-     [:p.m-0.text-center.text-white "Exported " (utils/render-time @utils/latest-export-time)]]
+     [:p.m-0.text-center.text-white.small "Exported " (utils/render-time @utils/latest-export-time)]]
     ]]])
-
 
 (defn render-date-range
   [[from to]]

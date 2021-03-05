@@ -12,12 +12,13 @@
 (defn recents
   [block-map]
   "Groups recently changed blocks by page, returns rev chron seq of seqs"
-  (->> (take 100 (reverse (sort-by :edit-time (filter :include? (vals block-map)))))
+  (->> (reverse (sort-by :edit-time (filter :include? (vals block-map))))
        (map #(assoc % :page (:id (database/block-page block-map %))))
        (group-by :page)
        vals
        (sort-by (fn [blocks] (reduce max 0 (map :edit-time blocks))))
-       reverse))
+       reverse
+       (take 10)))                      ;Last 10 pages, TODO maybe take a time period instead?
 
 (defn recent-page-content
   [block-map]
