@@ -2,16 +2,15 @@
   (:require [static-roam.utils :as utils]
             [static-roam.database :as database]
             [static-roam.parser :as parser]
-            [static-roam.templating :as templating]
-            [clojure.pprint :as pprint]))
+            [static-roam.templating :as templating]))
 
 ;;; TODO filter out empty blocks
 ;;; TODO link path isnt right, formatting
 ;;; TODO if there are outline-nested blocks, they will repeat, which looks stupid
 
 (defn recents
-  [block-map]
   "Groups recently changed blocks by page, returns rev chron seq of seqs"
+  [block-map]
   (->> (reverse (sort-by :edit-time (filter :include? (vals block-map))))
        (map #(assoc % :page (:id (database/block-page block-map %))))
        (group-by :page)
@@ -38,6 +37,6 @@
            " "
            [:span (utils/render-time edit-time)]]
           (for [block (take 3 group)] ;limit to 3 chunks
-            [:dAiv (templating/block-template (:id block) block-map)])])]]]])
+            [:div.ragged (templating/block-template (:id block) block-map)])])]]]])
 
 

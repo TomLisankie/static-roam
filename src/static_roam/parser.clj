@@ -151,6 +151,12 @@
       (prn "Missing content: " (:id block))
       nil)))
 
+(defn format-codeblock
+  [spec]
+  (let [[_ lang content] (re-matches #"(?sm)```(\w*)\n(.*)```\s*" spec)]
+    ;; TODO there are packages that will do language-specific highlighting
+    [:code.codeblock content]))
+
 (defn ele->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
   (let [recurse (fn [s]                 ;TODO probably needs a few more uses
@@ -182,7 +188,7 @@
            :todo [:input {:type "checkbox" :disabled "disabled"}]
            :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
            :code-line [:code (utils/remove-n-surrounding-delimiters 1 ele-content)]
-           :code-block [:code.codeblock (utils/remove-n-surrounding-delimiters 3 ele-content)] ;TODO parse out language indicator, or better yet use it
+           :code-block (format-codeblock ele-content)
            :youtube (youtube-vid-embed (get-youtube-id ele-content))
            :bare-url (make-content-from-url ele-content)
            :blockquote [:blockquote (ele->hiccup ele-content block-map)]

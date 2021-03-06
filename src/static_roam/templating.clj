@@ -77,6 +77,7 @@
 
 
 ;;; TODO configurability
+;;; Not working, reason unknown
 (defn analytics-1
   []
   [:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=UA-345282-1"}])
@@ -91,12 +92,29 @@
   gtag('config', 'UA-345282-1');
 "])
 
+(defn old-analytics-1
+  []
+  [:script {:type "text/javascript"}
+   "var gaJsHost = ((\"https:\" == document.location.protocol) ? \"https://ssl.\" : \"http://www.\");
+document.write(unescape(\"%3Cscript src='\" + gaJsHost + \"google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E\"));"
+   ])
+
+(defn old-analytics-2
+  []
+  [:script {:type "text/javascript"}
+   "try {
+var pageTracker = _gat._getTracker(\"UA-345282-1\");
+pageTracker._trackPageview();
+     } catch(err) {}"])
+
 ;;; TODO much of this should be configurable
 (defn page-hiccup
   [body-hiccup page-title block-map]
   [:html
     [:head
-     (analytics-1) (analytics-2)
+     ;; Not working
+     #_ (analytics-1)
+     #_ (analytics-2)
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
      [:title (str "AMMDI: " page-title)] ;TODO config site prefix
@@ -137,7 +155,11 @@
     [:div.container
      [:p.m-0.text-center.text-white "Copyright © Hyperphor 2020-2021"]
      [:p.m-0.text-center.text-white.small "Exported " (utils/render-time @utils/latest-export-time)]]
-    ]]])
+    ]
+   (old-analytics-1)
+   (old-analytics-2)
+   
+   ]])
 
 (defn render-date-range
   [[from to]]

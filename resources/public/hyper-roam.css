@@ -9,7 +9,8 @@
     --background: #FFFFFF;
     --navbar-background: #407492;
     --link: #9e2a2bff;
-    --blockquote: #efe9c9;  /*   #fff3b0ff #fffce9 */
+    --blockquote: #f1efe6;  /*   #fff3b0ff #fffce9 #efe9c9 */
+    --blockquote-border: #c0c0c0;
     --incoming: #d2e7ec;  	/* picked this myself, and dont want it relgated to botton of page */
     --navbar-foreground: #e09f3eff;
 }
@@ -112,7 +113,8 @@ blockquote {
     padding-right: 10px;
     padding-top: 10px;
     padding-bottom: 10px;
-    border-left: 3px solid black;
+    border-left: 3px solid var(--blockquote-border);
+    border-radius: 10px;
     width: 90%;
 }
 
@@ -191,3 +193,12 @@ iframe {
 .footer {
     background-color: var(--auburn);
 }
+
+.ragged {
+    border-radius: 25px 15px 225px 15px/15px 225px 15px 255px;    
+    border:dashed 3px var(--auburn);
+    margin: 5px;
+    padding-top: 4px;
+    padding-right: 4px;
+}
+

@@ -13,19 +13,19 @@
   (->> "~/Downloads"
        fs/expand-home
        fs/list-dir
-       (filter #(s/includes? (str %) "Roam-Export" ))
+       (filter #(s/includes? (str %) "Roam-Export"))
        (sort-by fs/mod-time)
        last
        str))
 
+;;; TODO timezone correction
 (u/def-lazy latest-export-time
   (->> (latest-export)
        fs/base-name
        (re-find #"-(\d*)\.")
        second
        u/coerce-numeric
-       java.util.Date.
-       ))
+       java.util.Date.))
 
 (defn unzip-roam-json
   "Takes the path to a zipfile `source` and unzips it to `target-dir`, returning the path of the target file"

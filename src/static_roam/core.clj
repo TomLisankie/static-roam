@@ -4,8 +4,7 @@
             [static-roam.database :as database]
             [static-roam.html-generation :as html-gen]
             [org.parkerici.multitool.core :as u]
-            [org.parkerici.multitool.cljcore :as ju]
-            [clojure.pprint :as pprint]))
+            [org.parkerici.multitool.cljcore :as ju]))
 
 (defn block-map
   [path-to-zip]

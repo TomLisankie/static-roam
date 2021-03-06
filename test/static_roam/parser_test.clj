@@ -99,13 +99,13 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
 
 (deftest code-block-test
   (testing "codeblock parsing"
-    (is (= [:block [:code-block "```This is code
+    (is (= [:block [:code-block "```javascript\nThis is code
  and so is this.```"]]
-           (parse-to-ast "```This is code
+           (parse-to-ast "```javascript\nThis is code
  and so is this.```"))))
   (testing "codeblock htmlgen"
     (is (= [:code.codeblock "This is code\n and so is this."]
-           (block-content->hiccup "```This is code
+           (block-content->hiccup "```javascript\nThis is code
  and so is this.```" {})))))
 
 (deftest markup-in-page-names-test

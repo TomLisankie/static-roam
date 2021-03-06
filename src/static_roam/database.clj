@@ -3,7 +3,6 @@
             [static-roam.utils :as utils]
             [static-roam.config :as config]
             [org.parkerici.multitool.core :as u]
-            [clojure.walk :as walk]
             [clojure.set :as set]
             [taoensso.truss :as truss :refer (have have! have?)]
             [clojure.string :as str-utils]))
@@ -110,10 +109,6 @@
 
 (def descendents
   (u/transitive-closure :dchildren))
-
-(defn page-refs
-  [block]
-  (set (mapcat :refs (descendents block))))
 
 (defn block-parent
   [block-map block]
@@ -274,14 +269,6 @@
         [block-id
          (assoc block-props :children (into (:children block-props) (reverse (:children referenced-block-props))) :content (:content referenced-block-props))])
       pair)))
-
-(defn- add-children-of-block-embeds
-  [block-map]
-  (into
-   (hash-map)
-   (map
-    #(lkjsafas % block-map)
-    block-map)))
 
 (defn setup-static-roam-block-map
   [roam-json]

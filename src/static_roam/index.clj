@@ -3,8 +3,7 @@
             [static-roam.database :as db]
             [static-roam.templating :as templating]
             [static-roam.parser :as parser]
-            [clojure.string :as s]
-            [clojure.pprint :as pprint]))
+            [clojure.string :as s]))
 
 
 
