@@ -127,9 +127,13 @@
 
 (defn page-link [page & [alias]]
   (let [page-id (:id page)]
-    [:a {:href (utils/page-title->html-file-title page-id :case-sensitive)
-         :class (if (page-empty? page) "empty" "")}
-     (block-content->hiccup (or alias page-id) {})]))
+    (if (:include? page)
+      [:a {:href (utils/page-title->html-file-title page-id :case-sensitive)
+           :class (if (page-empty? page) "empty" "")}
+       (block-content->hiccup (or alias page-id) {})]
+      (do
+        (prn "ref to excluded page " page-id)
+        (block-content->hiccup (or alias page-id) {})))))
 
 (defn unspan
   "Remove :span elts that are basically no-ops. Would be cleaner to not generate"
