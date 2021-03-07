@@ -15,20 +15,28 @@
 
 (def last-bm (atom nil))
 
-;;; Dump blocks in readable file
-#_
-(org.parkerici.multitool.cljcore/schppit "blocks.edn" @last-bm)
 
 (defn pages
   []
   (keys (u/dissoc-if (fn [[_ v]] (not (:page? v))) @last-bm)))
 
-;;; SLoooow. Dumps pages including dchildren
-(defn dump
+;;; Sloooow. Dumps pages including dchildren
+(defn page-dump
   []
   ;; TODO output-dir
-  (ju/schppit "blocks.edn" (u/map-filter (fn [[k b]] (and (:page? b) b))
-                                         @last-bm)))
+  (ju/schppit
+   "pages.edn"
+   (u/map-filter (fn [[k b]] (and (:page? b) b))
+                 @last-bm)))
+
+;;; Dumps included blocks in order; the idea is this should be diffable. Also slow.
+(defn block-dump
+  []
+  (ju/schppit
+   "blocks.edn"
+   (into (sorted-map)
+         (u/map-values #(dissoc % :dchildren)
+                       (u/clean-map @last-bm (comp not :include?))))))
 
 (defn tap
   [bm]
