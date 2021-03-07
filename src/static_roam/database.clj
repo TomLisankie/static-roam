@@ -19,11 +19,8 @@
    :children (map :uid (:children block-json))
    :content (or (:string block-json) (:title block-json))
    :heading (:heading block-json -1)
-   :edit-time (or (:edit-time block-json) (:create-time block-json)) ;TODO convert to #inst 
-
-;;; Don' think this wants to be done here
-;   :entry-point (parser/entry-point? block-json)
-;   :exit-point (parser/exit-point? block-json)
+   :edit-time (when-let [time (or (:edit-time block-json) (:create-time block-json))]
+                (java.util.Date. time))
    :page? (contains? block-json :title)
    })
 
@@ -286,7 +283,7 @@
 (defn date-range [page]
   (let [visible-blocks (filter :include? (block-descendents page))
         visible-dates (map :edit-time visible-blocks)]
-    [(java.util.Date. (min* visible-dates)) (java.util.Date. (max* visible-dates))]))
+    [(min* visible-dates) (max* visible-dates)]))
 
 
 (defn stats [bm]

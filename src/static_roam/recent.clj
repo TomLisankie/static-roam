@@ -2,7 +2,9 @@
   (:require [static-roam.utils :as utils]
             [static-roam.database :as database]
             [static-roam.parser :as parser]
-            [static-roam.templating :as templating]))
+            [static-roam.templating :as templating]
+            [org.parkerici.multitool.core :as u]
+            ))
 
 ;;; TODO filter out empty blocks
 ;;; TODO link path isnt right, formatting
@@ -11,11 +13,11 @@
 (defn recents
   "Groups recently changed blocks by page, returns rev chron seq of seqs"
   [block-map]
-  (->> (reverse (sort-by :edit-time (filter :include? (vals block-map))))
+  (->> (reverse (sort-by :edit-time u/>* (filter :include? (vals block-map))))
        (map #(assoc % :page (:id (database/block-page block-map %))))
        (group-by :page)
        vals
-       (sort-by (fn [blocks] (reduce max 0 (map :edit-time blocks))))
+       (sort-by (fn [blocks] (u/max* (map :edit-time blocks))))
        reverse
        (take 10)))                      ;Last 10 pages, TODO maybe take a time period instead?
 
@@ -30,7 +32,7 @@
       [:hr]
       (for [group (recents block-map)
              :let [page-id (:page (first group))
-                   edit-time (reduce max 0 (map :edit-time group))]]
+                   edit-time (u/max* (map :edit-time group))]]
          [:div
           [:div.pheader
            "from " (parser/page-link (get block-map page-id))
