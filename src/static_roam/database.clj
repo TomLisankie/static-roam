@@ -121,7 +121,7 @@
   ((u/transitive-closure :dchildren) block))
 
 (defn page-refs
-  [block-map page]
+  [page]
   (apply clojure.set/union
          (map :refs (block-descendents page))))
 
@@ -284,7 +284,6 @@
   (let [visible-blocks (filter :include? (block-descendents page))
         visible-dates (map :edit-time visible-blocks)]
     [(min* visible-dates) (max* visible-dates)]))
-
 
 (defn stats [bm]
   {:blocks {:total (count bm)

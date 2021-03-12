@@ -21,13 +21,14 @@
    :entry-tags ["EntryPoint"]
    :exit-tags ["ExitPoint" "Private"] 
    :daily-logs false
-   :dev-mode false              ;true turns on links into Roam itself
+   :dev-mode false                      ;true turns on links into Roam itself
    :output-path "output"
+   :bullets false                       ;TODO not hooked up
    }
   )
 
 (defmethod aero/reader 'split
-  [_ tag [s]]
+  [_ _ [s]]
   (and s (s/split s #",")))
 
 (def config

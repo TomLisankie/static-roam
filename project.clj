@@ -12,6 +12,8 @@
                  [stasis "2.5.0"]
                  [instaparse "1.4.10"]
                  [aero "1.1.6"]
-                 [metasoarous/oz "1.6.0-alpha6"]]
+                 [metasoarous/oz "1.6.0-alpha6"]
+                 [mock-clj "0.2.0"]     ;TODO should be under :test profile
+                 ]
   :resource-paths ["resources"]
   :main static-roam.core)

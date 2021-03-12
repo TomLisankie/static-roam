@@ -2,6 +2,7 @@
   (:require [static-roam.database :as db]
             [clojure.string :as s]
             [clojure.java.shell :as shell]
+            [clojure.java.io :as io]
             [org.parkerici.multitool.core :as u]
             ))
 
@@ -25,7 +26,7 @@
         pages (filter :include? (db/pages block-map))
         ]
     (println "Writing " dot-file)
-    (with-open [wrtr (clojure.java.io/writer dot-file)]
+    (with-open [wrtr (io/writer dot-file)]
       (binding [*out* wrtr]
         (println "digraph schema {")
         (println (attributes
@@ -42,7 +43,7 @@
                                         ; :fillcolor (if (get-in kinds [kind :reference?]) reference-color nonreference-color)
                                         ; :fontname graph-font
                                         })))
-          (doseq [ref (db/page-refs block-map page)]
+          (doseq [ref (db/page-refs page)]
             (println (format "%s -> %s [%s];"
                              (clean (:content page))
                              (clean ref)

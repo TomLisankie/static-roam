@@ -5,6 +5,7 @@
             [clojure.data.json :as json]
             [static-roam.config :as config]
             [static-roam.utils :as utils]
+            [org.parkerici.multitool.core :as u]
             [clojure.java.io :as io]))
 
 ;; Modified from Athens: https://github.com/athensresearch/athens/blob/master/src/cljc/athens/parser.cljc
@@ -128,8 +129,9 @@
 (defn page-link [page & [alias]]
   (let [page-id (:id page)]
     (if (:include? page)
-      [:a {:href (utils/page-title->html-file-title page-id :case-sensitive)
-           :class (if (page-empty? page) "empty" "")}
+      [:a (u/clean-map
+           {:href (utils/page-title->html-file-title page-id :case-sensitive)
+            :class (if (page-empty? page) "empty" nil)})
        (block-content->hiccup (or alias page-id) {})]
       (do
         (prn "ref to excluded page " page-id)
@@ -176,10 +178,8 @@
            :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
                                                         ele-content)]
                          (page-link (get block-map page) alias))
-           ;; NOTE this is the only thing that needs the block-map passed in
-           :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))
-                            ref-page nil] ;TODO database/block-page but namespace problem
-                        [:div.block-ref #_ {:onclick (format "location.href='%s';" (page-url ref-page))}
+           :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
+                        [:div.block-ref
                          (generate-hiccup ref-block block-map)])
            :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
                      (utils/format-hashtag ele-content)]

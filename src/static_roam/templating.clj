@@ -80,7 +80,7 @@
 ;;; Not working, reason unknown
 (defn analytics-1
   []
-  [:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=UA-345282-1"}])
+  [:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=G-SK8PZVFHTW"}])
 
 (defn analytics-2
   []
@@ -89,7 +89,7 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'UA-345282-1');
+  gtag('config', 'G-SK8PZVFHTW');
 "])
 
 (defn old-analytics-1
@@ -113,8 +113,8 @@ pageTracker._trackPageview();
   [:html
     [:head
      ;; Not working
-     #_ (analytics-1)
-     #_ (analytics-2)
+     (analytics-1)
+     (analytics-2)
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
      [:title (str "AMMDI: " page-title)] ;TODO config site prefix
@@ -156,8 +156,8 @@ pageTracker._trackPageview();
      [:p.m-0.text-center.text-white "Copyright © Hyperphor 2020-2021"]
      [:p.m-0.text-center.text-white.small "Exported " (utils/render-time @utils/latest-export-time)]]
     ]
-   (old-analytics-1)
-   (old-analytics-2)
+   #_ (old-analytics-1)
+   #_ (old-analytics-2)
    
    ]])
 

@@ -66,7 +66,7 @@ li {
 .main ul li::before {
     /* content: "\2022";  bullet */
     /* content: "\2aa2";  my fave ⪢ */
-    content: "\30fb";   
+    /* content: "\30fb";  bite the no bullet  */
     color: var(--link);
   /* color: #4E176E; 		 */
     display: inline-block; 
@@ -113,6 +113,7 @@ blockquote {
     padding-right: 10px;
     padding-top: 10px;
     padding-bottom: 10px;
+    margin-bottom: 0px;
     border-left: 3px solid var(--blockquote-border);
     border-radius: 10px;
     width: 90%;
@@ -153,9 +154,11 @@ blockquote {
 
 .ptitle {
     /* gets title left-aligned with text, but a kludge and not sure it will work with different fonts etc  */
-    padding-left: 26px;
+    /* padding-left: 26px; */
     display: inline-block;
 }
+
+.ptitle
 
 img {
     /* center images */
@@ -175,7 +178,7 @@ iframe {
 }
 
 .navbar-brand {
-    margin-left: 26px;
+    /* margin-left: 26px; */
 }
 
 .edit {
@@ -188,6 +191,7 @@ iframe {
     background-color: #f1eded;
     padding: 2px;
     margin-bottom: 3px;
+    margin-top: 15px;
 }
 
 .footer {
@@ -198,7 +202,8 @@ iframe {
     border-radius: 25px 15px 225px 15px/15px 225px 15px 255px;    
     border:dashed 3px var(--auburn);
     margin: 5px;
-    padding-top: 4px;
-    padding-right: 4px;
+    margin-left: 15px;
+    padding-left: 7px;
+    padding-top: 7px;
 }
 
