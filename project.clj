@@ -8,6 +8,7 @@
                  [org.clojure/data.json "1.0.0"]
                  [hiccup "1.0.5"]
                  [stasis "2.5.0"]
-                 [instaparse "1.4.10"]]
+                 [instaparse "1.4.10"]
+                 [datascript "1.0.3"]]
   :resource-paths ["resources"]
   :main static-roam.core)

@@ -2,6 +2,7 @@
   (:require [instaparse.core :as insta :refer [defparser]]
             [clojure.string :as str-utils]
             [static-roam.utils :as utils]
+            [datascript.core :as ds]
             [clojure.java.io :as io]))
 
 ;; Modified from Athens: https://github.com/athensresearch/athens/blob/master/src/cljc/athens/parser.cljc
@@ -173,3 +174,78 @@
   "Convert Roam markup to Hiccup"
   [content block-map]
   (vec (map #(ele->hiccup % block-map) (parse-to-ast content))))
+
+(defn- get-eid-for-node-title
+  [roam-db node-title]
+  (first (first (ds/q '[:find
+                        ?eid
+                        :in $ ?node-title
+                        :where
+                        [?eid :node/title ?node-title]]
+                      @roam-db node-title))))
+
+(defn- get-eid-for-block-uid
+  [roam-db block-uid]
+  (first (first (ds/q '[:find
+                        ?eid
+                        :in $ ?block-uid
+                        :where
+                        [?eid :block/uid ?block-uid]]
+                      @roam-db block-uid))))
+
+(defn- html-file-name-for-uid
+  [roam-db uid]
+  (str (:block/uid (ds/entity (ds/db roam-db) (get-eid-for-node-title roam-db uid))) ".html"))
+
+(defn element-vec->hiccup ;; TODO: have code to change behavior if page/block is not included
+  [roam-db ast-ele]
+  (let [ele-content (second ast-ele)]
+    (case (first ast-ele)
+      :metadata-tag [:b [:a {:href (html-file-name-for-uid roam-db (subs ele-content 0 (dec (count ele-content))))}
+                         (subs ele-content 0 (dec (count ele-content)))]]
+      :page-link [:a {:href (html-file-name-for-uid roam-db (remove-double-delimiters ele-content))}
+                  (remove-double-delimiters ele-content)]
+      :block-ref [:a {:href (str (remove-double-delimiters ele-content) ".html")}
+                  (:block/string
+                   (ds/entity (ds/db roam-db)
+                            (get-eid-for-block-uid roam-db (remove-double-delimiters ele-content))))]
+      :hashtag [:a {:href (html-file-name-for-uid roam-db (remove-double-delimiters ele-content))}
+                (format-hashtag ele-content)]
+      :strikethrough [:s (remove-double-delimiters ele-content)]
+      :highlight [:mark (remove-double-delimiters ele-content)]
+      :italic [:i (remove-double-delimiters ele-content)]
+      :bold [:b (remove-double-delimiters ele-content)]
+      :alias (format-alias ele-content)
+      :image (format-image ele-content)
+      :todo [:input {:type "checkbox" :disabled "disabled"}]
+      :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
+      :code-line [:code (remove-n-surrounding-delimiters 1 ele-content)]
+      :youtube (get-youtube-vid-embed ele-content)
+      :bare-url (make-link-from-url ele-content)
+      ast-ele)))
+
+(defn ele->hiccup
+  [roam-db ele]
+  (cond
+    (string? ele) ele
+    (= ele :block) :div
+    (vector? ele) (element-vec->hiccup roam-db ele)))
+
+(defn- roam-markdown->hiccup
+  [roam-db content-string]
+  (vec (map #(ele->hiccup roam-db %) (parse-to-ast content-string))))
+
+(defn parse-entities-in-db-to-hiccup
+  [roam-db]
+  (let [eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db))
+        transactions-seq (map
+                          (fn [eid]
+                            [:db/add
+                             eid
+                             :static-roam/hiccup
+                             (roam-markdown->hiccup roam-db (:block/string (ds/entity (ds/db roam-db) eid)))])
+                          eids)
+        transactions (vec
+                      transactions-seq)
+        transaction-report (ds/transact! roam-db transactions)]
+    transaction-report))

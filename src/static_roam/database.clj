@@ -2,6 +2,7 @@
   (:require [static-roam.parser :as parser]
             [static-roam.utils :as utils]
             [clojure.string :as str-utils]
+            [datascript.core :as ds]
             [clojure.pprint :as pprint]))
 
 (defn- get-block-id
@@ -344,3 +345,292 @@
         children-of-embeds-added (add-children-of-block-embeds blocks-tagged-for-inclusion)
         hiccup-for-included-blocks (generate-hiccup-for-included-blocks children-of-embeds-added)]
     hiccup-for-included-blocks))
+
+(defn- include-children-of-included-pages
+  [roam-db])
+
+(defn- include-explicitly-included-blocks
+  [roam-db include-tags]
+  (let [sr-info-eid (first (first (ds/q '[:find ?eid
+                                          :where
+                                          [?eid :node/title "Static-Roam Info"]]
+                                        @roam-db)))
+        explicit-include-eids (map #(first (first %))
+                                   (map #(ds/q '[:find ?eid
+                                                 :in $ ?tag
+                                                 :where
+                                                 [?eid :node/title ?tag]]
+                                               @roam-db %)
+                                        include-tags))
+        eids-of-explicit-includes (reduce into []
+                                          (map first
+                                               (map #(ds/q '[:find ?parent-eid
+                                                             :in $ ?explicit-include-tag-eid
+                                                             :where
+                                                             [?eid :block/refs sr-info-eid]
+                                                             [?eid :block/refs ?explicit-include-tag-eid]
+                                                             [?eid :block/parents ?parent-eid]]
+                                                           @roam-db %)
+                                                    explicit-include-eids)))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) eids-of-explicit-includes))
+        ;; TODO include children as well
+        ]
+    (ds/transact! roam-db transactions)))
+
+(defn- exclude-explicitly-excluded-blocks
+  [roam-db exclude-tags]
+  (let [sr-info-eid (first (first (ds/q '[:find ?eid
+                                          :where
+                                          [?eid :node/title "Static-Roam Info"]]
+                                        @roam-db)))
+        explicit-exclude-eid (map #(first (first %))
+                                  (map #(ds/q '[:find ?eid
+                                                :in $ ?tag
+                                                :where
+                                                [?eid :node/title ?tag]]
+                                              @roam-db %)
+                                       exclude-tags))
+        eids-of-explicit-excludes (reduce into []
+                                          (map first
+                                               (map #(ds/q '[:find ?parent-eid
+                                                             :in $ ?explicit-exclude-tag-eid
+                                                             :where
+                                                             [?eid :block/refs sr-info-eid]
+                                                             [?eid :block/refs ?explicit-exclude-tag-eid]
+                                                             [?eid :block/parents ?parent-eid]]
+                                                           @roam-db %)
+                                                    explicit-exclude-eid)))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) eids-of-explicit-excludes))
+        ;; TODO exclude children as well
+        ]
+    (ds/transact! roam-db transactions)))
+
+(defn- mark-all-entities-as-excluded
+  [roam-db]
+  (let [eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) eids))]
+    (ds/transact! roam-db transactions)) ;; might want to make this more nuanced so only entities with :block/string or :node/title get included
+  )
+
+(defn- get-parent-eids
+  [roam-db sr-info-eid entity-tag-eid]
+  (let [query-result (ds/q '[:find ?parent-eid
+                             :in $ ?entity-tag-eid ?sr-info-eid
+                             :where
+                             [?eid :block/refs ?sr-info-eid]
+                             [?eid :block/refs ?entity-tag-eid]
+                             [?parent-eid :block/children ?eid]]
+                           @roam-db entity-tag-eid sr-info-eid)]
+    query-result))
+
+(defn- get-all-queries
+  [roam-db sr-info-eid entity-tag-eids]
+  (let [nils-removed (filter #(not (nil? %)) entity-tag-eids)]
+    (if (empty? nils-removed)
+      []
+      (let [query-results (map #(get-parent-eids roam-db sr-info-eid %)
+                               entity-tag-eids)]
+        query-results))))
+
+(defn- get-eids-of-entities-with-tags
+  [roam-db tags]
+  (let [sr-info-eid (first (first (ds/q '[:find ?eid
+                                          :where
+                                          [?eid :node/title "Static-Roam Info"]]
+                                        @roam-db)))
+        entity-tag-eids (map #(first (first %))
+                             (map #(ds/q '[:find ?eid
+                                           :in $ ?tag
+                                           :where
+                                           [?eid :node/title ?tag]]
+                                         @roam-db %)
+                                  tags))
+        eids-of-entities-with-tags (map first
+                                        (reduce into []
+                                                (get-all-queries roam-db sr-info-eid entity-tag-eids)))]
+    eids-of-entities-with-tags))
+
+(defn- get-descendant-eids
+  [roam-db eid]
+  ;; This is a very important function and will be used in further steps
+  (let [eid (if (vector? eid)
+              (first eid)
+              eid)
+        children (map first
+                      (ds/q '[:find ?children-eids
+                              :in $ ?parent-eid
+                              :where
+                              [?parent-eid :block/children ?children-eids]]
+                            @roam-db eid))]
+    (reduce into children (map #(get-descendant-eids roam-db %) children))))
+
+(defn- get-descendant-eids-for-eids
+  [roam-db eids]
+  (reduce into #{} (map #(get-descendant-eids roam-db %) eids)))
+
+(defn- get-refs-for-entity
+  [roam-db eid]
+  (map first
+       (ds/q '[:find ?ref-eids
+               :in $ ?eid
+               :where
+               [?eid :block/refs ?ref-eids]]
+             @roam-db eid)))
+
+(defn- get-refs-of-descendants
+  [roam-db descendant-eids]
+  (reduce into #{} (map #(get-refs-for-entity roam-db %) descendant-eids)))
+
+(defn- get-entities-linked-by-descendants
+  [roam-db eid]
+  (let [descendant-eids (get-descendant-eids roam-db eid)
+        refs (get-refs-of-descendants roam-db descendant-eids)]
+    refs))
+
+(defn- get-eids-linked-by-entity
+  [roam-db eid]
+  (let [eids-linked (get-entities-linked-by-descendants roam-db eid)]
+    eids-linked))
+
+(defn- get-entities-linked-by
+  [roam-db eids]
+  (let [all-eids-linked (reduce into #{} (map #(get-eids-linked-by-entity roam-db %) eids))]
+    all-eids-linked))
+
+(defn- mark-refs-as-included
+  [roam-db degree entry-point-eids]
+  (let [eids entry-point-eids
+        linked-eids (get-entities-linked-by roam-db eids)
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) linked-eids))]
+    (ds/transact! roam-db transactions)
+    (when (> degree 0)
+      (mark-refs-as-included roam-db (dec degree) linked-eids))))
+
+(defn- mark-entry-points-and-refs-as-included
+  [roam-db degree entry-point-tags other-page-tags]
+  (let [entry-point-eids (get-eids-of-entities-with-tags roam-db (into entry-point-tags (filter (complement nil?) other-page-tags)))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) entry-point-eids))]
+    (ds/transact! roam-db transactions) ;; mark entry points as included
+    (mark-refs-as-included roam-db degree entry-point-eids)
+    (include-children-of-included-pages roam-db)))
+
+(defn- get-children-recursively
+  [roam-db eid]
+  (let [children-eids (map #(:db/id %) (:block/children (ds/entity (ds/db roam-db) eid)))]
+    (if (not= 0 (count children-eids))
+      (reduce into children-eids (map #(get-children-recursively roam-db %) children-eids))
+      nil)))
+
+(defn- mark-included-entity-children-as-included
+  [roam-db]
+  (let [entities-marked-for-inclusion (map first
+                                           (ds/q '[:find ?included-eids
+                                                   :where
+                                                   [?included-eids :static-roam/included true]]
+                                                 @roam-db))
+        entity-children-seqs (map #(get-children-recursively roam-db %) entities-marked-for-inclusion)
+        entity-children-eids (filter (complement nil?) (flatten entity-children-seqs))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) entity-children-eids))]
+    (ds/transact! roam-db transactions)))
+
+(defn- mark-entry-point-and-ref-pages-as-included
+  [roam-db degree entry-point-tags other-page-tags]
+  (mark-entry-points-and-refs-as-included roam-db degree entry-point-tags other-page-tags)
+  (mark-included-entity-children-as-included roam-db))
+
+(defn- mark-all-entities-as-included
+  [roam-db]
+  (let [eids (map first (ds/q '[:find ?eid :where [?eid]] @roam-db))
+        transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) eids))]
+    (ds/transact! roam-db transactions)))
+
+(defn- include-tagged
+  [roam-db tagged]
+  (let [explicitly-included-tag-eids (get-eids-of-entities-with-tags roam-db tagged)
+        children-of-entities-eids (get-descendant-eids-for-eids roam-db explicitly-included-tag-eids)
+        parent-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) explicitly-included-tag-eids))
+        children-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) children-of-entities-eids))]
+    (ds/transact! roam-db parent-transactions)
+    (ds/transact! roam-db children-transactions)))
+
+(defn- get-eid-of-node-with-title
+  [roam-db title]
+  (first
+   (first
+    (ds/q '[:find ?eid
+            :in $ ?title
+            :where
+            [?eid :node/title ?title]]
+          @roam-db title))))
+
+(defn- get-eids-of-nodes-with-titles
+  [roam-db titles]
+  (map #(get-eid-of-node-with-title roam-db %) titles))
+
+(defn- get-eids-of-entities-with-refs-to
+  [roam-db refs]
+  (let [ref-eids (get-eids-of-nodes-with-titles roam-db refs)
+        eids-linking-to-ref (map first
+                                 (map #(ds/q '[:find ?eid
+                                               :in $ ?ref-eid
+                                               :where
+                                               [?eid :block/refs ?ref-eid]]
+                                             @roam-db %)
+                                      ref-eids))]
+    eids-linking-to-ref))
+
+(defn- include-refs
+  [roam-db refs]
+  (let [explicitly-included-ref-eids (get-eids-of-entities-with-refs-to roam-db refs)
+        children-of-entities-eids (get-descendant-eids-for-eids roam-db explicitly-included-ref-eids)
+        parent-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) explicitly-included-ref-eids))
+        children-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included true]) children-of-entities-eids))]
+    (ds/transact! roam-db parent-transactions)
+    (ds/transact! roam-db children-transactions)))
+
+(defn- include-explicitly-included
+  [roam-db tagged refs]
+  (include-tagged roam-db tagged)
+  (include-refs roam-db refs))
+
+(defn- exclude-tagged
+  [roam-db tagged]
+  (let [explicitly-excluded-tag-eids (get-eids-of-entities-with-tags roam-db tagged)
+        children-of-entities-eids (get-descendant-eids-for-eids roam-db explicitly-excluded-tag-eids)
+        parent-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) explicitly-excluded-tag-eids))
+        children-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) children-of-entities-eids))]
+    (ds/transact! roam-db parent-transactions)
+    (ds/transact! roam-db children-transactions)))
+
+(defn- exclude-refs
+  [roam-db refs]
+  (let [explicitly-excluded-ref-eids (flatten (get-eids-of-entities-with-refs-to roam-db refs))
+        children-of-entities-eids (flatten (get-descendant-eids-for-eids roam-db explicitly-excluded-ref-eids))
+        parent-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) explicitly-excluded-ref-eids))
+        children-transactions (vec (map (fn [eid] [:db/add eid :static-roam/included false]) children-of-entities-eids))]
+    (ds/transact! roam-db parent-transactions)
+    (ds/transact! roam-db children-transactions)))
+
+(defn- exclude-explicitly-excluded
+  [roam-db tagged refs]
+  (exclude-tagged roam-db tagged)
+  (exclude-refs roam-db refs))
+
+(defn- retract-all-excluded-entities
+  [roam-db]
+  (let [excluded-eids (map first(ds/q '[:find ?eid
+                                        :where
+                                        [?eid :static-roam/included false]]
+                                      @roam-db))
+        retraction-transactions (vec (map (fn [eid] [:db.fn/retractEntity eid]) excluded-eids))]
+    (ds/transact! roam-db retraction-transactions)))
+
+(defn determine-which-content-to-include
+  [roam-db degree config]
+  (mark-all-entities-as-excluded roam-db)
+  (if (int? degree)
+    (mark-entry-point-and-ref-pages-as-included roam-db degree (:entry-point-tags config) (map :tagged-as (:template-info config)))
+    (mark-all-entities-as-included roam-db))
+  (include-explicitly-included roam-db (:include-tagged config) (:include-refs config))
+  (exclude-explicitly-excluded roam-db (:exclude-tagged config) (:exclude-refs config))
+  (retract-all-excluded-entities roam-db))

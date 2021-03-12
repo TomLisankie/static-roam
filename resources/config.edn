@@ -1,0 +1,57 @@
+{
+ :site-title "Thomas Lisankie"
+ :twitter-username "TomLisankie"
+ :github-username "TomLisankie"
+ :entry-point-tags ["EntryPoint" "Post"]
+ :include-tagged ["Include"]
+ :include-refs []
+ :exclude-tagged ["Exclude"]
+ :exclude-refs ["high"]
+ ;; Keep in mind, all of these are only operating on blocks that we've already marked as included:
+ :template-info {"about"
+                 {
+                  :folder "/about"
+                  :index true
+                  :tagged-as "About"
+                  }
+                 "contact"
+                 {
+                  :folder "/contact"
+                  :index true
+                  :tagged-as "Contact"
+                  }
+                 "graph-page-example"
+                 {
+                  :folder "/nodes"
+                  }
+                 "index"
+                 {
+                  :folder "/"
+                  :index true
+                  :tagged-as "Homepage"
+                  }
+                 "mind"
+                 {
+                  :folder "/mind"
+                  :index true
+                  :tagged-as "EntryPoint"
+                  }
+                 "now"
+                 {
+                  :folder "/now"
+                  :index true
+                  :tagged-as "Now"
+                  }
+                 "post-example"
+                 {
+                  :folder "/nodes"
+                  :tagged-as "Post"
+                  }
+                 "posts"
+                 {
+                  :folder "/posts"
+                  :index true
+                  :tagged-as "Post"
+                  }
+                 }
+ }
