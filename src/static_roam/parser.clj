@@ -57,8 +57,8 @@
 ;;; TODO "alias" seems like a misnomer, these are external links.
 (defn- format-alias
   [alias-content]
-  (let [alias-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.+?\]" alias-content))
-        alias-dest (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.+?\)" alias-content))
+  (let [alias-text (utils/remove-n-surrounding-delimiters 1 (re-find #"(?s)\[.+?\]" alias-content))
+        alias-dest (utils/remove-n-surrounding-delimiters 1 (re-find #"(?s)\(.+?\)" alias-content))
         alias-link (if (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
                      (utils/page-title->html-file-title alias-dest :case-sensitive)
                      alias-dest)]
@@ -85,8 +85,7 @@
 (defn get-youtube-id
   [string]
   (or (second (re-find #"https\:\/\/youtu\.be/([\w_-]*)" string))
-      (second (re-find #"https\:\/\/www.youtube.com\/watch\?v=([\w_-]*)" string))
-      (throw (ex-info "Couldn't find youtube id" {:string string}))))
+      (second (re-find #"https\:\/\/www.youtube.com\/watch\?v=([\w_-]*)" string))))
 
 (defn- make-link-from-url
   [string]
@@ -103,13 +102,17 @@
     (let [oembed (json/read-str (slurp (str "https://publish.twitter.com/oembed?url=" url)) :key-fn keyword)]
       (:html oembed))
     (catch Throwable e
-        (make-link-from-url url))))
+      (prn :twitter-embed-failed e)
+      (make-link-from-url url))))
 
 (defn- make-content-from-url
   [url]
-  (if (twitter-url? url)                ;TODO if there are more
-    (embed-twitter url)
-    (make-link-from-url url)))
+  (cond (twitter-url? url)                ;TODO if there are more
+        (embed-twitter url)
+        (get-youtube-id url)
+        (youtube-vid-embed (get-youtube-id url))
+        :else
+        (make-link-from-url url)))
 
 ;;; Following 2 fns dup from database until I can untangle the ns mess
 (def size
@@ -159,47 +162,68 @@
 
 (defn format-codeblock
   [spec]
-  (let [[_ lang content] (re-matches #"(?sm)```(\w*)\n(.*)```\s*" spec)]
+  (let [[_ _lang content] (re-matches #"(?sm)```(\w*)\n(.*)```\s*" spec)]
     ;; TODO there are packages that will do language-specific highlighting
     [:code.codeblock content]))
 
+;;; → multitool
+(defmacro debuggable [tag captures & body]
+  `(try
+     ~@body
+     (catch Throwable e#
+         (throw (ex-info ~(str "Debuggable ex " tag) ~(zipmap (map keyword captures) captures) e#)))))
+
+
+(comment
+(let [x 23]
+  (debuggable
+   :test [x]
+   (/ x 0)))
+)
+
+
 (defn ele->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
-  (let [recurse (fn [s]                 ;TODO probably needs a few more uses
-                  (ele->hiccup (parse-to-ast s) block-map))]
-    (if (string? ast-ele)
-      ast-ele
-      (let [ele-content (second ast-ele)]
-        (unspan
-         (case (first ast-ele)
-           :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                              (subs ele-content 0 (dec (count ele-content)))]]
-           :page-link (page-link (get block-map (utils/remove-double-delimiters ele-content)))
-           :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
-                                                        ele-content)]
-                         (page-link (get block-map page) alias))
-           :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
-                        [:div.block-ref
-                         (generate-hiccup ref-block block-map)])
-           :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
-                     (utils/format-hashtag ele-content)]
-           :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
-           :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]
-           :italic [:i (recurse (utils/remove-double-delimiters ele-content))]
-           :bold [:b (recurse (utils/remove-double-delimiters ele-content))]
-           :alias (format-alias ele-content)
-           :image (format-image ele-content)
-           :todo [:input {:type "checkbox" :disabled "disabled"}]
-           :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
-           :code-line [:code (utils/remove-n-surrounding-delimiters 1 ele-content)]
-           :code-block (format-codeblock ele-content)
-           :youtube (youtube-vid-embed (get-youtube-id ele-content))
-           :bare-url (make-content-from-url ele-content)
-           :blockquote [:blockquote (ele->hiccup ele-content block-map)]
+  (debuggable
+   :ele->hiccup [ast-ele]
+   (let [recurse (fn [s]                 ;TODO probably needs a few more uses
+                   (ele->hiccup (parse-to-ast s) block-map))]
+     (if (string? ast-ele)
+       ast-ele
+       (let [ele-content (second ast-ele)]
+         (unspan
+          (case (first ast-ele)
+            :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                               (subs ele-content 0 (dec (count ele-content)))]]
+            :page-link (page-link (get block-map (utils/remove-double-delimiters ele-content)))
+            :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
+                                                         ele-content)]
+                          (page-link (get block-map page) alias))
+            :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
+                         [:div.block-ref
+                          (generate-hiccup ref-block block-map)])
+            :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+                      (utils/format-hashtag ele-content)]
+            :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
+            :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]
+            :italic [:i (recurse (utils/remove-double-delimiters ele-content))]
+            :bold [:b (recurse (utils/remove-double-delimiters ele-content))]
+            :alias (format-alias ele-content)
+            :image (format-image ele-content)
+            :todo [:input {:type "checkbox" :disabled "disabled"}]
+            :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
+            :code-line [:code (utils/remove-n-surrounding-delimiters 1 ele-content)]
+            :code-block (format-codeblock ele-content)
+            :youtube (youtube-vid-embed
+                      (or (get-youtube-id ele-content)
+                          (throw (ex-info "Couldn't find youtube id" {:string ele-content}))))
+                          
+            :bare-url (make-content-from-url ele-content)
+            :blockquote [:blockquote (ele->hiccup ele-content block-map)]
                                         ;ast-ele
-           :block `[:span ~@(map #(ele->hiccup % block-map) (rest ast-ele))]
-           :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
-           ))))))
+            :block `[:span ~@(map #(ele->hiccup % block-map) (rest ast-ele))]
+            :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
+            )))))))
 
       ;#Private
 

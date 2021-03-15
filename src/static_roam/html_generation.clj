@@ -55,7 +55,6 @@
    (u/map-values #(hiccup/html %) content)
    output-dir))
 
-
 (defn export-page
   "Write out a single page. Content is hiccup. " 
   [content fname output-dir]

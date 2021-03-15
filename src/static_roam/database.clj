@@ -5,7 +5,7 @@
             [org.parkerici.multitool.core :as u]
             [clojure.set :as set]
             [taoensso.truss :as truss :refer (have have! have?)]
-            [clojure.string :as str-utils]))
+            ))
 
 (defn- get-block-id
   [block-json]
@@ -249,23 +249,6 @@
        compute-includes
        add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
        ))
-
-;;; Currently unused.
-
-(defn- lkjsafas
-  [pair block-map]
-  (let [block-id (first pair)
-        block-props (second pair)
-        block-content (:content block-props)
-        block-embed-found (re-find #"\{\{embed: .*?\}\}|\{\{\[\[embed\]\]: .*?\}\}" block-content)]
-    (if block-embed-found
-      (let [block-ref-uncleaned (re-find #"\(\(.*?\)\)|\[\[.*?\]\]"
-                                         (second (str-utils/split block-embed-found #":")))
-            referenced-block-id (utils/remove-double-delimiters block-ref-uncleaned)
-            referenced-block-props (get block-map referenced-block-id)]
-        [block-id
-         (assoc block-props :children (into (:children block-props) (reverse (:children referenced-block-props))) :content (:content referenced-block-props))])
-      pair)))
 
 (defn setup-static-roam-block-map
   [roam-json]

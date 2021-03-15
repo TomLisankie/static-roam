@@ -173,5 +173,14 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
   (is (= "-Jq0lohh_5U"
          (get-youtube-id "LA Open School {{[[video]]: https://youtu.be/-Jq0lohh_5U}}")))
   (is (= "0nU4EnB6wiE"
-         (get-youtube-id "Dennett et al debate free will https://www.youtube.com/watch?v=0nU4EnB6wiE&feature=youtu.be"))))
-  
+         (get-youtube-id "Dennett et al debate free will https://www.youtube.com/watch?v=0nU4EnB6wiE&feature=youtu.be")))
+  (is (nil? (get-youtube-id "Not a youtube https://www.foo.com"))))
+
+
+(deftest multiline-alias-test
+  (is (= [:a.external
+          {:href "https://faculty.washington.edu/lynnhank/GouldLewontin.pdf"}
+          "The Spandrels of San Marco and the Panglossian Paradigm:\nA Critique of the Adaptationist Programme"]
+         (ele->hiccup
+          [:alias
+           "[The Spandrels of San Marco and the Panglossian Paradigm:\nA Critique of the Adaptationist Programme](https://faculty.washington.edu/lynnhank/GouldLewontin.pdf)"] {}))))
