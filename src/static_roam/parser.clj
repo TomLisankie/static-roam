@@ -201,7 +201,7 @@
   [roam-db ast-ele]
   (let [ele-content (second ast-ele)]
     (case (first ast-ele)
-      :metadata-tag [:b [:a {:href (html-file-name-for-uid roam-db (subs ele-content 0 (dec (count ele-content))))}
+      :metadata-tag [:b [:a {:href (html-file-name-for-uid roam-db (subs ele-content 0 (- (count ele-content) 2)))}
                          (subs ele-content 0 (dec (count ele-content)))]]
       :page-link [:a {:href (html-file-name-for-uid roam-db (remove-double-delimiters ele-content))}
                   (remove-double-delimiters ele-content)]
