@@ -28,13 +28,11 @@
                  {
                   :folder "/"
                   :index true
-                  :tagged-as "Homepage"
                   }
                  "mind"
                  {
                   :folder "/mind"
                   :index true
-                  :tagged-as "EntryPoint"
                   }
                  "now"
                  {

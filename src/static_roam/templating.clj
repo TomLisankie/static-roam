@@ -273,9 +273,14 @@
                                                :where
                                                [?eid :node/title "About Page"]]
                                            @roam-db)))
-        ;; abt-pg (get-eids-for-tagged-blocks roam-db "About")
-        ;; about-eid-print (println abt-pg)
-        children-eids (:block/children (ds/entity (ds/db roam-db) about-page-eid))]
+        about-eid-print (println "About Page EID: " about-page-eid)
+        children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] about-page-eid))))]
+    (println "Children EIDs: " children-eids)
+    (println [:section {:id "about-content"}
+              [:div
+               [:h1 "About Me"]]
+              [:ul {:style "list-style-type:none; padding-left:0;"}
+               (map #(children-of-block-hiccup roam-db %) children-eids)]])
     [:section {:id "about-content"}
      [:div
       [:h1 "About Me"]]

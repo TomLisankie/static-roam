@@ -434,6 +434,7 @@
 
 (defn- get-eids-of-entities-with-tags
   [roam-db tags]
+  (println tags)
   (let [sr-info-eid (first (first (ds/q '[:find ?eid
                                           :where
                                           [?eid :node/title "Static-Roam Info"]]
@@ -631,6 +632,6 @@
   (if (int? degree)
     (mark-entry-point-and-ref-pages-as-included roam-db degree (:entry-point-tags config) (map :tagged-as (:template-info config)))
     (mark-all-entities-as-included roam-db))
-  (include-explicitly-included roam-db (:include-tagged config) (:include-refs config))
+  (include-explicitly-included roam-db (into (into #{} (:include-tagged config)) (filter (complement nil?) (map :tagged-as (vals (:template-info config))))) (:include-refs config))
   (exclude-explicitly-excluded roam-db (:exclude-tagged config) (:exclude-refs config))
   (retract-all-excluded-entities roam-db))
