@@ -5,7 +5,7 @@ block = (syntax-in-block / any-char)*
 alias = #"\[(.*?)\]\(.*?\)"
 image = #"!\[(.*?)\]\(.*?\)"
 page-link = #"\[\[.*?\]\]"
-hashtag = #"\#..*?(?=\s|$)" | #"#\[\[.*?\]\]"
+hashtag = #"\#..*?(?=\s|$)" | #"\#\[\[.*?\]\]"
 block-ref = #"\(\(([\w\s\d]+)\)\)"
 metadata-tag = #"^.+?::"
 code-line = #"\`.*?\`"
