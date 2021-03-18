@@ -233,15 +233,20 @@
      [:a {:href "https://www.recurse.com/scout/click?t=1a34fc98998afcb8a3ea183e9aa2b564"} "Join the Recurse Center!"]]]])
 
 (defn- children-of-block-hiccup
-  [roam-db block-eid]
-  [:ul {:style "list-style-type:none; padding-left:0;"}
-   [:li (:static-roam/hiccup (ds/entity (ds/db roam-db) block-eid))]
-   (let [children-eids (:block/children (ds/entity (ds/db roam-db) block-eid))]
-     (if (not= 0 (count children-eids))
-       ;; recurse on each of the children
-       (map #(children-of-block-hiccup roam-db %) children-eids)
-       ;; otherwise, evaluate to empty div
-       [:div]))])
+  [roam-db block-eid top-level]
+  (let [ul (if top-level
+             [:ul {:style "list-style-type:none; padding-left:0;"}
+              [:li (:static-roam/hiccup (ds/entity (ds/db roam-db) block-eid))]]
+             [:ul
+              [:li (:static-roam/hiccup (ds/entity (ds/db roam-db) block-eid))]])]
+    (conj
+     ul
+     (let [children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] block-eid))))]
+       (if (not= 0 (count children-eids))
+         ;; recurse on each of the children
+         (map #(children-of-block-hiccup roam-db % false) children-eids)
+         ;; otherwise, evaluate to empty div
+         [:div])))))
 
 (defn- get-eids-for-tagged-blocks
   [roam-db tag]
@@ -273,22 +278,16 @@
                                                :where
                                                [?eid :node/title "About Page"]]
                                            @roam-db)))
-        about-eid-print (println "About Page EID: " about-page-eid)
         children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] about-page-eid))))]
-    (println "Children EIDs: " children-eids)
-    (println [:section {:id "about-content"}
-              [:div
-               [:h1 "About Me"]]
-              [:ul {:style "list-style-type:none; padding-left:0;"}
-               (map #(children-of-block-hiccup roam-db %) children-eids)]])
     [:section {:id "about-content"}
      [:div
       [:h1 "About Me"]]
      [:ul {:style "list-style-type:none; padding-left:0;"}
-      (map #(children-of-block-hiccup roam-db %) children-eids)]]))
+      (map #(children-of-block-hiccup roam-db % true) children-eids)]]))
 
 (defn about-template
   [roam-db]
+  (println "About Template")
   (let [about-content (get-about-content-hiccup roam-db)]
     {"/about/index.html"
      [:html {:lang "en-US"}
@@ -305,12 +304,12 @@
                                                :where
                                                [?eid :node/title "Contact Page"]]
                                               @roam-db)))
-        children-eids (:block/children (ds/entity (ds/db roam-db) contact-page-eid))]
+        children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] contact-page-eid))))]
     [:section {:id "contact-content"}
      [:div
       [:h1 "Contact Me"]]
      [:ul {:style "list-style-type:none; padding-left:0;"}
-      (map #(children-of-block-hiccup roam-db %) children-eids)]]))
+      (map #(children-of-block-hiccup roam-db % true) children-eids)]]))
 
 (defn contact-template
   [roam-db]
@@ -330,12 +329,12 @@
                                                :where
                                                [?eid :node/title "Now Page"]]
                                               @roam-db)))
-        children-eids (:block/children (ds/entity (ds/db roam-db) now-page-eid))]
+        children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] now-page-eid))))]
     [:section {:id "contact-content"}
      [:div
       [:h1 "What I'm Up To"]]
      [:ul {:style "list-style-type:none; padding-left:0;"}
-      (map #(children-of-block-hiccup roam-db %) children-eids)]]))
+      (map #(children-of-block-hiccup roam-db % true) children-eids)]]))
 
 (defn now-template
   [roam-db]
@@ -357,13 +356,13 @@
 
 (defn- get-post-content-hiccup
   [roam-db post-eid]
-  (let [children-eids (:block/children (ds/entity (ds/db roam-db) post-eid))
+  (let [children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] post-eid))))
         post-title (:node/title (ds/entity (ds/db roam-db) post-eid))]
     [:section {:id "post-content"}
      [:div
       [:h1 post-title]]
      [:ul {:style "list-style-type:none; padding-left:0;"}
-      (map #(children-of-block-hiccup roam-db %) children-eids)]]))
+      (map #(children-of-block-hiccup roam-db % true) children-eids)]]))
 
 (defn- hiccup-for-post
   [roam-db post-eid]
