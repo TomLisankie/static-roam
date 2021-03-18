@@ -209,7 +209,7 @@
                   (:block/string
                    (ds/entity (ds/db roam-db)
                             (get-eid-for-block-uid roam-db (remove-double-delimiters ele-content))))]
-      :hashtag [:a {:href (html-file-name-for-uid roam-db (remove-double-delimiters ele-content))}
+      :hashtag [:a {:href (html-file-name-for-uid roam-db (format-hashtag ele-content))}
                 (format-hashtag ele-content)]
       :strikethrough [:s (remove-double-delimiters ele-content)]
       :highlight [:mark (remove-double-delimiters ele-content)]
