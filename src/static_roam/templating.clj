@@ -464,6 +464,23 @@
        ;; otherwise, evaluate to empty div
        [:div]))])
 
+(defn- get-parent-link-hiccup
+  [roam-db node-eid]
+  (let [parent-eid (first
+                    (first
+                     (ds/q '[:find ?parent-eid
+                             :in $ ?eid
+                             :where
+                             [?parent-eid :block/children ?eid]]
+                           @roam-db node-eid)))
+        node-title (if (:node/title (ds/entity (ds/db roam-db) parent-eid))
+                     (:node/title (ds/entity (ds/db roam-db) parent-eid))
+                     (:block/string (ds/entity (ds/db roam-db) parent-eid)))
+        node-url (str "./" (:block/uid (ds/entity (ds/db roam-db) parent-eid)) ".html")]
+    (if (nil? node-title)
+      [:div]
+      [:div "⮬" [:a {:href node-url} node-title]])))
+
 (defn- get-node-content-hiccup
   [roam-db node-eid]
   (let [children-eids (map #(:db/id %) (sort-by :block/order (:block/children (ds/pull (ds/db roam-db) [{:block/children [:db/id :block/order]}] node-eid))))
@@ -473,6 +490,7 @@
         uid (:block/uid (ds/entity (ds/db roam-db) node-eid))
         path (str "./nodes/" uid ".html")]
     [:section {:id "post-content"}
+     [:h3 (get-parent-link-hiccup roam-db node-eid)]
      [:div
       [:h1 node-title]]
      [:ul
