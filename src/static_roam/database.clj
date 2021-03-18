@@ -120,6 +120,10 @@
   [block]
   ((u/transitive-closure :dchildren) block))
 
+(defn block-contains?
+  [b1 b2]
+  (contains? (set (map :id (descendents b1))) (:id b2)))
+
 (defn page-refs
   [page]
   (apply clojure.set/union
@@ -296,3 +300,17 @@
   (< (- (size page)
         (count (:id page)))
         10))
+
+
+(defn expand-to [block-map block minsize]
+  (cond (>= (size block) minsize)
+        block
+        (nil? (:parent block))
+        block
+        :else
+        (expand-to block-map (get block-map (:parent block)) minsize)))
+
+
+(defn leaf?
+  [block]
+  (empty? (:chidlren block)))

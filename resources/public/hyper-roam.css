@@ -198,6 +198,7 @@ iframe {
     background-color: var(--auburn);
 }
 
+/* For recent changes, should have more semantic name */
 .ragged {
     border-radius: 25px 15px 225px 15px/15px 225px 15px 255px;    
     border:dashed 3px var(--auburn);
@@ -205,5 +206,9 @@ iframe {
     margin-left: 15px;
     padding-left: 7px;
     padding-top: 7px;
+}
+
+.ragged .block {
+    font-size: 10pt;
 }
 

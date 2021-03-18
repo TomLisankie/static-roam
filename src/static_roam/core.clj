@@ -26,8 +26,8 @@
   ;; TODO output-dir
   (ju/schppit
    "pages.edn"
-   (u/map-filter (fn [[k b]] (and (:page? b) b))
-                 @last-bm)))
+   (u/map-filter (fn [b] (and (:page? b) b))
+                 (vals @last-bm))))
 
 ;;; Dumps included blocks in order; the idea is this should be diffable. Also slow.
 (defn block-dump

@@ -68,6 +68,7 @@
     (let [page (database/block-page block-map (get block-map r))]
       [:div
        "from " (parser/page-link page)
+       ;; TODO this might want to do an expand thing like in recent-changes page? Does't actually seem necessary here
        [:div (block-template r block-map)]])))
 
 (defn linked-references-template
