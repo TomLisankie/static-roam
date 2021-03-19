@@ -1,15 +1,16 @@
 (ns static-roam.graph
   (:require [oz.core :as oz]
             [static-roam.database :as db]
+            [static-roam.html-generation :as html]
+            [clojure.data.json :as json]
+            [clojure.java.io :as io]
             [org.parkerici.multitool.core :as u]
             ))
 
 ;;; Based on https://vega.github.io/vega/examples/force-directed-layout/
 
 ;;; Status: makes a graph
-;;; TODO navigate on click
 ;;; TODO some kind of link highlighting
-;;; TODO static publishing
 ;;; More contrast between nodes
 
 (defn graph-data
@@ -67,6 +68,12 @@
        {:trigger "!fix" :modify "node" :values "{fx: null, fy: null}"}]
       :encode
       {:enter {:fill {:scale "color" :field "group"}
+               ;; TODO name needs more cleaning - maybe should be done outside of Vega. See utils/page-title->html-file-title
+               ;; TODO probably want relative URL?
+               ;; TODO apply to label also
+               ;; TODO customization point
+               ;; TODO would be nice if this could open in different browser tab
+               :href {:signal "'http://hyperphor.com/ammdi/pages/' + replace(datum.name, ' ', '-') + '.html'" }
                :stroke {:value "white"}
                :size {:field "size"}}
        #_ :update #_ {:size {:signal "2 * nodeRadius * nodeRadius"} :cursor {:value "pointer"}}
@@ -89,7 +96,7 @@
       :zindex 1
       :encode
       {:enter {:text {:field "datum.name"}
-               :x {:signal "datum.x + 10"} 
+               :x {:signal "datum.x + 10"} ;TODO these offsets should depend on size of node
                :y {:signal "datum.y + 3"}
                :size {:fontSize {:value 5}}
                :fill {:value "gray"}}
@@ -161,7 +168,35 @@
       :on [{:events {:signal "fix"} :update "fix && fix.length"}]}]
     })
 
+;;; For displaying in development
 (defn display
   [block-map]
   (oz/view! (spec block-map) :port 1884 :mode :vega))
+
+;;; Static render
+
+(defn write-json [f data]
+  (with-open [s (io/writer f)]
+    (json/write data s)))
+
+(defn generate-map
+  [bm output-dir]
+  (write-json (str output-dir "/pages/graph.json") (spec bm))
+  (html/export-page
+   ;; TODO integrate into page template
+   [:html
+    [:head
+     [:script {:src "https://cdn.jsdelivr.net/npm/vega@5"}]
+                                        ; [:script {:src "https://cdn.jsdelivr.net/npm/vega-lite@5"}]
+     [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6"}]
+     ]
+    [:body
+     [:div#view]
+     [:script
+      "vegaEmbed('#view', 'graph.json');"
+     ]
+     ]]
+   "/pages/map.html"
+   output-dir
+   ))
 
