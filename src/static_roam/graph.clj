@@ -6,23 +6,11 @@
 
 ;;; Based on https://vega.github.io/vega/examples/force-directed-layout/
 
-;;; Status: makes a first-order graph! To make it useful:
-;;; - tooltips for block names, and click action to open
-;;; - sizing (by size) and coloring (by certain tags)
-
-
-(defn foo
-  [block-map]
-  (let [pages (->> block-map
-                   vals
-                   (filter :page?)
-                   (map (fn [index block] (assoc block
-                                                 :index index
-                                                 :page-refs (db/page-refs block)))
-                        (range)))
-        indexed (u/index-by :id pages)] ;make a new block map...
-    indexed))
-
+;;; Status: makes a graph
+;;; TODO navigate on click
+;;; TODO some kind of link highlighting
+;;; TODO static publishing
+;;; More contrast between nodes
 
 (defn graph-data
   [block-map]
@@ -60,7 +48,8 @@
     :$schema "https://vega.github.io/schema/vega/v5.json"
     :data ~(graph-data block-map)
     :autosize "none"
-    :width 700
+    :width 1500
+    :height 1000
     :scales
     [{:name "color"
       :type "ordinal"
@@ -93,6 +82,23 @@
          {:force "collide" :radius {:signal "nodeRadius"}}
          {:force "nbody" :strength {:signal "nodeCharge"}}
          {:force "link" :links "link-data" :distance {:signal "linkDistance"}}]}]}
+
+     {:name "nodelabels"
+      :type "text"
+      :from {:data "nodes"}
+      :zindex 1
+      :encode
+      {:enter {:text {:field "datum.name"}
+               :x {:signal "datum.x + 10"} 
+               :y {:signal "datum.y + 3"}
+               :size {:fontSize {:value 5}}
+               :fill {:value "gray"}}
+       :update {:x {:signal "datum.x + 10"}
+                :y {:signal "datum.y + 3"}
+                }
+       }
+      }
+     
      {:type "path"
       :from {:data "link-data"}
       :interactive false
@@ -130,11 +136,10 @@
            ]
       }
      {:name "title"
-;      :value "AMMDIx"
       :update "hover ? hover.name : 'AMMDI'"
       }
      {:name "nodeRadius" :value 8 :bind {:input "range" :min 1 :max 50 :step 1}}
-     {:name "nodeCharge" :value -30 :bind {:input "range" :min -100 :max 10 :step 1}}
+     {:name "nodeCharge" :value -70 :bind {:input "range" :min -100 :max 10 :step 1}}
      {:name "linkDistance" :value 30 :bind {:input "range" :min 5 :max 100 :step 1}}
      {:name "static" :value true :bind {:input "checkbox"}}
      {:description "State variable for active node fix status."
@@ -154,7 +159,6 @@
       :name "restart"
       :value false
       :on [{:events {:signal "fix"} :update "fix && fix.length"}]}]
-    :height 500
     })
 
 (defn display
