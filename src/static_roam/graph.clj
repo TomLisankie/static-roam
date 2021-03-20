@@ -45,7 +45,7 @@
 (defn spec
   [block-map]
   `{:description
-    "A node-link diagram with force-directed layout, depicting character co-occurrence in the novel Les Misérables.",
+    "A node-link diagram of AMMDI pages and links."
     :$schema "https://vega.github.io/schema/vega/v5.json"
     :data ~(graph-data block-map)
     :autosize "none"
@@ -109,7 +109,10 @@
      {:type "path"
       :from {:data "link-data"}
       :interactive false
-      :encode {:update {:stroke {:value "#ccc"} :strokeWidth {:value 0.5}}}
+      :encode {:update
+               {:stroke {:signal {:value "gray"}}
+                :strokeWidth {:signal "datum.source === node || datum.target === node ? 2 : 0.5"}}
+               }
       :transform
       [{:type "linkpath"
         :require {:signal "force"}
@@ -117,19 +120,8 @@
         :sourceX "datum.source.x"
         :sourceY "datum.source.y"
         :targetX "datum.target.x"
-        :targetY "datum.target.y"}]}
-     {:type "text"
-      :interactive false
-
-      :encode {
-               :enter {:x {:value 600}
-                       :y {:value 50}
-                       :fill {:value "black"}
-                       :fontSize {:value 20}
-                       :align {:value "right"}
-                       }
-               :update {:text {:signal "title"}}
-               }
+        :targetY "datum.target.y"}
+       ]
       }
      ]
     :signals
@@ -145,9 +137,11 @@
      {:name "title"
       :update "hover ? hover.name : 'AMMDI'"
       }
-     {:name "nodeRadius" :value 8 :bind {:input "range" :min 1 :max 50 :step 1}}
-     {:name "nodeCharge" :value -70 :bind {:input "range" :min -100 :max 10 :step 1}}
-     {:name "linkDistance" :value 30 :bind {:input "range" :min 5 :max 100 :step 1}}
+     ;; These numbers make a decent looking graph for current export (~200 nodes).
+     ;; TODO Adjusting to different scale should be configurable if not automated
+     {:name "nodeRadius" :value 20 :bind {:input "range" :min 1 :max 50 :step 1}}
+     {:name "nodeCharge" :value -100 :bind {:input "range" :min -100 :max 10 :step 1}}
+     {:name "linkDistance" :value 60 :bind {:input "range" :min 5 :max 100 :step 1}}
      {:name "static" :value true :bind {:input "checkbox"}}
      {:description "State variable for active node fix status."
       :name "fix"
@@ -171,7 +165,7 @@
 ;;; For displaying in development
 (defn display
   [block-map]
-  (oz/view! (spec block-map) :port 1884 :mode :vega))
+  (oz/view! (spec block-map) :port 1888 :mode :vega))
 
 ;;; Static render
 
