@@ -1,7 +1,7 @@
 (ns static-roam.graph
   (:require [oz.core :as oz]
             [static-roam.database :as db]
-            [static-roam.html-generation :as html]
+            [static-roam.templating :as template]
             [clojure.data.json :as json]
             [clojure.java.io :as io]
             [org.parkerici.multitool.core :as u]
@@ -10,8 +10,12 @@
 ;;; Based on https://vega.github.io/vega/examples/force-directed-layout/
 
 ;;; Status: makes a graph
-;;; TODO some kind of link highlighting
+;;; TODO compute links outside vega for consistency
+;;; TODO page size etc
+;;; TODO better link highlighting
 ;;; More contrast between nodes
+;;; TODO maybe color for recency?
+
 
 (defn graph-data
   [block-map]
@@ -30,7 +34,8 @@
                      {:name (:id b)
                       :index (:index b)
 ;                      :group (if (:include? b) 1 8)
-                      :size (- 300 (* 30 (or (:depth b) 0)))
+                      ;; This is the AREA of the circle
+                      :size (+ 50 (Math/pow (* 3 (- 12 (:depth b 0))) 2))
                       })
                    pages)}
      {:name "link-data"
@@ -110,7 +115,7 @@
       :from {:data "link-data"}
       :interactive false
       :encode {:update
-               {:stroke {:signal {:value "gray"}}
+               {:stroke {:value "gray"}
                 :strokeWidth {:signal "datum.source === node || datum.target === node ? 2 : 0.5"}}
                }
       :transform
@@ -165,7 +170,7 @@
 ;;; For displaying in development
 (defn display
   [block-map]
-  (oz/view! (spec block-map) :port 1888 :mode :vega))
+  (oz/view! (spec block-map) :port 1889 :mode :vega))
 
 ;;; Static render
 
@@ -173,6 +178,8 @@
   (with-open [s (io/writer f)]
     (json/write data s)))
 
+;;; Without template
+#_
 (defn generate-map
   [bm output-dir]
   (write-json (str output-dir "/pages/graph.json") (spec bm))
@@ -193,4 +200,20 @@
    "/pages/map.html"
    output-dir
    ))
+
+(defn generate-map
+  "Writes out graph json and returns the page hiccup"
+  [bm output-dir]
+  (write-json (str output-dir "/pages/graph.json") (spec bm))
+   (template/page-hiccup
+    [:div
+     [:div#view {:style "width: 100%; height: 100%;"}]
+     [:script
+      "vegaEmbed('#view', 'graph.json');"
+      ]]
+    "Map" bm
+    [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
+                                        ; [:script {:src "https://cdn.jsdelivr.net/npm/vega-lite@5"}]
+     [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]]))
+
 

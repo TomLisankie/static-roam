@@ -110,24 +110,25 @@ pageTracker._trackPageview();
 
 ;;; TODO much of this should be configurable
 (defn page-hiccup
-  [body-hiccup page-title block-map]
+  [body-hiccup page-title block-map & [head-extra]]
   [:html
-    [:head
-     ;; Not working
-     (analytics-1)
-     (analytics-2)
+   `[:head
+     ~(analytics-1)
+     ~(analytics-2)
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-     [:title (str "AMMDI: " page-title)] ;TODO config site prefix
+     [:title ~(str "AMMDI: " page-title)] ;TODO config site prefix
      [:link {:rel "stylesheet"
              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
              :crossorigin "anonymous"}]
-     (for [css (:site-css config/config)]
+     ~@(for [css (:site-css config/config)]
          `[:link {:rel "stylesheet" :href ~css}])
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
      ;; Using slightly-bold font for links for whatever reason.
-     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;500&display=swap"}]]
+     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;500&display=swap"}]
+     ~@head-extra
+     ]
   [:body
    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
     [:div.container
@@ -148,6 +149,7 @@ pageTracker._trackPageview();
        [:li.nav-item [:a.nav-link {:href "./About.html"} "About"]]
        [:li.nav-item [:a.nav-link {:href "./Title-index.html"} "Index"]]
        [:li.nav-item [:a.nav-link {:href "./recent-changes.html"} "New"]]
+       [:li.nav-item [:a.nav-link {:href "./map.html"} "Map"]]
        #_ [:li.nav-item [:a.nav-link {:href "#"} "Contact"]]]]]]
    [:div.container
     body-hiccup]

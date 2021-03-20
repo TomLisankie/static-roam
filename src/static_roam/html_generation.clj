@@ -7,6 +7,7 @@
             [static-roam.database :as db]
             [static-roam.recent :as recent]
             [static-roam.index :as index]
+            [static-roam.graph :as graph]
             [stasis.core :as stasis]))
 
 ;;; → multitool, should replace dissoc-if
@@ -88,10 +89,22 @@
    (index/make-index-pages block-map)
    output-dir))
 
+(defn generate-map
+  [bm output-dir]
+  (export-page
+   (graph/generate-map bm output-dir)
+   "/pages/map.html"
+   output-dir))
+
 (defn generate-static-roam-html
   [block-map output-dir]
   (generate-pages-html block-map (str output-dir "/pages"))
   (generate-home-page-html block-map output-dir)
   (generate-recent-page block-map output-dir)
   (generate-index-pages block-map output-dir)
+  (generate-map block-map output-dir)
   )
+
+
+
+
