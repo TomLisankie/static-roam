@@ -87,37 +87,28 @@
 
 (defn page-title->html-file-title
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
-  ([string]
-   {:pre [(have? string? string)]}
-   (->> string
-        (s/lower-case)
-        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
-        (#(s/replace % #"\s" "-"))
-        (#(str "/" % ".html"))))
-  ([string case-sensitive?]
-   {:pre [(have? string? string)]}
-   (->> string
-        (#(if case-sensitive?
-            %
-            (s/lower-case %)))
-        (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
-        (#(s/replace % #"\s" "-"))
-        (#(str "./" % ".html")))))
+  [string]
+  {:pre [(have? string? string)]}
+  (->> string
+       (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
+       (#(s/replace % #"\s" "-"))
+       (#(str "./" % ".html"))))
 
 (defn html-file-title
   [page-title]
-  (subs (page-title->html-file-title page-title :case-sensitive) 1))
+  ;; TODO argh
+  (subs (page-title->html-file-title page-title) 1))
 
 #_
 (defn page-link-from-title
   "Given a page and a directory for the page to go in, create Hiccup that contains the link to the HTML of that page"
   ([dir block-content]
-   [:a {:href (str dir (page-title->html-file-title block-content :case-sensitive))} block-content])
+   [:a {:href (str dir (page-title->html-file-title block-content))} block-content])
   ([block-content]
-   [:a {:href (page-title->html-file-title block-content :case-sensitive)} block-content])
+   [:a {:href (page-title->html-file-title block-content)} block-content])
   ([dir block-content link-class]
    [:a {:class link-class
-        :href (str dir (subs (page-title->html-file-title block-content :case-sensitive) 1))}
+        :href (str dir (subs (page-title->html-file-title block-content) 1))}
     block-content]))
 
 (defn find-content-entities-in-string

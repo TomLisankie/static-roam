@@ -60,7 +60,7 @@
   (let [alias-text (utils/remove-n-surrounding-delimiters 1 (re-find #"(?s)\[.+?\]" alias-content))
         alias-dest (utils/remove-n-surrounding-delimiters 1 (re-find #"(?s)\(.+?\)" alias-content))
         alias-link (if (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
-                     (utils/page-title->html-file-title alias-dest :case-sensitive)
+                     (utils/page-title->html-file-title alias-dest)
                      alias-dest)]
     [:a.external {:href alias-link} (block-content->hiccup alias-text {})])) 
 
@@ -133,7 +133,7 @@
   (let [page-id (:id page)]
     (if (:include? page)
       [:a (u/clean-map
-           {:href (utils/page-title->html-file-title page-id :case-sensitive)
+           {:href (utils/page-title->html-file-title page-id)
             :class (if (page-empty? page) "empty" nil)})
        (block-content->hiccup (or alias page-id) {})]
       (do
@@ -193,7 +193,7 @@
        (let [ele-content (second ast-ele)]
          (unspan
           (case (first ast-ele)
-            :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+            :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content)}
                                (subs ele-content 0 (dec (count ele-content)))]]
             :page-link (page-link (get block-map (utils/remove-double-delimiters ele-content)))
             :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
@@ -202,7 +202,7 @@
             :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
                          [:div.block-ref
                           (generate-hiccup ref-block block-map)])
-            :hashtag [:a {:href (utils/page-title->html-file-title ele-content :case-sensitive)}
+            :hashtag [:a {:href (utils/page-title->html-file-title ele-content)}
                       (utils/format-hashtag ele-content)]
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
             :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]

@@ -2,6 +2,7 @@
   (:require [oz.core :as oz]
             [static-roam.database :as db]
             [static-roam.templating :as template]
+            [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [clojure.java.io :as io]
             [org.parkerici.multitool.core :as u]
@@ -10,8 +11,6 @@
 ;;; Based on https://vega.github.io/vega/examples/force-directed-layout/
 
 ;;; Status: makes a graph
-;;; TODO compute links outside vega for consistency
-;;; TODO page size etc
 ;;; TODO better link highlighting
 ;;; More contrast between nodes
 ;;; TODO maybe color for recency?
@@ -25,13 +24,15 @@
                    (filter :include?)
                    (map (fn [index block] (assoc block
                                                  :index index
-                                                 :page-refs (db/page-refs block)))
+                                                 :page-refs (db/page-refs block)
+                                                 :link (utils/page-title->html-file-title (:content block))))
                         (range)))
         indexed (u/index-by :id pages)] ;make a new block map...
     [{:name "node-data"
       :values (map (fn [b]
                      ;;  :size (- 20 (or (:depth b) 0)) (not working)
                      {:name (:id b)
+                      :link (:link b)
                       :index (:index b)
 ;                      :group (if (:include? b) 1 8)
                       ;; This is the AREA of the circle
@@ -73,12 +74,10 @@
        {:trigger "!fix" :modify "node" :values "{fx: null, fy: null}"}]
       :encode
       {:enter {:fill {:scale "color" :field "group"}
-               ;; TODO name needs more cleaning - maybe should be done outside of Vega. See utils/page-title->html-file-title
-               ;; TODO probably want relative URL?
                ;; TODO apply to label also
                ;; TODO customization point
                ;; TODO would be nice if this could open in different browser tab
-               :href {:signal "'http://hyperphor.com/ammdi/pages/' + replace(datum.name, ' ', '-') + '.html'" }
+               :href {:field "link" }
                :stroke {:value "white"}
                :size {:field "size"}}
        #_ :update #_ {:size {:signal "2 * nodeRadius * nodeRadius"} :cursor {:value "pointer"}}
@@ -178,42 +177,18 @@
   (with-open [s (io/writer f)]
     (json/write data s)))
 
-;;; Without template
-#_
-(defn generate-map
-  [bm output-dir]
-  (write-json (str output-dir "/pages/graph.json") (spec bm))
-  (html/export-page
-   ;; TODO integrate into page template
-   [:html
-    [:head
-     [:script {:src "https://cdn.jsdelivr.net/npm/vega@5"}]
-                                        ; [:script {:src "https://cdn.jsdelivr.net/npm/vega-lite@5"}]
-     [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6"}]
-     ]
-    [:body
-     [:div#view]
-     [:script
-      "vegaEmbed('#view', 'graph.json');"
-     ]
-     ]]
-   "/pages/map.html"
-   output-dir
-   ))
-
 (defn generate-map
   "Writes out graph json and returns the page hiccup"
   [bm output-dir]
   (write-json (str output-dir "/pages/graph.json") (spec bm))
    (template/page-hiccup
     [:div
-     [:div#view {:style "width: 100%; height: 100%;"}]
+     [:div#view {:style "width: 100%; height: 1000px;"}]
      [:script
       "vegaEmbed('#view', 'graph.json');"
       ]]
     "Map" bm
     [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
-                                        ; [:script {:src "https://cdn.jsdelivr.net/npm/vega-lite@5"}]
      [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]]))
 
 
