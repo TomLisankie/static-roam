@@ -42,22 +42,23 @@
 (defn block-template
   [block-id block-map & [depth]]
   (let [depth (or depth 0)
-        properties (get block-map block-id)]
+        block (get block-map block-id)]
     [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
-     (if (or (nil? (:hiccup properties))
-             (= (:content properties) block-id))
+     (if (or (nil? (:hiccup block))                          ;TODO ech
+             (= (:content block) block-id))
        nil
        [:li.block
         (when (:dev-mode config/config)
           [:a.edit {:href (roam-url block-id)
                     :target "_roam"}
            "[e]"])
-        (:hiccup properties)
+        (when-not (:include? block)
+          [:span.edit 
+           "[X]"])
+        (:hiccup block)
         ])
-
-                                        ;TODO prettify
      (map #(block-template % block-map (inc depth))
-          (:children properties))
+          (:children block))
      ]))
 
 ;;; Annoying amount of id/block switcheroo
@@ -165,6 +166,8 @@
        [:div.ptitle
         [:h1 title]
         (render-date-range (database/date-range block))]
+       (when-not (:include? block)
+         [:span [:b "EXCLUDED"]])       ;TODO make this pop more
        [:hr {}]
        contents
        [:hr {}]

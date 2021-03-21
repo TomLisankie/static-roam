@@ -149,9 +149,19 @@
   (set/union (forward-page-refs page)
              (backward-page-refs bm page)))
 
-(defn pages
+(defn- pages
   [block-map]
   (filter :page? (vals block-map)))
+
+(defn included-pages
+  [block-map]
+  (filter :include? (pages block-map)))
+
+(defn displayed-pages
+  [block-map]
+  (if (:unexclude? config/config)
+    (pages block-map)
+    (included-pages block-map)))
 
 (defn tagged?
   [block-map block tag]
@@ -220,7 +230,7 @@
 ;;; TODO not the way to do this
 (defn add-hiccup-for-included-blocks
   [block-map]
-  (u/map-values #(if (:include? %)
+  (u/map-values #(if (or (:include? %) (:unexclude? config/config))
                    (assoc % :hiccup (parser/generate-hiccup % block-map))
                    %)
                 block-map))
@@ -277,7 +287,10 @@
 ;;; Also, to be proper, :create-time should be used as well
 ;;; I suppose the median time might be more informative – or an Ed Tufte minigraph
 (defn date-range [page]
-  (let [visible-blocks (filter :include? (block-descendents page))
+  (let [blocks (block-descendents page)
+        visible-blocks (if (:unexclude? config/config)
+                          blocks
+                          (filter :include? blocks))
         visible-dates (map :edit-time visible-blocks)]
     [(min* visible-dates) (max* visible-dates)]))
 

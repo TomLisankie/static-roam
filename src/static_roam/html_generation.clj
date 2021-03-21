@@ -8,6 +8,7 @@
             [static-roam.recent :as recent]
             [static-roam.index :as index]
             [static-roam.graph :as graph]
+            [static-roam.config :as config]
             [stasis.core :as stasis]))
 
 ;;; → multitool, should replace dissoc-if
@@ -20,15 +21,15 @@
 
 ;;; This is relative to output TODO probably copy into output?
 (defn generate-page-html
-  [block-map block-id]
-  (prn :generate-page block-id)
-  [(utils/html-file-title block-id)     ;TODO bullshit
-   (hiccup/html
-    (templating/page-hiccup
-     (templating/block-page-template block-id block-map)
-     block-id                           ;TODO htmlize
-     block-map
-     ))])
+  [block-map block]
+  (let [block-id (:id block)]
+    (prn :generate-page block-id)
+    (hiccup/html
+     (templating/page-hiccup
+      (templating/block-page-template block-id block-map)
+      block-id                           ;TODO htmlize
+      block-map
+      ))))
 
 (defn generate-page-hiccup
   [block-map block-id]
@@ -40,11 +41,11 @@
 
 (defn generate-pages-html
   [block-map output-dir]
-  (let [page-map (map-filter-by-value #(and (:page? %) (:include? %)) block-map)  ;Filter to pages only TODO maybe optionl
+  (let [pages (db/displayed-pages block-map)
         file-name-to-content
-        (into {}
-              (map (partial generate-page-html block-map)
-                   (keys page-map)))]
+        (zipmap (map (comp utils/html-file-title :id) pages)
+                (map (partial generate-page-html block-map)
+                     pages))]
     (stasis/export-pages
      file-name-to-content
      output-dir)))
@@ -89,10 +90,12 @@
    (index/make-index-pages block-map)
    output-dir))
 
-(defn generate-map
+(defn generate-global-map
   [bm output-dir]
   (export-page
-   (graph/generate-map bm output-dir)
+   (graph/generate-map bm output-dir {:name "ammdi"
+                                      :include-all? (:unexclude? config/config)
+                                      })
    "/pages/map.html"
    output-dir))
 
@@ -102,7 +105,7 @@
   (generate-home-page-html block-map output-dir)
   (generate-recent-page block-map output-dir)
   (generate-index-pages block-map output-dir)
-  (generate-map block-map output-dir)
+  (generate-global-map block-map output-dir)
   )
 
 

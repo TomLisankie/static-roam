@@ -5,4 +5,5 @@
  :dev-mode #boolean #or [#env ROAM_DEV_MODE "false"]
  :daily-logs #boolean #or [#env ROAM_DAILY_LOGS "false"]
  :output-dir #or [#env ROAM_OUTPUT_DIR "output"]
+ :unexclude? #boolean #or [#env ROAM_UNEXCLUDE "false"]
  }

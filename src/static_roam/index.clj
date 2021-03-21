@@ -3,6 +3,7 @@
             [static-roam.database :as db]
             [static-roam.templating :as templating]
             [static-roam.parser :as parser]
+            [static-roam.config :as config]
             [clojure.string :as s]))
 
 
@@ -29,7 +30,7 @@
 
 (defn make-index-pages
   [bm]
-  (let [pages (filter :include? (db/pages bm))
+  (let [pages (db/displayed-pages bm)
         page-loc (fn [col] (format "%s-index.html" (:title col)))]
     (apply
      merge

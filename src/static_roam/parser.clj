@@ -129,9 +129,15 @@
         (count (:id page)))
         10))
 
+;;; Should be in database but namespaces are phucked and need a total rebuild
+(defn displayed?
+  [block]
+  (or (:include? block)
+      (:unexclude? config/config)))
+
 (defn page-link [page & [alias]]
   (let [page-id (:id page)]
-    (if (:include? page)
+    (if (displayed? page)
       [:a (u/clean-map
            {:href (utils/page-title->html-file-title page-id)
             :class (if (page-empty? page) "empty" nil)})

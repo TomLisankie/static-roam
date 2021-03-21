@@ -5,6 +5,7 @@
             [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [clojure.java.io :as io]
+            [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
             ))
 
@@ -77,7 +78,7 @@
      {:name "link-data"
       :values (remove #(or (nil? (:target %))
                            ;; TODO links are symmetrical so this removes the redundnt half (but broken somehow)
-                           #_ (< (:target %) (:source %)))
+                           (< (:target %) (:source %)))
                       (mapcat (fn [b]
                                 (map (fn [ref]
                                        {:source (:index b) :target (get-in indexed [ref :index]) })
@@ -214,18 +215,19 @@
 ;;; Static render
 
 (defn write-json [f data]
+  (fs/mkdirs (fs/parent f))             ;ensure directory exists
   (with-open [s (io/writer f)]
     (json/write data s)))
 
 (defn generate-map
   "Writes out graph json and returns the page hiccup"
-  [bm output-dir]
-  (write-json (str output-dir "/pages/graph.json") (spec bm {}))
-   (template/page-hiccup
+  [bm output-dir {:keys [name] :as options}]
+  (write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
+  (template/page-hiccup
     [:div
-     [:div#view {:style "width: 100%; height: 1000px;"}]
+     [:div#view {:style "width: 100%; height: 1000px;"}] ;TODO parameterize
      [:script
-      "vegaEmbed('#view', 'graph.json');"
+      (format "vegaEmbed('#view', 'graphs/%s.json');" name)
       ]]
     "Map" bm
     [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]

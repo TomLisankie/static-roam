@@ -13,14 +13,18 @@
         (nil? m2) m1
         :else m2))
 
+;; TODO Not sure why need this and resources/config.edn
 (def default-config
-  {:site-css ["../assets/hyper-roam.css"
-;               "../assets/proofreading.css"
-              ]
+  {:site-css ["../assets/hyper-roam.css"]
    ;; Some of these want to be customized by extension, not replacement
+
+   ;; this group decides what is tagged :include? or not
    :entry-tags ["EntryPoint"]
    :exit-tags ["ExitPoint" "Private"] 
    :daily-logs false
+
+   :unexclude? false                     ;TODO Show everything, indicating graphically if it is included in regular version.
+
    :dev-mode false                      ;true turns on links into Roam itself
    :output-path "output"
    :bullets false                       ;TODO not hooked up
