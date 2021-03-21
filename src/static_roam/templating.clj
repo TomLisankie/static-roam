@@ -93,21 +93,6 @@
   gtag('config', 'G-SK8PZVFHTW');
 "])
 
-(defn old-analytics-1
-  []
-  [:script {:type "text/javascript"}
-   "var gaJsHost = ((\"https:\" == document.location.protocol) ? \"https://ssl.\" : \"http://www.\");
-document.write(unescape(\"%3Cscript src='\" + gaJsHost + \"google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E\"));"
-   ])
-
-(defn old-analytics-2
-  []
-  [:script {:type "text/javascript"}
-   "try {
-var pageTracker = _gat._getTracker(\"UA-345282-1\");
-pageTracker._trackPageview();
-     } catch(err) {}"])
-
 ;;; TODO much of this should be configurable
 (defn page-hiccup
   [body-hiccup page-title block-map & [head-extra]]
@@ -156,12 +141,10 @@ pageTracker._trackPageview();
    "<!-- Footer -->"
    [:footer.py-5.footer
     [:div.container
-     [:p.m-0.text-center.text-white "Copyright © Hyperphor 2020-2021"]
+     ;; TODO config point – and dates should be calculated from block content
+     [:p.m-0.text-center.text-white "Copyright © " [:a {:href "http://hyperphor.com"} "Hyperphor"] " 2020-2021"]
      [:p.m-0.text-center.text-white.small "Exported " (utils/render-time @utils/latest-export-time)]]
     ]
-   #_ (old-analytics-1)
-   #_ (old-analytics-2)
-   
    ]])
 
 (defn render-date-range

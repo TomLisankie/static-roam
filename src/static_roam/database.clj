@@ -24,11 +24,6 @@
    :page? (contains? block-json :title)
    })
 
-#_
-(def j (utils/read-roam-json-from-zip "test/resources/static-test.zip"))
-#_
-(def j (utils/read-roam-json-from-zip  (utils/latest-export)))
-
 ;;; → Multitool
 (defn add-parent
   [db children-att parent-att]
@@ -124,10 +119,12 @@
   [b1 b2]
   (contains? (set (map :id (descendents b1))) (:id b2)))
 
-(defn page-refs
+(defn forward-page-refs
+  "Forward page refs. Returns set of ids"
   [page]
   (apply clojure.set/union
-         (map :refs (block-descendents page))))
+         ;; TODO include? should be a parameter
+         (map :refs (filter :include? (block-descendents page)))))
 
 (defn block? [x]
   (and (map? x)
@@ -139,6 +136,18 @@
   (if-let [parent (block-parent block-map block)]
     (block-page block-map parent)
     block))
+
+(defn backward-page-refs
+  [bm page]
+  (map :content
+       (filter :include?
+               (map (comp (partial block-page bm) bm)
+                    (:linked-by page)))))
+
+(defn page-refs
+  [bm page]
+  (set/union (forward-page-refs page)
+             (backward-page-refs bm page)))
 
 (defn pages
   [block-map]

@@ -15,16 +15,51 @@
 ;;; More contrast between nodes
 ;;; TODO maybe color for recency?
 
+;;; TODO would be more Roam-ish to have a normal Map page with a special tag that put the vega stuff there. Then it could be linked to in the normal way.  OOOH also partial maps would be easy! Maybe in the sidebar... Mini-maps centered on current page.
+
+;;; Node-centered neighborhood maps:
+;;; 1-degree is kind of pointless; 2-degree gets way too crowded, so I am trying some crude ways to trim...
+
+
+
+;;; → multitool
+(defn neighborhood
+  [from n neighbors]
+  (if (zero? n)
+    (set (list from))
+    (set (cons from (mapcat #(neighborhood % (- n 1) neighbors)
+                            (neighbors from))))))
+
+;;; → db
+(defn block-neighbors
+  [bm from n]
+  (let [neighbors (fn [b] (map bm (db/all-refs b)))]
+    (neighborhood from n neighbors)))
+
+;;; → db
+(u/defn-memoized degree [block]
+  (count (db/all-refs block)))
+
+;;; TODO max-degree is a hack and I don't like it – without it, if you hit a high-degree node you'll get too much in the graph
+;;; some kind of smart filter would be better
+(defn page-neighbors
+  [bm from n max-degree]
+  (let [neighbors (fn [b] (take max-degree (map bm (db/page-refs bm b))))]
+    (neighborhood from n neighbors)))
 
 (defn graph-data
-  [block-map]
+  [block-map {:keys [include-all? radius-from radius max-degree] :or {radius 2 max-degree 8}}]
   (let [pages (->> block-map
                    vals
                    (filter :page?)
-                   (filter :include?)
+                   (filter (if include-all? identity :include?))
+                   (filter (if radius-from
+                             (let [neighborhood (set (map :content (page-neighbors block-map (get block-map radius-from) radius max-degree)))]
+                               #(contains? neighborhood (:content %)))
+                             identity))
                    (map (fn [index block] (assoc block
                                                  :index index
-                                                 :page-refs (db/page-refs block)
+                                                 :page-refs (db/page-refs block-map block)
                                                  :link (utils/page-title->html-file-title (:content block))))
                         (range)))
         indexed (u/index-by :id pages)] ;make a new block map...
@@ -34,28 +69,33 @@
                      {:name (:id b)
                       :link (:link b)
                       :index (:index b)
-;                      :group (if (:include? b) 1 8)
+                      :group (if (:include? b) 1 8)
                       ;; This is the AREA of the circle
                       :size (+ 50 (Math/pow (* 3 (- 12 (:depth b 0))) 2))
                       })
                    pages)}
      {:name "link-data"
-      :values (remove #(nil? (:target %))
+      :values (remove #(or (nil? (:target %))
+                           ;; TODO links are symmetrical so this removes the redundnt half (but broken somehow)
+                           #_ (< (:target %) (:source %)))
                       (mapcat (fn [b]
                                 (map (fn [ref]
-                                       {:source (:index b) :target (get-in indexed [ref :index]) :value 1})
+                                       {:source (:index b) :target (get-in indexed [ref :index]) })
                                      (:page-refs b)))
                               pages))}]))
 
 
+;;; options
+; {:include-all? false :radius-from "winning" :radius 2 :max-degree 6}
+
 (defn spec
-  [block-map]
+  [block-map options]
   `{:description
     "A node-link diagram of AMMDI pages and links."
     :$schema "https://vega.github.io/schema/vega/v5.json"
-    :data ~(graph-data block-map)
+    :data ~(graph-data block-map options)
     :autosize "none"
-    :width 1500
+    :width 1500                         ;TODO options
     :height 1000
     :scales
     [{:name "color"
@@ -146,7 +186,7 @@
      {:name "nodeRadius" :value 20 :bind {:input "range" :min 1 :max 50 :step 1}}
      {:name "nodeCharge" :value -100 :bind {:input "range" :min -100 :max 10 :step 1}}
      {:name "linkDistance" :value 60 :bind {:input "range" :min 5 :max 100 :step 1}}
-     {:name "static" :value true :bind {:input "checkbox"}}
+     {:name "static" :value false :bind {:input "checkbox"}}
      {:description "State variable for active node fix status."
       :name "fix"
       :value false
@@ -168,8 +208,8 @@
 
 ;;; For displaying in development
 (defn display
-  [block-map]
-  (oz/view! (spec block-map) :port 1889 :mode :vega))
+  [block-map options]
+  (oz/view! (spec block-map options) :port 1889 :mode :vega))
 
 ;;; Static render
 
@@ -180,7 +220,7 @@
 (defn generate-map
   "Writes out graph json and returns the page hiccup"
   [bm output-dir]
-  (write-json (str output-dir "/pages/graph.json") (spec bm))
+  (write-json (str output-dir "/pages/graph.json") (spec bm {}))
    (template/page-hiccup
     [:div
      [:div#view {:style "width: 100%; height: 1000px;"}]
