@@ -1,7 +1,6 @@
 (ns static-roam.graph
   (:require [oz.core :as oz]
             [static-roam.database :as db]
-            [static-roam.templating :as template]
             [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [clojure.java.io :as io]
@@ -90,14 +89,14 @@
 ; {:include-all? false :radius-from "winning" :radius 2 :max-degree 6}
 
 (defn spec
-  [block-map options]
+  [block-map {:keys [width height controls?] :as options}]
   `{:description
     "A node-link diagram of AMMDI pages and links."
     :$schema "https://vega.github.io/schema/vega/v5.json"
     :data ~(graph-data block-map options)
     :autosize "none"
-    :width 1500                         ;TODO options
-    :height 1000
+    :width ~(or width 1500)
+    :height ~(or height 1000)
     :scales
     [{:name "color"
       :type "ordinal"
@@ -184,10 +183,10 @@
       }
      ;; These numbers make a decent looking graph for current export (~200 nodes).
      ;; TODO Adjusting to different scale should be configurable if not automated
-     {:name "nodeRadius" :value 20 :bind {:input "range" :min 1 :max 50 :step 1}}
-     {:name "nodeCharge" :value -100 :bind {:input "range" :min -100 :max 10 :step 1}}
-     {:name "linkDistance" :value 60 :bind {:input "range" :min 5 :max 100 :step 1}}
-     {:name "static" :value false :bind {:input "checkbox"}}
+     {:name "nodeRadius" :value 20 :bind ~(and controls? {:input "range" :min 1 :max 50 :step 1})}
+     {:name "nodeCharge" :value -100 :bind ~(and controls? {:input "range" :min -100 :max 10 :step 1})}
+     {:name "linkDistance" :value 60 :bind ~(and controls? {:input "range" :min 5 :max 100 :step 1})}
+     {:name "static" :value false :bind ~(and controls? {:input "checkbox"})}
      {:description "State variable for active node fix status."
       :name "fix"
       :value false
@@ -219,6 +218,8 @@
   (with-open [s (io/writer f)]
     (json/write data s)))
 
+;; obso
+#_ 
 (defn generate-map
   "Writes out graph json and returns the page hiccup"
   [bm output-dir {:keys [name] :as options}]
@@ -227,10 +228,26 @@
     [:div
      [:div#view {:style "width: 100%; height: 1000px;"}] ;TODO parameterize
      [:script
-      (format "vegaEmbed('#view', 'graphs/%s.json');" name)
+      (format "vegaEmbed('#view_%s', 'graphs/%s.json');" name name)
       ]]
     "Map" bm
     [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
      [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]]))
+
+(defn render-graph
+  "Writes out the graph json and returns the hiccup to embed it"
+  [bm output-dir {:keys [name width height] :as options}]
+  (write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
+  (let [id (str "view_" name)]
+    [:div
+     [:div {:id id :style (format "width: %spx; height: %spx;" width height)}]
+     [:script
+      (format "vegaEmbed('#%s', 'graphs/%s.json');" id name)
+      ]]))
+
+(defn vega-head
+  []
+  [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]])
 
 

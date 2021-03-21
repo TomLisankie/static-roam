@@ -3,6 +3,7 @@
             [static-roam.config :as config]
             [static-roam.utils :as utils]
             [static-roam.parser :as parser]
+            [static-roam.graph :as graph]
             [static-roam.database :as database]
             [org.parkerici.multitool.core :as u]
             ))
@@ -114,6 +115,7 @@
      ;; Using slightly-bold font for links for whatever reason.
      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;500&display=swap"}]
      ~@head-extra
+     [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]
      ]
   [:body
    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
@@ -148,6 +150,16 @@
     ]
    ]])
 
+(defn map-page
+  [bm output-dir]
+  (page-hiccup
+   (graph/render-graph bm output-dir {:name "ammdi"
+                                      :include-all? (:unexclude? config/config)
+                                      })
+   "Map"
+   bm
+   (graph/vega-head)))
+
 (defn render-date-range
   [[from to]]
   [:div.date (utils/render-time from) " - " (utils/render-time to)])
@@ -173,6 +185,18 @@
        [:hr {}]
        ]
       "<!-- Sidebar Widgets Column -->"
+
+      ;; You are here map (TODO under a config)
+      [:div.card.my-4
+        [:h5.card-header "Map"]
+        [:div.card-body
+         (graph/render-graph block-map "output" {:name (utils/clean-page-title block-id)
+                                                 :width 300
+                                                 :height 300
+                                                 :radius-from block-id
+                                                 :radius 1})
+         ]]
+
       [:div.col-md-4
        ;; TODO might be nice!
        "<!-- Search Widget -->"

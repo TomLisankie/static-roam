@@ -7,7 +7,6 @@
             [static-roam.database :as db]
             [static-roam.recent :as recent]
             [static-roam.index :as index]
-            [static-roam.graph :as graph]
             [static-roam.config :as config]
             [stasis.core :as stasis]))
 
@@ -29,6 +28,11 @@
       (templating/block-page-template block-id block-map)
       block-id                           ;TODO htmlize
       block-map
+
+      ;; TODO should be under conditional
+      [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
+       [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]]
+
       ))))
 
 (defn generate-page-hiccup
@@ -93,9 +97,7 @@
 (defn generate-global-map
   [bm output-dir]
   (export-page
-   (graph/generate-map bm output-dir {:name "ammdi"
-                                      :include-all? (:unexclude? config/config)
-                                      })
+   (templating/map-page bm output-dir)
    "/pages/map.html"
    output-dir))
 

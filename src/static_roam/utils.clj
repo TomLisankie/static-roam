@@ -68,8 +68,8 @@
 
 (defn strip-chars
   "Removes every character of a given set from a string"
-  [chars collection]
-  (reduce str (remove #((set chars) %) collection)))
+  [s removed]
+  (reduce str (remove #((set removed) %) s)))
 
 (defn remove-leading-char
   [string]
@@ -85,14 +85,17 @@
     (remove-double-delimiters (subs hashtag 1))
     (subs hashtag 1)))
 
+(defn clean-page-title
+  [string]
+  (-> string
+      (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
+      (s/replace #"\s" "-")))
+
 (defn page-title->html-file-title
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   [string]
   {:pre [(have? string? string)]}
-  (->> string
-       (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
-       (#(s/replace % #"\s" "-"))
-       (#(str "./" % ".html"))))
+  (str "./" (clean-page-title string) ".html"))
 
 (defn html-file-title
   [page-title]
