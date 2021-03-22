@@ -145,7 +145,7 @@
    [:footer.py-5.footer
     [:div.container
      ;; TODO config point – and dates should be calculated from block content
-     [:p.m-0.text-center.text-white "Copyright © " [:a {:href "http://hyperphor.com"} "Hyperphor"] " 2020-2021"]
+     [:p.m-0.text-center.text-white "Copyright © " [:a {:href "http://hyperphor.com" :style "color: white;"} "Hyperphor"] " 2020-2021"]
      [:p.m-0.text-center.text-white.small "Exported " (utils/render-time @utils/latest-export-time)]]
     ]
    ]])
@@ -153,7 +153,7 @@
 (defn map-page
   [bm output-dir]
   (page-hiccup
-   (graph/render-graph bm output-dir {:name "ammdi"
+   (graph/render-graph bm output-dir {:name "fullmap" ;warning: this name can't be the same as a page name!
                                       :include-all? (:unexclude? config/config)
                                       })
    "Map"
@@ -186,18 +186,24 @@
        ]
       "<!-- Sidebar Widgets Column -->"
 
+
+
+      [:div.col-md-4
       ;; You are here map (TODO under a config)
       [:div.card.my-4
         [:h5.card-header "Map"]
-        [:div.card-body
+        [:div.card-body {:style "padding: 2px;"}
          (graph/render-graph block-map "output" {:name (utils/clean-page-title block-id)
-                                                 :width 300
-                                                 :height 300
+                                                 :width 350
+                                                 :height 350
+                                                 :controls? false
+                                                 :link-distance 65
+                                                 :node-charge -30
+                                                 :node-radius 15
                                                  :radius-from block-id
-                                                 :radius 1})
+                                                 :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
          ]]
 
-      [:div.col-md-4
        ;; TODO might be nice!
        "<!-- Search Widget -->"
        #_

@@ -69,7 +69,12 @@
                      {:name (:id b)
                       :link (:link b)
                       :index (:index b)
-                      :group (if (:include? b) 1 8)
+                      :group (cond (= (:id b) radius-from)
+                                   7
+                                   (:include? b)
+                                   1
+                                   :else
+                                   8)
                       ;; This is the AREA of the circle
                       :size (+ 50 (Math/pow (* 3 (- 12 (:depth b 0))) 2))
                       })
@@ -89,7 +94,7 @@
 ; {:include-all? false :radius-from "winning" :radius 2 :max-degree 6}
 
 (defn spec
-  [block-map {:keys [width height controls?] :as options}]
+  [block-map {:keys [width height controls? link-distance node-charge node-radius] :as options :or {link-distance 60 node-charge -100 node-radius 20}}]
   `{:description
     "A node-link diagram of AMMDI pages and links."
     :$schema "https://vega.github.io/schema/vega/v5.json"
@@ -97,6 +102,7 @@
     :autosize "none"
     :width ~(or width 1500)
     :height ~(or height 1000)
+    :usermeta {:embedOptions {:actions false}} ;this turns off the menu with editor etc.
     :scales
     [{:name "color"
       :type "ordinal"
@@ -183,9 +189,9 @@
       }
      ;; These numbers make a decent looking graph for current export (~200 nodes).
      ;; TODO Adjusting to different scale should be configurable if not automated
-     {:name "nodeRadius" :value 20 :bind ~(and controls? {:input "range" :min 1 :max 50 :step 1})}
-     {:name "nodeCharge" :value -100 :bind ~(and controls? {:input "range" :min -100 :max 10 :step 1})}
-     {:name "linkDistance" :value 60 :bind ~(and controls? {:input "range" :min 5 :max 100 :step 1})}
+     {:name "nodeRadius" :value ~node-radius :bind ~(and controls? {:input "range" :min 1 :max 50 :step 1})}
+     {:name "nodeCharge" :value ~node-charge :bind ~(and controls? {:input "range" :min -100 :max 10 :step 1})}
+     {:name "linkDistance" :value ~link-distance :bind ~(and controls? {:input "range" :min 5 :max 100 :step 1})}
      {:name "static" :value false :bind ~(and controls? {:input "checkbox"})}
      {:description "State variable for active node fix status."
       :name "fix"
@@ -240,7 +246,7 @@
   (write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
   (let [id (str "view_" name)]
     [:div
-     [:div {:id id :style (format "width: %spx; height: %spx;" width height)}]
+     [:div {:id id :style (format "width: 100%%; height: %spx;"  height)}] ; width
      [:script
       (format "vegaEmbed('#%s', 'graphs/%s.json');" id name)
       ]]))
