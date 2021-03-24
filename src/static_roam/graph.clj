@@ -146,11 +146,11 @@
       :zindex 1
       :encode
       {:enter {:text {:field "datum.name"}
-               :x {:signal "datum.x + 10"} ;TODO these offsets should depend on size of node
+               :x {:signal "datum.x + 2 + sqrt(datum.size)/2"}
                :y {:signal "datum.y + 3"}
                :size {:fontSize {:value 5}}
                :fill {:value "gray"}}
-       :update {:x {:signal "datum.x + 10"}
+       :update {:x {:signal "datum.x + 2 + sqrt(datum.size)/2"}
                 :y {:signal "datum.y + 3"}
                 }
        }
