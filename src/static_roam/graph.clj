@@ -12,14 +12,10 @@
 
 ;;; Status: makes a graph
 ;;; TODO better link highlighting
-;;; More contrast between nodes
 ;;; TODO maybe color for recency?
+;;; TODO on global map, highlight entry points
 
 ;;; TODO would be more Roam-ish to have a normal Map page with a special tag that put the vega stuff there. Then it could be linked to in the normal way.  OOOH also partial maps would be easy! Maybe in the sidebar... Mini-maps centered on current page.
-
-;;; Node-centered neighborhood maps:
-;;; 1-degree is kind of pointless; 2-degree gets way too crowded, so I am trying some crude ways to trim...
-
 
 
 ;;; → multitool
@@ -107,7 +103,7 @@
     [{:name "color"
       :type "ordinal"
       :domain {:data "node-data" :field "group"}
-      :range {:scheme "set1"}
+      :range {:scheme "pastel1"}
       }]
     :padding 0
     :marks
@@ -119,12 +115,15 @@
       [{:trigger "fix" :modify "node" :values "fix === true ? {fx: node.x, fy: node.y} : {fx: fix[0], fy: fix[1]}"}
        {:trigger "!fix" :modify "node" :values "{fx: null, fy: null}"}]
       :encode
-      {:enter {:fill {:scale "color" :field "group"}
+      {:enter {:fill {:scale "color"  :field "group"} ;  {:value "lightcoral"}
                ;; TODO apply to label also
                ;; TODO customization point
                ;; TODO would be nice if this could open in different browser tab
+               ; unfortunately this means links show through which looks bad
+               ; :opacity {:value 0.5}
                :href {:field "link" }
                :stroke {:value "white"}
+               :strokeWidth {:value 0}
                :size {:field "size"}}
        #_ :update #_ {:size {:signal "2 * nodeRadius * nodeRadius"} :cursor {:value "pointer"}}
        }
@@ -143,13 +142,13 @@
      {:name "nodelabels"
       :type "text"
       :from {:data "nodes"}
-      :zindex 1
+      :zindex 2
       :encode
       {:enter {:text {:field "datum.name"}
                :x {:signal "datum.x + 2 + sqrt(datum.size)/2"}
                :y {:signal "datum.y + 3"}
                :size {:fontSize {:value 5}}
-               :fill {:value "gray"}}
+               :fill {:value "black"}} ; gray
        :update {:x {:signal "datum.x + 2 + sqrt(datum.size)/2"}
                 :y {:signal "datum.y + 3"}
                 }
@@ -242,11 +241,11 @@
 
 (defn render-graph
   "Writes out the graph json and returns the hiccup to embed it"
-  [bm output-dir {:keys [name width height] :as options}]
+  [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]
   (write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
   (let [id (str "view_" name)]
     [:div
-     [:div {:id id :style (format "width: 100%%; height: %spx;"  height)}] ; width
+     [:div {:id id :style (format "width: 100%%; height: %spx;" (+ height (if controls? 300 0)))}] ; width
      [:script
       (format "vegaEmbed('#%s', 'graphs/%s.json');" id name)
       ]]))

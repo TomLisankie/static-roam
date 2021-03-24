@@ -71,14 +71,6 @@
   [s removed]
   (reduce str (remove #((set removed) %) s)))
 
-(defn remove-leading-char
-  [string]
-  (subs string 1))
-
-(defn remove-double-colon
-  [string]
-  (apply str (drop-last 2 string)))
-
 (defn format-hashtag
   [hashtag]
   (if (= \[ (second hashtag))
@@ -101,31 +93,6 @@
   [page-title]
   ;; TODO argh
   (subs (page-title->html-file-title page-title) 1))
-
-(defn find-content-entities-in-string
-  [string]
-  (when (not (nil? string))
-    (re-seq #"\[\[.*?\]\]|\(\(.*?\)\)" string)))
-
-;;; TODO why is this necessary when we've already parsed the fucker!
-(defn find-hashtags-in-string
-  [string]
-  (when (not (nil? string))
-    (re-seq #"\#\w*" string)))
-
-(defn find-metadata-in-string
-  [string]
-  (when (not (nil? string))
-    (re-seq #"^.+?::" string)))
-
-(defn remove-heading-parens
-  [strings]
-  (map
-   #(if (= "(((" (subs % 0 3))
-      (subs % 1)
-      %)
-   strings))
-
 
 (def date-formatter
   (java.text.SimpleDateFormat. "dd MMM yyyy hh:mm"))

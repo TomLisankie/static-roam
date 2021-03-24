@@ -13,8 +13,7 @@
       utils/read-roam-json-from-zip
       (database/setup-static-roam-block-map)))
 
-(def last-bm (atom nil))
-
+(defonce last-bm (atom nil))
 
 (defn pages
   []
@@ -53,12 +52,13 @@
   (prn (database/stats @last-bm))
   #_ (dump))
 
+
 (defn gen-page
   [page]
   (html-gen/export-page
-   (html-gen/generate-page-hiccup @last-bm page)
+   (html-gen/generate-page-html @last-bm (get @last-bm page))
    (utils/html-file-title page)
-   "output/pages"))                     ;TODO
+   "output"))
 
 (defn gen-pages
   []

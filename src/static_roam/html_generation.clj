@@ -35,14 +35,6 @@
 
       ))))
 
-(defn generate-page-hiccup
-  [block-map block-id]
-  (templating/page-hiccup
-   (templating/block-page-template block-id block-map)
-   block-id                           ;TODO htmlize
-   block-map
-   ))
-
 (defn generate-pages-html
   [block-map output-dir]
   (let [pages (db/displayed-pages block-map)

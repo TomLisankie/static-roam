@@ -23,7 +23,7 @@
         attributes (fn [m & [sep]]
                      ;; For some reason graph attributes need a different separator
                      (s/join (or sep ",") (map (fn [[k v]] (format "%s=%s" (name k) (pr-str v))) m)))
-        pages (filter :include? (db/pages block-map))
+        pages (db/included-pages block-map)
         ]
     (println "Writing " dot-file)
     (with-open [wrtr (io/writer dot-file)]

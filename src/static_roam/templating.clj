@@ -10,6 +10,8 @@
 
 ;;; TODO Note: the functions of templating and html-gen seem to overlap; not sure they should be separate.
 
+
+;;; TODO site-metadata stuff I don't use much, either get rid of it or spruce it up and use it
 (defn- metadata-properties
   [metadata]
   (into (hash-map) (filter #(= 2 (count %)) (map #(s/split % #":: ") metadata))))
@@ -20,21 +22,6 @@
         property-block-content (map #(:content (get block-map %)) property-block-ids)
         prop-val-dict (metadata-properties property-block-content)]
     prop-val-dict))
-
-(u/defn-memoized nav-bar-page-dict
-  [block-map]
-  (let [site-metadata-dict (site-metadata block-map)
-        nav-bar-page-string (get site-metadata-dict "Nav Bar")
-        nav-bar-pages-uncleaned (into
-                                 (utils/find-content-entities-in-string nav-bar-page-string)
-                                 (utils/find-hashtags-in-string nav-bar-page-string))
-        nav-bar-pages (map utils/remove-double-delimiters nav-bar-pages-uncleaned)
-        ;; TODO ugly but works to get italics in titles rendered properly. Should do same for backlinks
-        nav-bar-pages-r (map #(static-roam.parser/block-content->hiccup % {}) 
-                             nav-bar-pages)
-        nav-bar-hrefs (map utils/page-title->html-file-title nav-bar-pages)
-        nav-bar-page-dict (zipmap nav-bar-hrefs nav-bar-pages-r)]
-    nav-bar-page-dict))
 
 (defn roam-url
   [block-id]
@@ -115,7 +102,6 @@
      ;; Using slightly-bold font for links for whatever reason.
      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;500&display=swap"}]
      ~@head-extra
-     [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]
      ]
   [:body
    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
@@ -198,8 +184,8 @@
                                                  :height 350
                                                  :controls? false
                                                  :link-distance 65
-                                                 :node-charge -30
-                                                 :node-radius 15
+                                                 :node-charge -60
+                                                 :node-radius 25
                                                  :radius-from block-id
                                                  :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
          ]]
