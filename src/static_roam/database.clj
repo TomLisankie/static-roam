@@ -163,6 +163,10 @@
     (pages block-map)
     (included-pages block-map)))
 
+(defn displayed-regular-pages
+  [block-map]
+  (remove :special? (displayed-pages block-map)))
+
 (defn tagged?
   [block-map block tag]
   (or (contains? (:refs block) tag)
@@ -273,7 +277,7 @@
        add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
        ))
 
-(defn setup-static-roam-block-map
+(defn setup-block-map
   [roam-json]
   (-> roam-json
       roam-db

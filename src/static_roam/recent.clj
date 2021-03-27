@@ -34,7 +34,13 @@
   "Groups recently changed blocks by page, returns rev chron seq of seqs"
   [block-map]
   ;; get the 100 latest changed leaf blocks TODO parameterize
-  (->> (take 100 (sort-by :edit-time u/>* (filter database/leaf? (filter :include? (vals block-map)))))
+  (->> block-map
+       vals
+       (filter :include?)
+       (remove :special?)
+       (filter database/leaf?)
+       (sort-by :edit-time u/>*)     
+       (take 100)
        ;; Expand small ones TODO parameterize
        (map #(database/expand-to block-map % 101))
        ;; remove duplicates

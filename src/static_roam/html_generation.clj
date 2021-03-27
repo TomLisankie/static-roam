@@ -36,9 +36,11 @@
 (defn generate-content-page
   [block-map output-dir block]
   (prn :generate-page (:id block))
-  (export-page (page-hiccup block-map output-dir block)
-               (str "/pages/" (utils/html-file-title (:id block)))
-               output-dir))
+  (if (:special? block)                 ;I miss OOP
+    ((:generator block) block-map output-dir)
+    (export-page (page-hiccup block-map output-dir block)
+                 (str "/pages/" (utils/html-file-title (:id block)))
+                 output-dir)))
 
 (defn generate-content-pages
   [block-map output-dir]
@@ -78,15 +80,23 @@
    "/pages/map.html"
    output-dir))
 
+;;; TODO revise
 (defn generate-static-roam
   [block-map output-dir]
   (generate-content-pages block-map output-dir)
-  (generate-home-page block-map output-dir)
-  (generate-recent-page block-map output-dir)
-  (generate-index-pages block-map output-dir)
-  (generate-global-map block-map output-dir)
+  #_ (generate-home-page block-map output-dir)
+  #_ (generate-recent-page block-map output-dir)
+  #_ (generate-index-pages block-map output-dir)
+  #_ (generate-global-map block-map output-dir)
   )
 
-
-
-
+(defn generated-page
+  "Add a generated page to the block map"
+  [block-map name generator]
+  (assoc block-map name
+         {:id name
+          :special? true                ;I miss OOP
+          :generator generator
+          :include? true
+          :page? true
+          }))

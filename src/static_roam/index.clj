@@ -30,7 +30,7 @@
 
 (defn make-index-pages
   [bm]
-  (let [pages (db/displayed-pages bm)
+  (let [pages (remove :special? (db/displayed-regular-pages bm))
         page-loc (fn [col] (format "%s-index.html" (:title col)))]
     (apply
      merge

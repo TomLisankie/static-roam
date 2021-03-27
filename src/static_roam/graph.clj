@@ -15,7 +15,8 @@
 ;;; TODO maybe color for recency?
 ;;; TODO on global map, highlight entry points
 ;;; TODO on side map in private mode, highlight excluded
-
+;;; TODO on maps, empty pages should be visually distinguished
+;;; Starting to require a legend though
 
 ;;; TODO would be more Roam-ish to have a normal Map page with a special tag that put the vega stuff there. Then it could be linked to in the normal way.  OOOH also partial maps would be easy! Maybe in the sidebar... Mini-maps centered on current page.
 
@@ -47,10 +48,7 @@
 
 (defn graph-data
   [block-map {:keys [include-all? radius-from radius max-degree] :or {radius 2 max-degree 8}}]
-  (let [pages (->> block-map
-                   vals
-                   (filter :page?)
-                   (filter (if include-all? identity :include?))
+  (let [pages (->> (db/displayed-regular-pages block-map)
                    (filter (if radius-from
                              (let [neighborhood (set (map :content (page-neighbors block-map (get block-map radius-from) radius max-degree)))]
                                #(contains? neighborhood (:content %)))
@@ -94,7 +92,7 @@
 (defn spec
   [block-map {:keys [width height controls? link-distance node-charge node-radius] :as options :or {link-distance 60 node-charge -100 node-radius 20}}]
   `{:description
-    "A node-link diagram of AMMDI pages and links."
+    "A node-link diagram of Roam pages and links."
     :$schema "https://vega.github.io/schema/vega/v5.json"
     :data ~(graph-data block-map options)
     :autosize "none"
@@ -184,9 +182,6 @@
            {:events "@nodes:mouseover" :update "datum"}
            {:events "@nodes:mouseout" :update "null"}
            ]
-      }
-     {:name "title"
-      :update "hover ? hover.name : 'AMMDI'"
       }
      ;; These numbers make a decent looking graph for current export (~200 nodes).
      ;; TODO Adjusting to different scale should be configurable if not automated

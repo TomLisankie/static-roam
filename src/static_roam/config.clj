@@ -21,8 +21,10 @@
    ;; this group decides what is tagged :include? or not
    :entry-tags ["EntryPoint"]
    :exit-tags ["ExitPoint" "Private"] 
+   :short-title "StaticRoam"            ;page titles get prefixed with this
+   :main-page "Agency Made Me Do It" ; "Your Main Page"            ;note: TODO
+   :right-navbar ["About" "Index" "New" "Map"]
    :daily-logs false
-
    :unexclude? false                     ;TODO Show everything, indicating graphically if it is included in regular version.
 
    :dev-mode false                      ;true turns on links into Roam itself

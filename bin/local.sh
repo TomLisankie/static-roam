@@ -2,5 +2,5 @@
 
 export ROAM_DEV_MODE=true
 
-./generate.sh
+./bin/generate.sh
 

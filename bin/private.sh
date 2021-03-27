@@ -5,4 +5,4 @@ export ROAM_DEV_MODE=true
 export ROAM_UNEXCLUDE=true	
 export ROAM_OUTPUT_DIR=private
 
-./generate.sh
+./bin/generate.sh

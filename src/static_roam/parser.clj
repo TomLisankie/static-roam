@@ -1,7 +1,7 @@
 (ns static-roam.parser
   (:require [instaparse.core :as insta :refer [defparser]]
             [taoensso.truss :as truss :refer (have have! have?)]
-            [clojure.string :as str-utils]
+            [clojure.string :as str]
             [clojure.data.json :as json]
             [static-roam.config :as config]
             [static-roam.utils :as utils]
@@ -115,19 +115,21 @@
         (make-link-from-url url)))
 
 ;;; Following 2 fns dup from database until I can untangle the ns mess
+;;; And they have diverged...argh TODO
 (def size
   (memoize
    (fn [page]
      (reduce +
-             (count (or (:content page) 0))
+             (count (:content page 0))
              (map size
                   (filter :include? (:dchildren page)))))))
 
 (defn page-empty?
   [page]
-  (< (- (size page)
-        (count (:id page)))
-        10))
+  (when-not (:special? page)
+    (< (- (size page)
+          (count (:id page)))
+       10)))
 
 ;;; Should be in database but namespaces are phucked and need a total rebuild
 (defn displayed?
@@ -135,12 +137,18 @@
   (or (:include? block)
       (:unexclude? config/config)))
 
-(defn page-link [page & [alias]]
+(defn page-link
+  [page & {:keys [alias class]}]
   (let [page-id (:id page)]
     (if (displayed? page)
       [:a (u/clean-map
            {:href (utils/page-title->html-file-title page-id)
-            :class (if (page-empty? page) "empty" nil)})
+            ;; TODO behavior with empties should be configurable, I keep
+            ;; changing my own mind about it.
+            :class (str/join " "
+                             (filter identity
+                                     (list (when (page-empty? page) "empty")
+                                           class)))})
        (block-content->hiccup (or alias page-id) {})]
       (do
         (prn "ref to excluded page " page-id)
@@ -204,7 +212,7 @@
             :page-link (page-link (get block-map (utils/remove-double-delimiters ele-content)))
             :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
                                                          ele-content)]
-                          (page-link (get block-map page) alias))
+                          (page-link (get block-map page) :alias alias))
             :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
                          [:div.block-ref
                           (generate-hiccup ref-block block-map)])

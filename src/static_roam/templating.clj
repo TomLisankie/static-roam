@@ -39,7 +39,7 @@
         (when (:dev-mode config/config)
           [:a.edit {:href (roam-url block-id)
                     :target "_roam"}
-           "[e]"])
+           "[e]"])                      ;TODO nicer icons
         (when-not (:include? block)
           [:span.edit 
            "[X]"])
@@ -67,7 +67,6 @@
 
 
 ;;; TODO configurability
-;;; Not working, reason unknown
 (defn analytics-1
   []
   [:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=G-SK8PZVFHTW"}])
@@ -91,7 +90,7 @@
      ~(analytics-2)
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-     [:title ~(str "AMMDI: " page-title)] ;TODO config site prefix
+     [:title ~(str (:short-title config/config) ": " page-title)]
      [:link {:rel "stylesheet"
              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
@@ -106,7 +105,9 @@
   [:body
    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
     [:div.container
-     [:a.navbar-brand {:href "./Agency-Made-Me-Do-It.html"} "Agency Made Me Do it"] ;TODO config
+     #_ [:a.navbar-brand {:href "./Agency-Made-Me-Do-It.html"} "Agency Made Me Do it"] ;TODO config
+     (parser/page-link (get block-map (:main-page config/config)) :class "navbar-brand")
+     #_
      [:button.navbar-toggler
       {:type "button",
        :data-toggle "collapse",
@@ -119,12 +120,9 @@
       {:id "navbarResponsive"}
       ;; TODO config and maybe make active page machinery mork
       [:ul.navbar-nav.ml-auto
-       #_ [:li.nav-item [:a.nav-link {:href "./index.html"} "Home"]]
-       [:li.nav-item [:a.nav-link {:href "./About.html"} "About"]]
-       [:li.nav-item [:a.nav-link {:href "./Title-index.html"} "Index"]]
-       [:li.nav-item [:a.nav-link {:href "./recent-changes.html"} "New"]]
-       [:li.nav-item [:a.nav-link {:href "./map.html"} "Map"]]
-       #_ [:li.nav-item [:a.nav-link {:href "#"} "Contact"]]]]]]
+       (for [page (:right-navbar config/config)]
+         [:li.nav-item (parser/page-link (get block-map page) :class "nav-link")])
+       ]]]]
    [:div.container
     body-hiccup]
    "<!-- Footer -->"
