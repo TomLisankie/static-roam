@@ -48,18 +48,6 @@
   (reset! last-bm bm)
   bm)
 
-(defn -main
-  [& [path-to-zip]]
-  (prn config/config)
-  ;; TODO should clear out the whole output dir, but then would have to copy css etc
-  (fs/delete-dir (str (:output-dir config/config) "/pages" ))
-  (-> (or path-to-zip (utils/latest-export))
-      block-map
-      tap
-      (html-gen/generate-static-roam (:output-dir config/config)))
-  (prn (database/stats @last-bm))
-  #_ (dump))
-
 (defn gen-page
   [page]
   (html-gen/export-page
@@ -69,7 +57,21 @@
 
 (defn gen-pages
   []
+  (fs/delete-dir (str (:output-dir config/config) "/pages" ))
   (html-gen/generate-static-roam @last-bm (:output-dir config/config)))
+
+(defn -main
+  [& [path-to-zip]]
+  (prn config/config)
+  ;; TODO should clear out the whole output dir, but then would have to copy css etc
+  (-> (or path-to-zip (utils/latest-export))
+      block-map
+      tap
+      (html-gen/generate-static-roam (:output-dir config/config)))
+  (prn (database/stats @last-bm))
+  #_ (dump))
+
+
 
 #_
 (def pages (map #(select-keys % [:content :depth :refs :linked-by]) (filter :page? (vals bm))))

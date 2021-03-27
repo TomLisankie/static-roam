@@ -12,42 +12,44 @@
 ;;; by size, # of refs (incoming/outgoing/both)
 
 (def indexes
-  [{:title "Title"
+  [{:name "Title"
     :sort-key (comp s/upper-case :content)
     :render parser/page-link
+    :page-title "Index"                 ;kludge to match block-map and links
     }
-   {:title "Date"
+   {:name "Date"
     :sort-key (comp - inst-ms db/edit-time)
     :render (comp utils/render-time db/edit-time)}
-   {:title "Depth"
+   {:name "Depth"
     :sort-key :depth
     :render :depth}
-   {:title "Size"
+   {:name "Size"
     :sort-key (comp - db/size)
     :render #(format "%.1fK" (double (/ (db/size %) 1000)))}
    ])
 
-
 (defn make-index-pages
   [bm]
   (let [pages (remove :special? (db/displayed-regular-pages bm))
-        page-loc (fn [col] (format "%s-index.html" (:title col)))]
+        page-loc (fn [col] (str (or (:page-title col)
+                                    (format "Index-%s" (:name col)))
+                                ".html"))]
     (apply
      merge
-     (for [{:keys [title sort-key] :as index} indexes]
+     (for [{:keys [name sort-key] :as index} indexes]
        (let [hiccup
              [:div.main
               [:div.ptitle
-               [:h1 (str "Index by " title)]]
+               [:h1 (str "Index by " name)]]
               [:table.table.table-sm.table-hover 
                [:thead
                 ;; col headers
                 [:tr
                  (for [col indexes]
                    [:th {:scope "col"}
-                    (if (= (:title col) title)
-                      (:title col)
-                      [:a {:href (page-loc col)} (:title col)])])]]
+                    (if (= (:name col) name)
+                      (:name col)
+                      [:a {:href (page-loc col)} (:name col)])])]]
                [:tbody 
                 (for [page (sort-by sort-key pages)]
                   [:tr
@@ -56,6 +58,6 @@
                       ((:render col) page)])])
                 ]]]]
          {(str "/pages/" (page-loc index))    ;pkm
-          (templating/page-hiccup hiccup (format "Index by %s" title) bm)}
+          (templating/page-hiccup hiccup (format "Index by %s" name) bm)}
          )))))
 
