@@ -7,60 +7,45 @@
             [static-roam.database :as db]
             [static-roam.recent :as recent]
             [static-roam.index :as index]
-            [static-roam.config :as config]
-            [stasis.core :as stasis]))
+            [static-roam.config :as config]))
 
-;;; → multitool, should replace dissoc-if
-(defn map-filter-by-value
-  [f m]
-  (apply dissoc m (keep #(if (f (val %))
-                           nil
-                           (key %))
-                        m)))
-
-;;; This is relative to output TODO probably copy into output?
-(defn generate-page-html
-  [block-map block]
+(defn page-hiccup
+  [block-map output-dir block]
   (let [block-id (:id block)]
-    (prn :generate-page block-id)
-    (hiccup/html
-     (templating/page-hiccup
-      (templating/block-page-template block-id block-map)
-      block-id                           ;TODO htmlize
-      block-map
-
-      ;; TODO should be under conditional
-      [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
-       [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]]
-
-      ))))
-
-(defn generate-pages-html
-  [block-map output-dir]
-  (let [pages (db/displayed-pages block-map)
-        file-name-to-content
-        (zipmap (map (comp utils/html-file-title :id) pages)
-                (map (partial generate-page-html block-map)
-                     pages))]
-    (stasis/export-pages
-     file-name-to-content
-     output-dir)))
-
-(defn export-hiccup-pages
-  "Write out pages. Content is map of filenames → hiccup." 
-  [content output-dir]
-  (stasis/export-pages
-   (u/map-values #(hiccup/html %) content)
-   output-dir))
+    (templating/page-hiccup
+     (templating/block-page-template block-id block-map output-dir)
+     block-id                           ;TODO htmlize
+     block-map
+     ;; TODO should be under conditional
+     [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
+      [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]]
+     )))
 
 (defn export-page
   "Write out a single page. Content is hiccup. " 
   [content fname output-dir]
-    (stasis/export-pages
-     {fname (hiccup/html content)}
-     output-dir))
+  (spit (str output-dir fname)
+        (hiccup/html content)))
 
-(defn generate-home-page-html
+(defn export-pages
+  "Write out pages. Content is map of filenames → hiccup." 
+  [content output-dir]
+  (doseq [[fname hiccup] content]
+    (export-page hiccup fname output-dir)))
+
+(defn generate-content-page
+  [block-map output-dir block]
+  (prn :generate-page (:id block))
+  (export-page (page-hiccup block-map output-dir block)
+               (str "/pages/" (utils/html-file-title (:id block)))
+               output-dir))
+
+(defn generate-content-pages
+  [block-map output-dir]
+  (doseq [page (db/displayed-pages block-map)]
+    (generate-content-page block-map output-dir page)))
+
+(defn generate-home-page
   [block-map output-dir]
   (let [entry-points (db/entry-points block-map)]
     (export-page
@@ -82,7 +67,7 @@
 
 (defn generate-index-pages
   [block-map output-dir]
-  (export-hiccup-pages
+  (export-pages
    (index/make-index-pages block-map)
    output-dir))
 
@@ -93,10 +78,10 @@
    "/pages/map.html"
    output-dir))
 
-(defn generate-static-roam-html
+(defn generate-static-roam
   [block-map output-dir]
-  (generate-pages-html block-map (str output-dir "/pages"))
-  (generate-home-page-html block-map output-dir)
+  (generate-content-pages block-map output-dir)
+  (generate-home-page block-map output-dir)
   (generate-recent-page block-map output-dir)
   (generate-index-pages block-map output-dir)
   (generate-global-map block-map output-dir)

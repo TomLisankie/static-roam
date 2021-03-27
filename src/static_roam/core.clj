@@ -3,6 +3,7 @@
             [static-roam.utils :as utils]
             [static-roam.database :as database]
             [static-roam.html-generation :as html-gen]
+            [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]))
 
@@ -45,24 +46,25 @@
 (defn -main
   [& [path-to-zip]]
   (prn config/config)
+  ;; TODO should clear out the whole output dir, but then would have to copy css etc
+  (fs/delete-dir (str (:output-dir config/config) "/pages" ))
   (-> (or path-to-zip (utils/latest-export))
       block-map
       tap
-      (html-gen/generate-static-roam-html (:output-dir config/config)))
+      (html-gen/generate-static-roam (:output-dir config/config)))
   (prn (database/stats @last-bm))
   #_ (dump))
-
 
 (defn gen-page
   [page]
   (html-gen/export-page
-   (html-gen/generate-page-html @last-bm (get @last-bm page))
+   (html-gen/generate-content-page @last-bm (:output-dir config/config) (get @last-bm page))
    (utils/html-file-title page)
-   "output"))
+   (:output-dir config/config)))
 
 (defn gen-pages
   []
-  (html-gen/generate-static-roam-html @last-bm (:output-dir config/config)))
+  (html-gen/generate-static-roam @last-bm (:output-dir config/config)))
 
 #_
 (def pages (map #(select-keys % [:content :depth :refs :linked-by]) (filter :page? (vals bm))))

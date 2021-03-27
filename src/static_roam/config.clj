@@ -26,7 +26,7 @@
    :unexclude? false                     ;TODO Show everything, indicating graphically if it is included in regular version.
 
    :dev-mode false                      ;true turns on links into Roam itself
-   :output-path "output"
+   :output-dir "output"                 ;TODO should be output-path
    :bullets false                       ;TODO not hooked up
    }
   )

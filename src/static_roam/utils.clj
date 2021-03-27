@@ -87,12 +87,12 @@
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   [string]
   {:pre [(have? string? string)]}
-  (str "./" (clean-page-title string) ".html"))
+  (str (clean-page-title string) ".html"))
 
+;;; TODO hopefully no need for both this and above
 (defn html-file-title
   [page-title]
-  ;; TODO argh
-  (subs (page-title->html-file-title page-title) 1))
+  (page-title->html-file-title page-title))
 
 (def date-formatter
   (java.text.SimpleDateFormat. "dd MMM yyyy hh:mm"))

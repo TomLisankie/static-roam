@@ -150,9 +150,8 @@
   [[from to]]
   [:div.date (utils/render-time from) " - " (utils/render-time to)])
 
-;;; Boostrap version
 (defn block-page-template
-  [block-id block-map]
+  [block-id block-map output-dir]
   (let [block (get block-map block-id)
         title (parser/block-content->hiccup (get block :content) block-map) ;no this makes no sense
         contents (block-template block-id block-map)]
@@ -179,15 +178,18 @@
       [:div.card.my-4
         [:h5.card-header "Map"]
         [:div.card-body {:style "padding: 2px;"}
-         (graph/render-graph block-map "output" {:name (utils/clean-page-title block-id)
-                                                 :width 350
-                                                 :height 350
-                                                 :controls? false
-                                                 :link-distance 65
-                                                 :node-charge -60
-                                                 :node-radius 25
-                                                 :radius-from block-id
-                                                 :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
+         (graph/render-graph
+          block-map
+          output-dir
+          {:name (utils/clean-page-title block-id)
+           :width 350
+           :height 350
+           :controls? false
+           :link-distance 65
+           :node-charge -60
+           :node-radius 25
+           :radius-from block-id
+           :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
          ]]
 
        ;; TODO might be nice!

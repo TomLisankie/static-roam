@@ -14,6 +14,8 @@
 ;;; TODO better link highlighting
 ;;; TODO maybe color for recency?
 ;;; TODO on global map, highlight entry points
+;;; TODO on side map in private mode, highlight excluded
+
 
 ;;; TODO would be more Roam-ish to have a normal Map page with a special tag that put the vega stuff there. Then it could be linked to in the normal way.  OOOH also partial maps would be easy! Maybe in the sidebar... Mini-maps centered on current page.
 

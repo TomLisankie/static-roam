@@ -9,7 +9,6 @@
                  [org.clojure/data.json "1.1.0"]
                  [com.taoensso/truss "1.6.0"]
                  [hiccup "1.0.5"]
-                 [stasis "2.5.0"]
                  [instaparse "1.4.10"]
                  [aero "1.1.6"]
                  [metasoarous/oz "1.6.0-alpha6"]
