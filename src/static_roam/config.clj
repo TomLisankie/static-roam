@@ -2,6 +2,7 @@
   (:require [aero.core :as aero]
             [clojure.string :as s]
             [clojure.java.io :as io]
+            [clojure.pprint :as pprint]
             ))
 
 (defmethod aero/reader 'split
@@ -14,7 +15,8 @@
   [path]
   (reset! the-config
           (aero/read-config
-           (io/resource path))))
+           (io/resource path)))
+  (pprint/pprint @the-config))
 
 (defn config
   [& [att]]

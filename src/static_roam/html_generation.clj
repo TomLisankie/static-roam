@@ -64,7 +64,7 @@
     (recent/recent-page-content block-map)
     "Recently changed"
     block-map)
-   "/pages/recent-changes.html"
+   "/pages/New.html"
    output-dir))
 
 (defn generate-index-pages

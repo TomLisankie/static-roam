@@ -1,2 +1,2 @@
-lein run
+lein run $ROAM_CONFIG
 

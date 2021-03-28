@@ -1,25 +1,6 @@
-:root {
-    --deep-space-sparkle: #335c67ff;
-    --medium-champagne: #fff3b0ff;
-    --indian-yellow: #e09f3eff;
-    --auburn: #9e2a2bff;
-    --rosewood: #540b0eff;
-    --white: #FFFFFFFF;
-
-    --background: #FFFFFF;
-    --navbar-background: #407492;
-    --link: #9e2a2bff;
-    --blockquote: #f1efe6;  /*   #fff3b0ff #fffce9 #efe9c9 */
-    --blockquote-border: #c0c0c0;
-    --incoming: #d2e7ec;  	/* picked this myself, and dont want it relgated to botton of page */
-    --navbar-foreground: #e09f3eff;
-}
 
 
 body {
-    background-color: var(--background);
-    /* font-family: Georgia; */
-    /* font-family: 'Martel', serif; */
     font-family: Lato;
     font-size: 14pt;
     line-height: 1.5; 
@@ -39,11 +20,9 @@ body {
 }
 
 .navbar {
-    background-color: var(--navbar-background);
 }
 
 .nav-link {
-    color: var(--navbar-foreground) !important;	
     font-weight: bold;
     padding-right: 1rem;
     padding-left: 1rem;
@@ -65,23 +44,16 @@ li {
 /* Gyrations to get colored list bullets */
 .main ul li::before {
     /* content: "\2022";  bullet */
-    /* content: "\2aa2";  my fave ⪢ */
-    /* content: "\30fb";  bite the no bullet  */
-    color: var(--link);
-  /* color: #4E176E; 		 */
     display: inline-block; 
     vertical-align: top;
     margin-right: 0.5em;
 }
 
 a {
-    color: var(--link); 
     font-weight: 500;	/* slightly bold */
 }
 
 a:hover {
-    background-color: #eeeee0; 
-    color: var(--link) !important; 
     text-decoration: none;
     box-shadow: 0 0 0 5px #eeeee0;
 }
@@ -108,20 +80,17 @@ h2 {
 
 blockquote {
     white-space: break-spaces;
-    background: var(--blockquote);
     padding-left: 20px;
     padding-right: 10px;
     padding-top: 10px;
     padding-bottom: 10px;
     margin-bottom: 0px;
-    border-left: 3px solid var(--blockquote-border);
     border-radius: 10px;
     width: 90%;
 }
 
 /* aka linked references */
 .incoming {
-    /* background: var(--incoming);  */
 }
 
 .incoming h3 {
@@ -140,7 +109,7 @@ blockquote {
 
 .missing {
     border: 5px solid red;
-    padding: 20px;
+    padding: 5px;
 }
 
 .block-ref {
@@ -154,7 +123,6 @@ blockquote {
 
 .ptitle {
     /* gets title left-aligned with text, but a kludge and not sure it will work with different fonts etc  */
-    /* padding-left: 26px; */
     display: inline-block;
 }
 
@@ -165,7 +133,6 @@ img {
     max-width: 90%;		/* TODO should have click-to-see-full-size as in Roam */
 }
 
-/* center videos (TODO not working, I think because they are within a <span>?a) */
 iframe {
     margin-left: auto;
     margin-right: auto;
@@ -176,7 +143,6 @@ iframe {
 }
 
 .navbar-brand {
-    /* margin-left: 26px; */
 }
 
 .edit {
@@ -185,20 +151,18 @@ iframe {
 
 /* header of recent chenges sections */
 .pheader {
-    background-color: #f1eded;
     padding: 2px;
     margin-bottom: 3px;
     margin-top: 15px;
 }
 
 .footer {
-    background-color: var(--auburn);
 }
 
 /* For recent changes, should have more semantic name */
 .ragged {
     border-radius: 25px 15px 225px 15px/15px 225px 15px 255px;    
-    border:dashed 3px var(--auburn);
+    border:dashed 3px red;
     margin: 5px;
     margin-left: 15px;
     padding-left: 7px;

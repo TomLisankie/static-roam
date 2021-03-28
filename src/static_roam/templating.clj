@@ -106,7 +106,7 @@
   [:body
    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
     [:div.container
-     (parser/page-link (get block-map (config/config :main-page)) :class "navbar-brand")
+     (parser/page-link-by-name block-map (config/config :main-page) :class "navbar-brand")
      #_
      [:button.navbar-toggler
       {:type "button",
@@ -121,7 +121,7 @@
       ;; TODO make active page machinery mork
       [:ul.navbar-nav.ml-auto
        (for [page (config/config :right-navbar)]
-         [:li.nav-item (parser/page-link (get block-map page) :class "nav-link")])
+         [:li.nav-item (parser/page-link-by-name block-map page :class "nav-link")])
        ]]]]
    [:div.container
     body-hiccup]

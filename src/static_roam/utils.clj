@@ -102,3 +102,17 @@
   [time]
   (.format date-formatter (coerce-time time)))         ;crude for now
 
+;;; → multitool
+(defmacro debuggable [tag captures & body]
+  `(try
+     ~@body
+     (catch Throwable e#
+         (throw (ex-info ~(str "Debuggable ex " tag) ~(zipmap (map keyword captures) captures) e#)))))
+
+(comment
+(let [x 23]
+  (debuggable
+   :test [x]
+   (/ x 0)))
+)
+

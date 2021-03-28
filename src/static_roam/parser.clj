@@ -149,6 +149,14 @@
         (prn "ref to excluded page " page-id)
         (block-content->hiccup (or alias page-id) {})))))
 
+;;; Turns out Roam can have links to nonexistant pages, eg from Import
+(defn page-link-by-name
+  [bm page-name & rest]
+  (if (contains? bm page-name)
+    (apply page-link (get bm page-name)rest)
+    [:span.missing "Missing link: " page-name]
+    ))
+
 (defn unspan
   "Remove :span elts that are basically no-ops. Would be cleaner to not generate"
   [hiccup]
@@ -175,23 +183,9 @@
     ;; TODO there are packages that will do language-specific highlighting
     [:code.codeblock content]))
 
-;;; → multitool
-(defmacro debuggable [tag captures & body]
-  `(try
-     ~@body
-     (catch Throwable e#
-         (throw (ex-info ~(str "Debuggable ex " tag) ~(zipmap (map keyword captures) captures) e#)))))
-
-(comment
-(let [x 23]
-  (debuggable
-   :test [x]
-   (/ x 0)))
-)
-
 (defn ele->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
-  (debuggable
+ (utils/debuggable
    :ele->hiccup [ast-ele]
    (let [recurse (fn [s]                 ;TODO probably needs a few more uses
                    (ele->hiccup (parse-to-ast s) block-map))]
@@ -202,10 +196,10 @@
           (case (first ast-ele)
             :metadata-tag [:b [:a {:href (utils/html-file-title ele-content)}
                                (subs ele-content 0 (dec (count ele-content)))]]
-            :page-link (page-link (get block-map (utils/remove-double-delimiters ele-content)))
+            :page-link (page-link-by-name block-map (utils/remove-double-delimiters ele-content))
             :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
                                                          ele-content)]
-                          (page-link (get block-map page) :alias alias))
+                          (page-link-by-name block-map page :alias alias))
             :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
                          [:div.block-ref
                           (generate-hiccup ref-block block-map)])

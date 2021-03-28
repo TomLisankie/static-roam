@@ -62,7 +62,7 @@
    :children :parent))
 
 ;;; TODO "((foobar))"
-(defn content-refs-0
+(defn- content-refs-0
   [string]
   (letfn [(struct-entities [struct] 
             (if (string? struct)
@@ -77,7 +77,8 @@
 
 (defn content-refs
   [string]
-  (set (content-refs-0 string)))
+  (set (and string
+            (content-refs-0 string))))
 
 (defn- get-linked-references
   [block-id block-map]
@@ -218,7 +219,9 @@
   (let [exit-point? (memoize #(exit-point? block-map (get block-map %)))] ;performance hack
     (letfn [(propagate [depth block-map from]
               (let [current-depth (or (get-in block-map [from :depth]) 1000)]
-                (if (and (< depth current-depth) (not (exit-point? from)))
+                (if (and (contains? block-map from)
+                         (< depth current-depth)
+                         (not (exit-point? from)))
                   (reduce (fn [bm r]
                             (propagate (+ depth 1) bm r))
                           (assoc-in block-map [from :depth] depth)
