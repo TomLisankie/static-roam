@@ -4,20 +4,17 @@
 
 This is a fork from [the original](https://github.com/TomLisankie/static-roam) by Tom Lisankie. I'm using it for a personal project and it's very much in flux. 
 
-Among the changes from the original:
-
-- new tags for content control (privacy)
-- doesn't generate or link to pages for individual blocks
-- more css customization points
-- generates a navbar properly
-- generates backlinks properly
-- handles blockquotes
-- more testing
-- faster
+It's pretty diverged from the original by now, and includes a bunch of new features, most notably graphic maps of the network.
 
 ## A static-site generator for [Roam Research](https://roamresearch.com/)
 
-Usage: `lein run /path/to/export/zip /path/to/output/dir degree`. You must use the JSON export from Roam, not the Markdown export.
+### Usage:
+
+- create a configuration file by editing `resources/example-config.edn`
+- Export All from Roam, choose the JSON format
+- `lein run <config file>`
+
+By default, the program will look for the latest Roam Export file in `~/Downloads` and generate output in `./output`
 
 ## Background
 

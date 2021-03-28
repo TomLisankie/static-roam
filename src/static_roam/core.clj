@@ -48,34 +48,34 @@
   (reset! last-bm bm)
   bm)
 
+(defn reset-output
+  []
+  (fs/delete-dir (str (config/config :output-dir) "/pages" )))
+
 (defn gen-page
   [page]
   (html-gen/export-page
-   (html-gen/generate-content-page @last-bm (:output-dir config/config) (get @last-bm page))
+   (html-gen/generate-content-page @last-bm (config/config :output-dir) (get @last-bm page))
    (utils/html-file-title page)
-   (:output-dir config/config)))
+   (config/config :output-dir)))
 
 (defn gen-pages
   []
-  (fs/delete-dir (str (:output-dir config/config) "/pages" ))
-  (html-gen/generate-static-roam @last-bm (:output-dir config/config)))
+  ;; TODO should clear out the whole output dir, but then would have to copy css etc
+  (reset-output)
+  (html-gen/generate-static-roam @last-bm (config/config :output-dir)))
 
 (defn -main
   [& [path-to-zip]]
-  (prn config/config)
-  ;; TODO should clear out the whole output dir, but then would have to copy css etc
+  (clojure.pprint/pprint (config/config))
+  (reset-output)
   (-> (or path-to-zip (utils/latest-export))
       block-map
       tap
-      (html-gen/generate-static-roam (:output-dir config/config)))
+      (html-gen/generate-static-roam (config/config :output-dir)))
   (prn (database/stats @last-bm))
   #_ (dump))
 
 
-
-#_
-(def pages (map #(select-keys % [:content :depth :refs :linked-by]) (filter :page? (vals bm))))
-#_
-(def g (group-by :depth pages))
 
 

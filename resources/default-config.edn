@@ -1,0 +1,13 @@
+{:source "~/Downloads"
+ :entry-tags ["EntryPoint"]
+ :exit-tags #or [#split [#env ROAM_EXIT_TAGS] ["ExitPoint" "Private"]]
+ :dev-mode #boolean #or [#env ROAM_DEV_MODE "false"]
+ :daily-notes? #boolean #or [#env ROAM_DAILY_NOTES "false"]
+ :output-dir #or [#env ROAM_OUTPUT_DIR "output"]
+ :unexclude? #boolean #or [#env ROAM_UNEXCLUDE "false"]
+ :site-css ["../assets/default.css"]
+ :short-title "MyGarden"
+ :main-page "My Beautiful Garden"
+ :right-navbar ["About" "Index" "New" "Map"]
+ :bullets? false                        ;TODO not implemented 
+ }

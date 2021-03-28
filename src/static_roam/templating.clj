@@ -25,7 +25,7 @@
 
 (defn roam-url
   [block-id]
-  (str (:roam-base-url config/config) block-id))
+  (str (config/config :roam-base-url) block-id))
 
 (defn block-template
   [block-id block-map & [depth]]
@@ -36,7 +36,7 @@
              (= (:content block) block-id))
        nil
        [:li.block
-        (when (:dev-mode config/config)
+        (when (config/config :dev-mode)
           [:a.edit {:href (roam-url block-id)
                     :target "_roam"}
            "[e]"])                      ;TODO nicer icons
@@ -69,17 +69,20 @@
 ;;; TODO configurability
 (defn analytics-1
   []
-  [:script {:async true :src "https://www.googletagmanager.com/gtag/js?id=G-SK8PZVFHTW"}])
+  (and (config/config :google-analytics)
+       [:script {:async true :src (format "https://www.googletagmanager.com/gtag/js?id=%s" (config/config :google-analytics))}]))
 
 (defn analytics-2
   []
-  [:script "
+  (and (config/config :google-analytics)
+       [:script (format
+                 "
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-SK8PZVFHTW');
-"])
+  gtag('config', '%s');
+" (config/config :google-analytics))]))
 
 ;;; TODO much of this should be configurable
 (defn page-hiccup
@@ -90,12 +93,12 @@
      ~(analytics-2)
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-     [:title ~(str (:short-title config/config) ": " page-title)]
+     [:title ~(str (config/config :short-title) ": " page-title)]
      [:link {:rel "stylesheet"
              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
              :crossorigin "anonymous"}]
-     ~@(for [css (:site-css config/config)]
+     ~@(for [css (config/config :site-css)]
          `[:link {:rel "stylesheet" :href ~css}])
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
      ;; Using slightly-bold font for links for whatever reason.
@@ -105,8 +108,7 @@
   [:body
    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
     [:div.container
-     #_ [:a.navbar-brand {:href "./Agency-Made-Me-Do-It.html"} "Agency Made Me Do it"] ;TODO config
-     (parser/page-link (get block-map (:main-page config/config)) :class "navbar-brand")
+     (parser/page-link (get block-map (config/config :main-page)) :class "navbar-brand")
      #_
      [:button.navbar-toggler
       {:type "button",
@@ -118,9 +120,9 @@
       [:span.navbar-toggler-icon]]
      [:div.collapse.navbar-collapse
       {:id "navbarResponsive"}
-      ;; TODO config and maybe make active page machinery mork
+      ;; TODO make active page machinery mork
       [:ul.navbar-nav.ml-auto
-       (for [page (:right-navbar config/config)]
+       (for [page (config/config :right-navbar)]
          [:li.nav-item (parser/page-link (get block-map page) :class "nav-link")])
        ]]]]
    [:div.container
@@ -128,8 +130,8 @@
    "<!-- Footer -->"
    [:footer.py-5.footer
     [:div.container
-     ;; TODO config point – and dates should be calculated from block content
-     [:p.m-0.text-center.text-white "Copyright © " [:a {:href "http://hyperphor.com" :style "color: white;"} "Hyperphor"] " 2020-2021"]
+     (when (config/config :colophon)
+       `[:p.m-0.text-center.text-white ~@(config/config :colophon)])
      [:p.m-0.text-center.text-white.small "Exported " (utils/render-time @utils/latest-export-time)]]
     ]
    ]])
@@ -138,7 +140,7 @@
   [bm output-dir]
   (page-hiccup
    (graph/render-graph bm output-dir {:name "fullmap" ;warning: this name can't be the same as a page name!
-                                      :include-all? (:unexclude? config/config)
+                                      :include-all? (config/config :unexclude?)
                                       })
    "Map"
    bm

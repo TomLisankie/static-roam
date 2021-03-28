@@ -4,13 +4,14 @@
             [clojure.java.io :as io]
             [clojure.string :as s]
             [org.parkerici.multitool.core :as u]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [static-roam.config :as config]
+            )
   (:import (java.util.zip ZipFile)))
-
 
 (defn latest-export
   []
-  (->> "~/Downloads"
+  (->> (config/config :source)
        fs/expand-home
        fs/list-dir
        (filter #(s/includes? (str %) "Roam-Export"))

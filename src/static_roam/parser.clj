@@ -135,7 +135,7 @@
 (defn displayed?
   [block]
   (or (:include? block)
-      (:unexclude? config/config)))
+      (config/config :unexclude?)))
 
 (defn page-link
   [page & {:keys [alias class]}]

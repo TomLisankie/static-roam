@@ -159,7 +159,7 @@
 
 (defn displayed-pages
   [block-map]
-  (if (:unexclude? config/config)
+  (if (config/config :unexclude?)
     (pages block-map)
     (included-pages block-map)))
 
@@ -187,7 +187,7 @@
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
   [block-map block]
   (some #(tagged? block-map block %)
-        (:entry-tags config/config)))
+        (config/config :entry-tags)))
 
 (def fixed-entry-points #{"SR Metadata"})
 
@@ -195,20 +195,20 @@
   [block-map]
   (filter (partial entry-point? block-map) (pages block-map)))
 
-(def daily-log-regex #"(?:January|February|March|April|May|June|July|August|September|October|November|December) \d+.., \d+")
+(def daily-notes-regex #"(?:January|February|March|April|May|June|July|August|September|October|November|December) \d+.., \d+")
 
-(defn daily-log?
+(defn daily-notes?
   [block-map block]
   (let [page (block-page block-map block)
         title (or (:title page) (:content page))]
-    (when title (re-matches daily-log-regex title))))
+    (when title (re-matches daily-notes-regex title))))
 
 (defn exit-point?
   [block-map block]
   (or (some #(tagged-or-contained? block-map block %)
-            (:exit-tags config/config))
-      (and (not (:daily-logs config/config))
-           (daily-log? block-map block))))
+            (config/config :exit-tags))
+      (and (not (config/config :daily-notes?))
+           (daily-notes? block-map block))))
 
 ;;; New version computes degree as well as acctually the map
 ;;; TODO not hooked up yet                        
@@ -234,7 +234,7 @@
 ;;; TODO not the way to do this
 (defn add-hiccup-for-included-blocks
   [block-map]
-  (u/map-values #(if (or (:include? %) (:unexclude? config/config))
+  (u/map-values #(if (or (:include? %) (config/config :unexclude?))
                    (assoc % :hiccup (parser/generate-hiccup % block-map))
                    %)
                 block-map))
@@ -292,7 +292,7 @@
 ;;; I suppose the median time might be more informative – or an Ed Tufte minigraph
 (defn date-range [page]
   (let [blocks (block-descendents page)
-        visible-blocks (if (:unexclude? config/config)
+        visible-blocks (if (config/config :unexclude?)
                           blocks
                           (filter :include? blocks))
         visible-dates (map :edit-time visible-blocks)]

@@ -1,0 +1,10 @@
+[#include "default-config.edn"
+
+ {:exit-tags ["ExitPoint" "Private"]
+  :roam-base-url "https://roamresearch.com/#/app/hyperphor/page/"
+  :site-css ["../assets/hyper-roam.css"]
+  :short-title "AMMDI"
+  :main-page "Agency Made Me Do It"
+  :colophon  ["Copyright © " [:a {:href "http://hyperphor.com" :style "color: white;"} "Hyperphor"] " 2020-2021"]
+  :google-analytics "xxx" 
+  }]

@@ -61,14 +61,14 @@
          (block-content->hiccup "what [the](fuck) is this" {})))
   (is (= [:span "what " [:a.external {:href "fuck"} "the fucking"] " is this"]
          (block-content->hiccup "what [the fucking](fuck) is this" {})))
-  (is (= [:span "foo " [:a {:href "./bar.html" :class "empty"} "bar"] " baz " [:a.external {:href "yuck"} "ugh"]]
+  (is (= [:span "foo " [:a {:href "bar.html" :class "empty"} "bar"] " baz " [:a.external {:href "yuck"} "ugh"]]
          (block-content->hiccup "foo [[bar]] baz [ugh](yuck)" fake-block-map)))
-  (is (= [:span "foo " [:a.external {:href "yuck"} "ugh"] " baz " [:a {:href "./bar.html" :class "empty"} "bar"]]
+  (is (= [:span "foo " [:a.external {:href "yuck"} "ugh"] " baz " [:a {:href "bar.html" :class "empty"} "bar"]]
          (block-content->hiccup "foo [ugh](yuck) baz [[bar]]" fake-block-map)
          ))
   (is (= [:span "foo " [:a.external {:href "yuck"} "ugh"] " baz " [:a.external {:href "zippy"} "yow"]]
          (block-content->hiccup "foo [ugh](yuck) baz [yow](zippy)" {})))
-  (is (= [:span "foo " [:a {:href "./bar.html" :class "empty"} "bar"] " and " [:a {:href "./baz.html"} "baz"]]
+  (is (= [:span "foo " [:a {:href "bar.html" :class "empty"} "bar"] " and " [:a {:href "baz.html"} "baz"]]
          (block-content->hiccup "foo [[bar]] and [[baz]]" fake-block-map)
          ))
   )
