@@ -84,16 +84,11 @@
       (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
       (s/replace #"\s" "-")))
 
-(defn page-title->html-file-title
+(defn html-file-title
   "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
   [string]
   {:pre [(have? string? string)]}
   (str (clean-page-title string) ".html"))
-
-;;; TODO hopefully no need for both this and above
-(defn html-file-title
-  [page-title]
-  (page-title->html-file-title page-title))
 
 (def date-formatter
   (java.text.SimpleDateFormat. "dd MMM yyyy hh:mm"))

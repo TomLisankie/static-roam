@@ -28,9 +28,8 @@
 ;;; Sloooow. Dumps pages including dchildren
 (defn page-dump
   []
-  ;; TODO output-dir
   (ju/schppit
-   "pages.edn"
+   (str (config/config :output-dir) "/pages.edn")
    (u/map-filter (fn [b] (and (:page? b) b))
                  (vals @last-bm))))
 
@@ -66,10 +65,10 @@
   (html-gen/generate-static-roam @last-bm (config/config :output-dir)))
 
 (defn -main
-  [& [path-to-zip]]
-  (clojure.pprint/pprint (config/config))
+  [& [path-to-config]]
+  (config/set-config (or path-to-config "default-config.edn"))
   (reset-output)
-  (-> (or path-to-zip (utils/latest-export))
+  (-> (utils/latest-export)
       block-map
       tap
       (html-gen/generate-static-roam (config/config :output-dir)))

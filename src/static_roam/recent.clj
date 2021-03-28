@@ -56,7 +56,6 @@
 (defn recent-page-content
   [block-map]
   [:div.main
-   ;; TODO prob needs row/col stuff
    [:div.row
     [:div.col-lg-8                     ;TODO no side col I guess
      [:div.ptitle

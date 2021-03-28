@@ -8,15 +8,19 @@
   [_ _ [s]]
   (and s (s/split s #",")))
 
-(def the-config
-  (aero/read-config
-   (io/resource "hyperphor-config.edn")))
+(def the-config (atom {}))
+
+(defn set-config
+  [path]
+  (reset! the-config
+          (aero/read-config
+           (io/resource path))))
 
 (defn config
   [& [att]]
   (if att
-    (att the-config)
-    the-config))
+    (att @the-config)
+    @the-config))
 
 
 

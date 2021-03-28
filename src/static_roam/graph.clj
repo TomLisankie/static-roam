@@ -56,7 +56,7 @@
                    (map (fn [index block] (assoc block
                                                  :index index
                                                  :page-refs (db/page-refs block-map block)
-                                                 :link (utils/page-title->html-file-title (:content block))))
+                                                 :link (utils/html-file-title (:content block))))
                         (range)))
         indexed (u/index-by :id pages)] ;make a new block map...
     [{:name "node-data"
@@ -77,7 +77,7 @@
                    pages)}
      {:name "link-data"
       :values (remove #(or (nil? (:target %))
-                           ;; TODO links are symmetrical so this removes the redundnt half (but broken somehow)
+                           ;; TODO links are symmetrical so this removes the redundnt half 
                            (< (:target %) (:source %)))
                       (mapcat (fn [b]
                                 (map (fn [ref]
@@ -116,11 +116,7 @@
        {:trigger "!fix" :modify "node" :values "{fx: null, fy: null}"}]
       :encode
       {:enter {:fill {:scale "color"  :field "group"} ;  {:value "lightcoral"}
-               ;; TODO apply to label also
-               ;; TODO customization point
                ;; TODO would be nice if this could open in different browser tab
-               ; unfortunately this means links show through which looks bad
-               ; :opacity {:value 0.5}
                :href {:field "link" }
                :stroke {:value "white"}
                :strokeWidth {:value 0}
@@ -183,7 +179,6 @@
            {:events "@nodes:mouseout" :update "null"}
            ]
       }
-     ;; These numbers make a decent looking graph for current export (~200 nodes).
      ;; TODO Adjusting to different scale should be configurable if not automated
      {:name "nodeRadius" :value ~node-radius :bind ~(and controls? {:input "range" :min 1 :max 50 :step 1})}
      {:name "nodeCharge" :value ~node-charge :bind ~(and controls? {:input "range" :min -100 :max 10 :step 1})}

@@ -65,8 +65,6 @@
   (concat []
           (map (partial linked-reference-template block-map) references)))
 
-
-;;; TODO configurability
 (defn analytics-1
   []
   (and (config/config :google-analytics)

@@ -64,7 +64,7 @@
     (recent/recent-page-content block-map)
     "Recently changed"
     block-map)
-   "/pages/recent-changes.html"         ;TODO should be up a level, but links need adjusting
+   "/pages/recent-changes.html"
    output-dir))
 
 (defn generate-index-pages
@@ -80,15 +80,9 @@
    "/pages/map.html"
    output-dir))
 
-;;; TODO revise
 (defn generate-static-roam
   [block-map output-dir]
-  (generate-content-pages block-map output-dir)
-  #_ (generate-home-page block-map output-dir)
-  #_ (generate-recent-page block-map output-dir)
-  #_ (generate-index-pages block-map output-dir)
-  #_ (generate-global-map block-map output-dir)
-  )
+  (generate-content-pages block-map output-dir))
 
 (defn generated-page
   "Add a generated page to the block map"

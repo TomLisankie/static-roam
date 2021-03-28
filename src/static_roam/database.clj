@@ -211,7 +211,6 @@
            (daily-notes? block-map block))))
 
 ;;; New version computes degree as well as acctually the map
-;;; TODO not hooked up yet                        
 ;;; Seems to compute the same set as other method
 (defn compute-depths
   "Computes depths from entry points"

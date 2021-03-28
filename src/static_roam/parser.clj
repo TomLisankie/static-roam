@@ -9,9 +9,6 @@
             [clojure.java.io :as io]))
 
 ;; Modified from Athens: https://github.com/athensresearch/athens/blob/master/src/cljc/athens/parser.cljc
-
-(declare block-parser)
-
 ;; Instaparse docs: https://github.com/Engelberg/instaparse#readme
 
 (defn- combine-adjacent-strings
@@ -60,7 +57,7 @@
   (let [alias-text (utils/remove-n-surrounding-delimiters 1 (re-find #"(?s)\[.+?\]" alias-content))
         alias-dest (utils/remove-n-surrounding-delimiters 1 (re-find #"(?s)\(.+?\)" alias-content))
         alias-link (if (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
-                     (utils/page-title->html-file-title alias-dest)
+                     (utils/html-file-title alias-dest)
                      alias-dest)]
     [:a.external {:href alias-link} (block-content->hiccup alias-text {})])) 
 
@@ -69,8 +66,6 @@
   (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))
         image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))]
     [:img {:src image-source :alt alt-text}]))
-
-;;; TODO this really belongs in html gen, not in parsing, yes?
 
 (defn youtube-vid-embed
   "Returns an iframe for a YouTube embedding"
@@ -142,7 +137,7 @@
   (let [page-id (:id page)]
     (if (displayed? page)
       [:a (u/clean-map
-           {:href (utils/page-title->html-file-title page-id)
+           {:href (utils/html-file-title page-id)
             ;; TODO behavior with empties should be configurable, I keep
             ;; changing my own mind about it.
             :class (str/join " "
@@ -187,14 +182,12 @@
      (catch Throwable e#
          (throw (ex-info ~(str "Debuggable ex " tag) ~(zipmap (map keyword captures) captures) e#)))))
 
-
 (comment
 (let [x 23]
   (debuggable
    :test [x]
    (/ x 0)))
 )
-
 
 (defn ele->hiccup ;; TODO: have code to change behavior if page/block is not included
   [ast-ele block-map]
@@ -207,7 +200,7 @@
        (let [ele-content (second ast-ele)]
          (unspan
           (case (first ast-ele)
-            :metadata-tag [:b [:a {:href (utils/page-title->html-file-title ele-content)}
+            :metadata-tag [:b [:a {:href (utils/html-file-title ele-content)}
                                (subs ele-content 0 (dec (count ele-content)))]]
             :page-link (page-link (get block-map (utils/remove-double-delimiters ele-content)))
             :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
@@ -216,7 +209,7 @@
             :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
                          [:div.block-ref
                           (generate-hiccup ref-block block-map)])
-            :hashtag [:a {:href (utils/page-title->html-file-title ele-content)}
+            :hashtag [:a {:href (utils/html-file-title ele-content)}
                       (utils/format-hashtag ele-content)]
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
             :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]
@@ -238,8 +231,6 @@
             :block `[:span ~@(map #(ele->hiccup % block-map) (rest ast-ele))]
             :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
             )))))))
-
-      ;#Private
 
 (defn block-content->hiccup
   "Convert Roam markup to Hiccup"
