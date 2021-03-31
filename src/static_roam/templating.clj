@@ -172,8 +172,16 @@
 
 
       [:div.col-md-4
-      ;; You are here map (TODO under a config)
-      [:div.card.my-4
+       "<!-- Search Widget -->"
+       [:div.card.my-4
+        [:h5.card-header "Search"]
+        [:div.card-body
+         [:div.input-group
+          [:input.form-control {:id "searcht" :type "text", :placeholder "Search for..."}]
+          [:span.input-group-append [:button.btn.btn-secondary {:type "button" :onclick "doSearch();"} "Go!"]]]]]
+
+       ;; You are here map (TODO under a config)
+       [:div.card.my-4
         [:h5.card-header "Map"]
         [:div.card-body {:style "padding: 2px;"}
          (graph/render-graph
@@ -190,15 +198,6 @@
            :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
          ]]
 
-       ;; TODO might be nice!
-       "<!-- Search Widget -->"
-       #_
-       [:div.card.my-4
-        [:h5.card-header "Search"]
-        [:div.card-body
-         [:div.input-group
-          [:input.form-control {:type "text", :placeholder "Search for..."}]
-          [:span.input-group-append [:button.btn.btn-secondary {:type "button"} "Go!"]]]]]
        "<!-- Categories Widget -->"
        #_
        [:div.card.my-4

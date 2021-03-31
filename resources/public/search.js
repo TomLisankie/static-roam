@@ -11,9 +11,25 @@ function Get(yourUrl){
     return Httpreq.responseText;          
 }
 
-function getIndex() {
+function getDocs() {
     var docs = JSON.parse(Get("../index.js"));
     docs.forEach(function(doc) {
 	index.addDoc(doc, false);
     });
+}
+
+function doSearch() {
+    if (index.documentStore.length == 0) {
+	getDocs();
+    }
+    var term = document.getElementById("searcht").value;
+    var results = index.search(term);
+    // console.log(results);	
+    displayResults(results);
+}
+
+function displayResults(results) {
+    results.forEach(function(result) {
+	console.log(result.doc.title);
+    })
 }
