@@ -52,6 +52,11 @@
         roam-json (json/read-str (slurp json-path) :key-fn keyword)]
     roam-json))
 
+(defn write-json [f data]
+  (fs/mkdirs (fs/parent f))             ;ensure directory exists
+  (with-open [s (io/writer f)]
+    (json/write data s)))
+
 (defn remove-n-surrounding-delimiters
   "Removes n surrounding characters from both the beginning and end of a string"
   [n string]
@@ -115,4 +120,5 @@
    :test [x]
    (/ x 0)))
 )
+
 

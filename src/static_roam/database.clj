@@ -4,6 +4,7 @@
             [static-roam.config :as config]
             [org.parkerici.multitool.core :as u]
             [clojure.set :as set]
+            [clojure.string :as str]
             [taoensso.truss :as truss :refer (have have! have?)]
             ))
 
@@ -342,3 +343,22 @@
 (defn leaf?
   [block]
   (empty? (:chidlren block)))
+
+(defn block-text
+  [block-map block]
+  (letfn [(text [thing]
+            (cond (string? thing)
+                  (list thing)
+                  (map? thing)
+                  ()
+                  (vector? thing)
+                  (mapcat text (rest thing))
+                  :else
+                  ()))
+          (block-local-text [block] (str/join " " (text (:hiccup block))))
+          (block-full-text [block] (str/join " " (cons (block-local-text block)
+                                                       (map #(block-full-text (get block-map %))
+                                                            (:children block)))))]
+    (block-full-text block)))
+
+  ;; TODO filter for include

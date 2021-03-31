@@ -210,10 +210,7 @@
 
 ;;; Static render
 
-(defn write-json [f data]
-  (fs/mkdirs (fs/parent f))             ;ensure directory exists
-  (with-open [s (io/writer f)]
-    (json/write data s)))
+
 
 ;; obso
 #_ 
@@ -234,7 +231,7 @@
 (defn render-graph
   "Writes out the graph json and returns the hiccup to embed it"
   [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]
-  (write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
+  (utils/write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
   (let [id (str "view_" name)]
     [:div
      [:div {:id id :style (format "width: 100%%; height: %spx;" (+ height (if controls? 300 0)))}] ; width
@@ -245,6 +242,8 @@
 (defn vega-head
   []
   [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]])
+   [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]
+   [:script {:src "http://elasticlunr.com/elasticlunr.min.js"}] ;TODO temp
+   ])
 
 
