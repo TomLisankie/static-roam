@@ -5,6 +5,7 @@
             [hiccup.core :as hiccup]
             [static-roam.templating :as templating]
             [static-roam.database :as db]
+            [static-roam.graph :as graph]
             [static-roam.recent :as recent]
             [static-roam.index :as index]
             [static-roam.config :as config]))
@@ -17,8 +18,7 @@
      block-id                           ;TODO htmlize
      block-map
      ;; TODO should be under conditional
-     [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
-      [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]]
+     (graph/vega-head)
      )))
 
 (defn export-page

@@ -243,7 +243,9 @@
   []
   [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
    [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]
+   ;; For search, should be separated out
    [:script {:src "http://elasticlunr.com/elasticlunr.min.js"}] ;TODO temp
+   [:script {:src "../assets/search.js"}]
    ])
 
 
