@@ -8,6 +8,7 @@
             [static-roam.graph :as graph]
             [static-roam.recent :as recent]
             [static-roam.index :as index]
+            [static-roam.search :as search]
             [static-roam.config :as config]))
 
 (defn page-hiccup
@@ -82,7 +83,9 @@
 
 (defn generate-static-roam
   [block-map output-dir]
-  (generate-content-pages block-map output-dir))
+  (generate-content-pages block-map output-dir)
+  (search/write-index block-map output-dir)
+  )
 
 (defn generated-page
   "Add a generated page to the block map"

@@ -153,7 +153,7 @@
 (defn page-link-by-name
   [bm page-name & rest]
   (if (contains? bm page-name)
-    (apply page-link (get bm page-name)rest)
+    (apply page-link (get bm page-name) rest)
     [:span.missing "Missing link: " page-name]
     ))
 

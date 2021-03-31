@@ -178,7 +178,10 @@
         [:div.card-body
          [:div.input-group
           [:input.form-control {:id "searcht" :type "text", :placeholder "Search for..."}]
-          [:span.input-group-append [:button.btn.btn-secondary {:type "button" :onclick "doSearch();"} "Go!"]]]]]
+          ;; TODO would be nice if enter worked
+          [:span.input-group-append [:button.btn.btn-secondary {:type "button" :onclick "doSearch();"} "Go"]]]
+         [:div#searcho {:style "margin-left: 10px; margin-top: 5px;"}] ;output goes here
+         ]]
 
        ;; You are here map (TODO under a config)
        [:div.card.my-4

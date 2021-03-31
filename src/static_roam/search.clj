@@ -10,7 +10,8 @@
   [bm]
   (u/for* [page (db/displayed-pages bm)
            index (range)]
-    {:id index
+    {:id index                          ;TODO not sure this is necessary, we don't use it
+     :url (utils/html-file-title (:id page))
      :title (:id page)
      :body (db/block-text bm page)}))
 
