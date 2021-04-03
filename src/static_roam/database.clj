@@ -165,6 +165,12 @@
     (pages block-map)
     (included-pages block-map)))
 
+(defn displayed-blocks
+  [block-map]
+  (if (config/config :unexclude?)
+    (vals block-map)
+    (filter :include? (vals block-map))))
+
 (defn displayed-regular-pages
   [block-map]
   (remove :special? (displayed-pages block-map)))
@@ -362,3 +368,17 @@
     (block-full-text block)))
 
   ;; TODO filter for include
+
+(defn block-links
+  [block]
+  (u/walk-collect #(or (:href %) (:src %)) ;must be some more elegant way to express this
+                  (:hiccup block)))
+
+(defn all-links
+  [block-map]
+  (distinct (mapcat block-links (displayed-blocks block-map))))
+
+(defn all-external-links
+  [block-map]
+  (filter #(str/starts-with? % "http")
+          (all-links block-map)))
