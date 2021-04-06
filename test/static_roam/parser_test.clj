@@ -169,3 +169,11 @@ And its fallen Emanation, the Spectre and its cruel Shadow." {}))))
          (ele->hiccup
           [:alias
            "[The Spandrels of San Marco and the Panglossian Paradigm:\nA Critique of the Adaptationist Programme](https://faculty.washington.edu/lynnhank/GouldLewontin.pdf)"] {}))))
+
+(deftest internal-external-test
+  (is (= [:span
+          "Blah blah "
+          [:a {:href "What-Motivated-Rescuers-During-the-Holocaust.html"} "finished coherent essay"]
+          " or "
+          [:a.external {:href "http://link"} "normal"]])
+      (block-content->hiccup "Blah blah [finished coherent essay]([[What Motivated Rescuers During the Holocaust?]])")))

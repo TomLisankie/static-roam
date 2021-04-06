@@ -51,15 +51,19 @@
 
 (declare block-content->hiccup)         ;allow recursion on this
 
-;;; TODO "alias" seems like a misnomer, these are external links.
+;;; TODO "alias" seems like a misnomer, these are mostly external links.
 (defn- format-alias
   [alias-content]
-  (let [alias-text (utils/remove-n-surrounding-delimiters 1 (re-find #"(?s)\[.+?\]" alias-content))
-        alias-dest (utils/remove-n-surrounding-delimiters 1 (re-find #"(?s)\(.+?\)" alias-content))
-        alias-link (if (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
+  (let [alias-text (second (re-find #"(?s)\[(.+?)\]" alias-content))
+        alias-dest (second (re-find #"(?s)\((.+?)\)" alias-content))
+        internal? (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
+        alias-link (if internal?
                      (utils/html-file-title alias-dest)
-                     alias-dest)]
-    [:a.external {:href alias-link} (block-content->hiccup alias-text {})])) 
+                     alias-dest)
+        content (block-content->hiccup alias-text {})]
+    (if internal?
+      [:a {:href alias-link} content]
+      [:a.external {:href alias-link} content])))
 
 (defn- format-image
   [image-ref-content]
@@ -82,6 +86,7 @@
   (or (second (re-find #"https\:\/\/youtu\.be/([\w_-]*)" string))
       (second (re-find #"https\:\/\/www.youtube.com\/watch\?v=([\w_-]*)" string))))
 
+;;; Not used much
 (defn- make-link-from-url
   [string]
   [:a.external {:href string} string])
