@@ -177,9 +177,12 @@
         [:h5.card-header "Search"]
         [:div.card-body
          [:div.input-group
-          [:input.form-control {:id "searcht" :type "text", :placeholder "Search for..."}]
-          ;; TODO would be nice if enter worked
-          [:span.input-group-append [:button.btn.btn-secondary {:type "button" :onclick "doSearch();"} "Go"]]]
+          [:input.form-control {:id "searcht"
+                                :type "text"
+                                :placeholder "Search for..."
+                                :onkeyup "keypress(event)"}]
+          ;; Doing search on text enter so no longer needed
+          #_ [:span.input-group-append [:button.btn.btn-secondary {:type "button" :onclick "doSearch();"} "Go"]]]
          [:div#searcho {:style "margin-left: 10px; margin-top: 5px;"}] ;output goes here
          ]]
 

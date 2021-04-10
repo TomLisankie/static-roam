@@ -23,13 +23,18 @@ function getDocs() {
     });
 }
 
+function keypress(evt) {
+// for search on enter, but doing it on all keys is better
+//    if (evt.keyCode == 13) {
+    doSearch();
+}
+
 function doSearch() {
     if (index.documentStore.length == 0) {
 	getDocs();
     }
     var term = document.getElementById("searcht").value;
     var results = index.search(term);
-    // console.log(results);	
     displayResults(results);
 }
 
@@ -54,7 +59,6 @@ function displayResults(results) {
     var out = document.getElementById('searcho');
     out.innerHTML = "";
     results.forEach(function(result) {
-	console.log(result.doc.title);
 	insertLink(out, result.doc.url, result.doc.title);
     })
 }
