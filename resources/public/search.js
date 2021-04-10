@@ -29,18 +29,27 @@ function keypress(evt) {
     doSearch();
 }
 
+var config = {
+    fields: {
+        title: {boost: 2},
+        body: {boost: 1}
+    },
+    expand: true
+}
+
 function doSearch() {
     if (index.documentStore.length == 0) {
 	getDocs();
     }
     var term = document.getElementById("searcht").value;
-    var results = index.search(term);
+    var results = index.search(term, config);
     displayResults(results);
 }
 
 function insertText(container, text) {
     var node = document.createTextNode(text);
     container.appendChild(node);
+    return node;
 }
 
 function insertLink(container, url, title) {
@@ -55,10 +64,17 @@ function insertLink(container, url, title) {
     return link;
 }
 
+// TODO should limit to first n
 function displayResults(results) {
     var out = document.getElementById('searcho');
     out.innerHTML = "";
-    results.forEach(function(result) {
-	insertLink(out, result.doc.url, result.doc.title);
-    })
+    if (results.length == 0) {
+	insertText(out, "No results") // TODO style
+	    .setAttribute('class', 'searchnada')
+    } else {
+	results.forEach(function(result) {
+	    insertLink(out, result.doc.url, result.doc.title);
+	})
+    }
 }
+    
