@@ -58,6 +58,8 @@
       [:div
        "from " (parser/page-link page)
        ;; TODO this might want to do an expand thing like in recent-changes page? Does't actually seem necessary here
+       ;; TODO has been assuming this is in a low-level block, but that's not necessarily the case. For [[Introduction to [[Inventive Minds]]]], it includes the whole page!
+       ;; See database/expand-to, but we want to shrink in this case
        [:div (block-template r block-map)]])))
 
 (defn linked-references-template

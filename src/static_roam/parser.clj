@@ -155,13 +155,15 @@
         (prn "ref to excluded page " page-id)
         (block-content->hiccup (or alias page-id) {})))))
 
-;;; Turns out Roam can have links to nonexistant pages, eg from Import
 (defn page-link-by-name
   [bm page-name & rest]
-  (if (contains? bm page-name)
-    (apply page-link (get bm page-name) rest)
-    [:span.missing "Missing link: " page-name]
-    ))
+  (cond (contains? bm page-name)
+        (apply page-link (get bm page-name) rest)
+        (empty? bm)                     ;this can happen when a page title contains a link.
+        [:span page-name]
+        :else
+        [:span.missing "Missing link: " page-name] ;; Turns out Roam can have links to nonexistant pages, eg from Import
+        ))
 
 (defn unspan
   "Remove :span elts that are basically no-ops. Would be cleaner to not generate"
