@@ -2,9 +2,6 @@
   (:require [oz.core :as oz]
             [static-roam.database :as db]
             [static-roam.utils :as utils]
-            [clojure.data.json :as json]
-            [clojure.java.io :as io]
-            [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
             ))
 
@@ -13,7 +10,6 @@
 ;;; Status: makes a graph
 ;;; TODO better link highlighting
 ;;; TODO maybe color for recency?
-;;; TODO on global map, highlight entry points
 ;;; TODO on side map in private mode, highlight excluded
 ;;; TODO on maps, empty pages should be visually distinguished
 ;;; Starting to require a legend though
@@ -47,7 +43,7 @@
     (neighborhood from n neighbors)))
 
 (defn graph-data
-  [block-map {:keys [include-all? radius-from radius max-degree] :or {radius 2 max-degree 8}}]
+  [block-map {:keys [radius-from radius max-degree] :or {radius 2 max-degree 8}}]
   (let [pages (->> (db/displayed-regular-pages block-map)
                    (filter (if radius-from
                              (let [neighborhood (set (map :content (page-neighbors block-map (get block-map radius-from) radius max-degree)))]
@@ -58,19 +54,24 @@
                                                  :page-refs (db/page-refs block-map block)
                                                  :link (utils/html-file-title (:content block))))
                         (range)))
-        indexed (u/index-by :id pages)] ;make a new block map...
+        indexed (u/index-by :id pages)
+        ;; Starting nodes, either radius-frame or an entry point if doing the whole graph
+        start? (fn [b] (if radius-from  
+                         (= (:id b) radius-from)
+                         (db/entry-point? block-map b)))
+        ]
     [{:name "node-data"
       :values (map (fn [b]
                      ;;  :size (- 20 (or (:depth b) 0)) (not working)
                      {:name (:id b)
                       :link (:link b)
                       :index (:index b)
-                      :group (cond (= (:id b) radius-from)
+                      :group (cond (start? b)
                                    7
                                    (:include? b)
                                    1
                                    :else
-                                   8)
+                                   8)   ;only shows up in private mode
                       ;; This is the AREA of the circle
                       :size (+ 50 (Math/pow (* 3 (- 12 (:depth b 0))) 2))
                       })
@@ -85,9 +86,6 @@
                                      (:page-refs b)))
                               pages))}]))
 
-
-;;; options
-; {:include-all? false :radius-from "winning" :radius 2 :max-degree 6}
 
 (defn spec
   [block-map {:keys [width height controls? link-distance node-charge node-radius] :as options :or {link-distance 60 node-charge -100 node-radius 20}}]
