@@ -249,6 +249,7 @@
                 block-map))
 
 ;;; TODO this does a parse but throws away the structure, probably shgould be saved so we don't have to do it again
+;;; Currently hacked by memoizing parser/parse-to-ast
 (defn generate-refs
   [db]
   (u/map-values #(assoc % :refs (content-refs (:content %))) db))
@@ -350,11 +351,17 @@
   [block]
   (empty? (:chidlren block)))
 
+(defn url?
+  [s]
+  (re-matches #"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})" s))
+
 (defn block-text
   [block-map block]
   (letfn [(text [thing]
             (cond (string? thing)
-                  (list thing)
+                  (if (url? thing)
+                    ()
+                    (list thing))
                   (map? thing)
                   ()
                   (vector? thing)

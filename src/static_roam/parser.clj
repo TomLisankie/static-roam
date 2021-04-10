@@ -43,7 +43,8 @@
 (defparser block-parser
   (slurp parser-file))
 
-(defn parse-to-ast
+;;; Performance hack, 115 → 84 sec
+(u/defn-memoized parse-to-ast
   "Converts a string of block syntax to an abstract syntax tree for SR markup."
   [block-content]
   {:pre [(have? string? block-content)]}

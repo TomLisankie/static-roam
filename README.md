@@ -10,6 +10,11 @@ It's pretty diverged from the original by now, and includes a bunch of new featu
 - uses definable Exit Points for privacy (see below)
 - generates index pages, recently changed, and graphic map pages
 
+# Theory
+
+static-roam is somewhat more page-oriented that Roam itself. Navigation is by page, the identity of blocks doesn't really appear (Except for generating excerpts for the backlink and recent changes views).
+
+
 # Usage
 
 - create a configuration file by editing `resources/example-config.edn`
