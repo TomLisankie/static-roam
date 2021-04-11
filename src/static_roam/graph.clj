@@ -16,6 +16,8 @@
 
 ;;; TODO would be more Roam-ish to have a normal Map page with a special tag that put the vega stuff there. Then it could be linked to in the normal way.  OOOH also partial maps would be easy! Maybe in the sidebar... Mini-maps centered on current page.
 
+;;; TODO generating a json file per page is a pain. Maybe encode it in the html file? Probably page graphs should be smaller anyway, they are too crowded as it is.
+
 
 ;;; → multitool
 (defn neighborhood
@@ -94,7 +96,7 @@
     :$schema "https://vega.github.io/schema/vega/v5.json"
     :data ~(graph-data block-map options)
     :autosize "none"
-    :width ~(or width 1500)
+    :width ~(or width 1000)
     :height ~(or height 1000)
     :usermeta {:embedOptions {:actions false}} ;this turns off the menu with editor etc.
     :scales
@@ -232,7 +234,7 @@
   (utils/write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
   (let [id (str "view_" name)]
     [:div
-     [:div {:id id :style (format "width: 100%%; height: %spx;" (+ height (if controls? 300 0)))}] ; width
+     [:div {:id id :style (format "z-index; 99999; width: 100%%; height: %spx;" (+ height (if controls? 300 0)))}] ; width
      [:script
       (format "vegaEmbed('#%s', 'graphs/%s.json');" id name)
       ]]))
@@ -241,9 +243,6 @@
   []
   [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
    [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]
-   ;; For search, should be separated out
-   [:script {:src "http://elasticlunr.com/elasticlunr.min.js"}] ;TODO temp
-   [:script {:src "../assets/search.js"}]
    ])
 
 

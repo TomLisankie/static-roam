@@ -38,9 +38,6 @@
      merge
      (for [{:keys [name sort-key] :as index} indexes]
        (let [hiccup
-             [:div.main
-              [:div.ptitle
-               [:h1 (str "Index by " name)]]
               [:table.table.table-sm.table-hover 
                [:thead
                 ;; col headers
@@ -56,7 +53,7 @@
                    (for [col indexes]
                      [:td
                       ((:render col) page)])])
-                ]]]]
+                ]]]
          {(str "/pages/" (page-loc index))    ;pkm
           (templating/page-hiccup hiccup (format "Index by %s" name) bm)}
          )))))

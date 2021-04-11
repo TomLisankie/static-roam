@@ -4,6 +4,7 @@
             [static-roam.utils :as utils]
             [static-roam.parser :as parser]
             [static-roam.graph :as graph]
+            [static-roam.search :as search]
             [static-roam.database :as database]
             [org.parkerici.multitool.core :as u]
             ))
@@ -86,9 +87,9 @@
 
 ;;; TODO much of this should be configurable
 (defn page-hiccup
-  [body-hiccup page-title block-map & [head-extra]]
-  [:html
-   `[:head
+  [contents page-title block-map & {:keys [head-extra widgets]}]
+  `[:html
+    [:head
      ~(analytics-1)
      ~(analytics-2)
      [:meta {:charset "utf-8"}]
@@ -103,38 +104,65 @@
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
      ;; Using slightly-bold font for links for whatever reason.
      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;500&display=swap"}]
+     ~@(search/search-head)             ;search is on every page
      ~@head-extra
      ]
-  [:body
-   [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
+   [:body
+    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
+     [:div.container
+      ~(parser/page-link-by-name block-map (config/config :main-page) :class "navbar-brand")
+      #_
+      [:button.navbar-toggler
+       {:type "button",
+        :data-toggle "collapse",
+        :data-target "#navbarResponsive",
+        :aria-controls "navbarResponsive",
+        :aria-expanded "false",
+        :aria-label "Toggle navigation"}
+       [:span.navbar-toggler-icon]]
+      [:div.collapse.navbar-collapse
+       {:id "navbarResponsive"}
+       ;; TODO make active page machinery mork
+       [:ul.navbar-nav.ml-auto
+        ~@(for [page (config/config :right-navbar)]
+            [:li.nav-item (parser/page-link-by-name block-map page :class "nav-link")])
+        ]]]]
     [:div.container
-     (parser/page-link-by-name block-map (config/config :main-page) :class "navbar-brand")
-     #_
-     [:button.navbar-toggler
-      {:type "button",
-       :data-toggle "collapse",
-       :data-target "#navbarResponsive",
-       :aria-controls "navbarResponsive",
-       :aria-expanded "false",
-       :aria-label "Toggle navigation"}
-      [:span.navbar-toggler-icon]]
-     [:div.collapse.navbar-collapse
-      {:id "navbarResponsive"}
-      ;; TODO make active page machinery mork
-      [:ul.navbar-nav.ml-auto
-       (for [page (config/config :right-navbar)]
-         [:li.nav-item (parser/page-link-by-name block-map page :class "nav-link")])
-       ]]]]
-   [:div.container
-    body-hiccup]
-   "<!-- Footer -->"
-   [:footer.py-5.footer
-    [:div.container
-     (when (config/config :colophon)
-       `[:p.m-0.text-center.text-white ~@(config/config :colophon)])
-     [:p.m-0.text-center.text-white.small "Exported " (utils/render-time @utils/latest-export-time)]]
-    ]
-   ]])
+     [:div.main
+      [:div.row
+       "<!-- Post Content Column -->"
+       [:div.col-lg-8
+        "<!-- Title -->"
+        [:div.ptitle
+         [:h1 ~page-title]
+         ~contents
+
+        ]]
+       "<!-- Sidebar Widgets Column -->"
+       [:div.col-md-4
+        "<!-- Search Widget -->"
+        [:div.card.my-4
+         [:h5.card-header "Search"]
+         [:div.card-body
+          [:div.input-group
+           [:input.form-control {:id "searcht"
+                                 :type "text"
+                                 :placeholder "Search for..."
+                                 :onkeyup "keypress(event)"}]
+           ;; Doing search on text enter so no longer needed
+           #_ [:span.input-group-append [:button.btn.btn-secondary {:type "button" :onclick "doSearch();"} "Go"]]]
+          [:div#searcho {:style "margin-left: 10px; margin-top: 5px;"}] ;output goes here
+          ]]
+        ~@widgets
+        ]]]]
+    "<!-- Footer -->"
+    [:footer.py-5.footer
+     [:div.container
+      ~(when (config/config :colophon)
+        `[:p.m-0.text-center.text-white ~@(config/config :colophon)])
+      [:p.m-0.text-center.text-white.small "Exported " ~(utils/render-time @utils/latest-export-time)]]
+     ]
+    ]])
 
 (defn map-page
   [bm output-dir]
@@ -144,94 +172,58 @@
                                       })
    "Map"
    bm
-   (graph/vega-head)))
+   :head-extra (graph/vega-head)))
 
 (defn render-date-range
   [[from to]]
   [:div.date (utils/render-time from) " - " (utils/render-time to)])
 
-(defn block-page-template
+(defn block-page-hiccup
   [block-id block-map output-dir]
   (let [block (get block-map block-id)
         title (parser/block-content->hiccup (get block :content) block-map) ;no this makes no sense
-        contents (block-template block-id block-map)]
-    [:div.main
-     [:div.row
-      "<!-- Post Content Column -->"
-      [:div.col-lg-8
-       "<!-- Title -->"
-       [:div.ptitle
-        [:h1 title]
-        (render-date-range (database/date-range block))]
-       (when-not (:include? block)
-         [:span [:b "EXCLUDED"]])       ;TODO make this pop more
-       [:hr {}]
-       contents
-       [:hr {}]
-       ]
-      "<!-- Sidebar Widgets Column -->"
 
+        contents
+        [:div
+         [:div
+          (render-date-range (database/date-range block))]
+         (when-not (:include? block)
+           [:span [:b "EXCLUDED"]])       ;TODO make this pop more
+         [:hr {}]
+         (block-template block-id block-map)
+         [:hr {}]]
 
+        map-widget
+        [:div.card.my-4
+         [:h5.card-header "Map"]
+         [:div.card-body {:style "padding: 2px;"}
+          (graph/render-graph
+           block-map
+           output-dir
+           {:name (utils/clean-page-title block-id)
+            :width 350
+            :height 350
+            :controls? false
+            :link-distance 65
+            :node-charge -60
+            :node-radius 25
+            :radius-from block-id
+            :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
+          ]]
 
-      [:div.col-md-4
-       "<!-- Search Widget -->"
-       [:div.card.my-4
-        [:h5.card-header "Search"]
-        [:div.card-body
-         [:div.input-group
-          [:input.form-control {:id "searcht"
-                                :type "text"
-                                :placeholder "Search for..."
-                                :onkeyup "keypress(event)"}]
-          ;; Doing search on text enter so no longer needed
-          #_ [:span.input-group-append [:button.btn.btn-secondary {:type "button" :onclick "doSearch();"} "Go"]]]
-         [:div#searcho {:style "margin-left: 10px; margin-top: 5px;"}] ;output goes here
-         ]]
+        incoming-links-widget
+                (let [linked-refs (database/get-included-linked-references block-id block-map)]
+          (when-not (empty? linked-refs)
+            [:div.card.my-4
+             [:h5.card-header "Incoming links"]
+             [:div.card-body
+              [:div.incoming
+               (linked-references-template linked-refs block-map)]]]))
 
-       ;; You are here map (TODO under a config)
-       [:div.card.my-4
-        [:h5.card-header "Map"]
-        [:div.card-body {:style "padding: 2px;"}
-         (graph/render-graph
-          block-map
-          output-dir
-          {:name (utils/clean-page-title block-id)
-           :width 350
-           :height 350
-           :controls? false
-           :link-distance 65
-           :node-charge -60
-           :node-radius 25
-           :radius-from block-id
-           :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
-         ]]
-
-       "<!-- Categories Widget -->"
-       #_
-       [:div.card.my-4
-        [:h5.card-header "Categories"]
-        [:div.card-body
-         [:div.row
-          [:div.col-lg-6
-           [:ul.list-unstyled.mb-0
-            [:li {} [:a {:href "#"} "Web Design"]]
-            [:li {} [:a {:href "#"} "HTML"]]
-            [:li {} [:a {:href "#"} "Freebies"]]]]
-          [:div.col-lg-6
-           [:ul.list-unstyled.mb-0
-            [:li {} [:a {:href "#"} "JavaScript"]]
-            [:li {} [:a {:href "#"} "CSS"]]
-            [:li {} [:a {:href "#"} "Tutorials"]]]]]]]
-       ;; incoming
-       (let [linked-refs (database/get-included-linked-references block-id block-map)]
-         (when-not (empty? linked-refs)
-           [:div.card.my-4
-            [:h5.card-header "Incoming links"]
-            [:div.card-body
-             [:div.incoming
-              (linked-references-template linked-refs block-map)]]]))
-       ]]]
+        ]
+    (page-hiccup contents title block-map :head-extra (graph/vega-head) :widgets [map-widget incoming-links-widget])
     ))
+
 
 (defn home-page-hiccup
   [entry-points block-map]

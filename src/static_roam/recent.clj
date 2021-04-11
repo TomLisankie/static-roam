@@ -55,21 +55,16 @@
 
 (defn recent-page-content
   [block-map]
-  [:div.main
-   [:div.row
-    [:div.col-lg-8                     ;TODO no side col I guess
-     [:div.ptitle
-      [:h1 "Recent changes"]
-      [:hr]
-      (for [group (recents block-map)
-             :let [page-id (:page (first group))
-                   edit-time (u/max* (map real-edit-time group))]]
-         [:div
-          [:div.pheader
-           "from " (parser/page-link (get block-map page-id))
-           " "
-           [:span (utils/render-time edit-time)]]
-          (for [block (take 3 group)] ;limit to 3 chunks
-            [:div.ragged (templating/block-template (:id block) block-map)])])]]]])
+  [:div
+   (for [group (recents block-map)
+         :let [page-id (:page (first group))
+               edit-time (u/max* (map real-edit-time group))]]
+     [:div
+      [:div.pheader
+       "from " (parser/page-link (get block-map page-id))
+       " "
+       [:span (utils/render-time edit-time)]]
+      (for [block (take 3 group)] ;limit to 3 chunks
+        [:div.ragged (templating/block-template (:id block) block-map)])])])
 
 

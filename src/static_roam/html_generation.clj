@@ -14,13 +14,8 @@
 (defn page-hiccup
   [block-map output-dir block]
   (let [block-id (:id block)]
-    (templating/page-hiccup
-     (templating/block-page-template block-id block-map output-dir)
-     block-id                           ;TODO htmlize
-     block-map
-     ;; TODO should be under conditional
-     (graph/vega-head)
-     )))
+    (templating/block-page-hiccup block-id block-map output-dir)
+    ))
 
 (defn export-page
   "Write out a single page. Content is hiccup. " 
@@ -78,7 +73,7 @@
   [bm output-dir]
   (export-page
    (templating/map-page bm output-dir)
-   "/pages/map.html"
+   "/pages/Map.html"
    output-dir))
 
 (defn generate-static-roam
