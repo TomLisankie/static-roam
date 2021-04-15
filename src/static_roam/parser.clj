@@ -44,6 +44,7 @@
   (slurp parser-file))
 
 ;;; Performance hack, 115 → 84 sec
+;;; Should turn off in repl → TODO idea for multitool
 (u/defn-memoized parse-to-ast
   "Converts a string of block syntax to an abstract syntax tree for SR markup."
   [block-content]
@@ -71,7 +72,7 @@
   (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))
         image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))]
     ;; Link to
-    [:a {:href image-source :target "_image"} ;cheap way to get expansion. TODO link highlighhting looking slightly crufty
+    [:a.imga {:href image-source :target "_image"} ;cheap way to get expansion. TODO link highlighhting looking slightly crufty
      [:img {:src image-source :alt alt-text}]]))
 
 (defn youtube-vid-embed
