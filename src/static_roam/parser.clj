@@ -70,7 +70,9 @@
   [image-ref-content]
   (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))
         image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))]
-    [:img {:src image-source :alt alt-text}]))
+    ;; Link to
+    [:a {:href image-source :target "_image"} ;cheap way to get expansion. TODO link highlighhting looking slightly crufty
+     [:img {:src image-source :alt alt-text}]]))
 
 (defn youtube-vid-embed
   "Returns an iframe for a YouTube embedding"
