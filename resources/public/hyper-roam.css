@@ -42,6 +42,7 @@ body {
 
 .navbar {
     background-color: var(--navbar-background);
+    z-index: 1000;		/* should be greater than .graph */
 }
 
 .nav-link {
@@ -225,4 +226,10 @@ iframe {
 hr {
     /* Otherwise hr s do not show up in blocks... */
     width: 100%;
+}
+
+.graph {
+    z-index: 999;		/* big but less than .navbar */
+    width: 100%;
+    /* height is computed */
 }
