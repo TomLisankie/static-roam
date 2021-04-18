@@ -1,7 +1,7 @@
 (ns static-roam.recent
   (:require [static-roam.utils :as utils]
             [static-roam.database :as database]
-            [static-roam.parser :as parser]
+            [static-roam.rendering :as render]
             [static-roam.templating :as templating]
             [org.parkerici.multitool.core :as u]
             ))
@@ -61,7 +61,7 @@
                edit-time (u/max* (map real-edit-time group))]]
      [:div
       [:div.pheader
-       "from " (parser/page-link (get block-map page-id))
+       "from " (render/page-link (get block-map page-id))
        " "
        [:span (utils/render-time edit-time)]]
       (for [block (take 3 group)] ;limit to 3 chunks

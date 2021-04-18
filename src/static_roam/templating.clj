@@ -2,7 +2,7 @@
   (:require [clojure.string :as s]
             [static-roam.config :as config]
             [static-roam.utils :as utils]
-            [static-roam.parser :as parser]
+            [static-roam.rendering :as render]
             [static-roam.graph :as graph]
             [static-roam.search :as search]
             [static-roam.database :as database]
@@ -57,7 +57,7 @@
     ""                                  ;TODO ugly
     (let [page (database/block-page block-map (get block-map r))]
       [:div
-       "from " (parser/page-link page)
+       "from " (render/page-link page)
        ;; TODO this might want to do an expand thing like in recent-changes page? Does't actually seem necessary here
        ;; TODO has been assuming this is in a low-level block, but that's not necessarily the case. For [[Introduction to [[Inventive Minds]]]], it includes the whole page!
        ;; See database/expand-to, but we want to shrink in this case
@@ -110,7 +110,7 @@
    [:body
     [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
      [:div.container
-      ~(parser/page-link-by-name block-map (config/config :main-page) :class "navbar-brand")
+      ~(render/page-link-by-name block-map (config/config :main-page) :class "navbar-brand")
       #_
       [:button.navbar-toggler
        {:type "button",
@@ -125,7 +125,7 @@
        ;; TODO make active page machinery mork
        [:ul.navbar-nav.ml-auto
         ~@(for [page (config/config :right-navbar)]
-            [:li.nav-item (parser/page-link-by-name block-map page :class "nav-link")])
+            [:li.nav-item (render/page-link-by-name block-map page :class "nav-link")])
         ]]]]
     [:div.container
      [:div.main
@@ -181,8 +181,7 @@
 (defn block-page-hiccup
   [block-id block-map output-dir]
   (let [block (get block-map block-id)
-        title (parser/block-content->hiccup (get block :content) block-map) ;no this makes no sense
-
+        title (:hiccup block)
         contents
         [:div
          [:div
@@ -233,7 +232,7 @@
        [:h2.post-list-heading "Entry Points"]
       [:ul.post-list
        ;; TOD sort
-       (map (fn [page] [:li [:h3 (parser/page-link page)]]) entry-points)]]]
+       (map (fn [page] [:li [:h3 (render/page-link page)]]) entry-points)]]]
    (get (site-metadata block-map) "Title")
    block-map))
 

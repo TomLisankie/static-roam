@@ -2,7 +2,7 @@
   (:require [static-roam.utils :as utils]
             [static-roam.database :as db]
             [static-roam.templating :as templating]
-            [static-roam.parser :as parser]
+            [static-roam.rendering :as render]
             [static-roam.config :as config]
             [clojure.string :as s]))
 
@@ -14,7 +14,7 @@
 (def indexes
   [{:name "Title"
     :sort-key (comp s/upper-case :content)
-    :render parser/page-link
+    :render render/page-link
     :page-title "Index"                 ;kludge to match block-map and links
     }
    {:name "Date"

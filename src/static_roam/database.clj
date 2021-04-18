@@ -63,11 +63,13 @@
    :children :parent))
 
 ;;; TODO "((foobar))"
-(defn- content-refs-0
+#_
+(defn content-refs-0
   [string]
-  (letfn [(struct-entities [struct] 
+  (letfn [(struct-entities [struct]
             (if (string? struct)
               []
+              ;; Would make sense to do some of this in parser/transform-to-ast
               (case (first struct)
                 :block (mapcat struct-entities (rest struct))
                 :hashtag [(utils/format-hashtag (second struct))]
@@ -76,10 +78,25 @@
                 [])))]
     (struct-entities (parser/parse-to-ast string))))
 
+#_
 (defn content-refs
   [string]
   (set (and string
             (content-refs-0 string))))
+
+(defn block-refs
+  [block]
+  (letfn [(struct-entities [struct]
+            (if (string? struct)
+              []
+              ;; Would make sense to do some of this in parser/transform-to-ast
+              (case (first struct)
+                :block (mapcat struct-entities (rest struct))
+                :hashtag [(utils/format-hashtag (second struct))]
+                :page-link [(utils/remove-double-delimiters (second struct))]
+                :blockquote (struct-entities (second struct))
+                [])))]
+    (struct-entities (:parsed block))))
 
 (defn- get-linked-references
   [block-id block-map]
@@ -171,6 +188,11 @@
     (vals block-map)
     (filter :include? (vals block-map))))
 
+(defn displayed?
+  [block]
+  (or (:include? block)
+      (config/config :unexclude?)))
+
 (defn displayed-regular-pages
   [block-map]
   (remove :special? (displayed-pages block-map)))
@@ -241,6 +263,7 @@
   (u/map-values #(assoc % :include? (not (nil? (:depth %)))) block-map))
 
 ;;; TODO not the way to do this
+#_
 (defn add-hiccup-for-included-blocks
   [block-map]
   (u/map-values #(if (or (:include? %) (config/config :unexclude?))
@@ -248,11 +271,12 @@
                    %)
                 block-map))
 
-;;; TODO this does a parse but throws away the structure, probably shgould be saved so we don't have to do it again
-;;; Currently hacked by memoizing parser/parse-to-ast
 (defn generate-refs
   [db]
-  (u/map-values #(assoc % :refs (content-refs (:content %))) db))
+  (u/map-values #(-> %
+                     (assoc :parsed (parser/parse-to-ast (:content %)))
+                     (assoc :refs (block-refs %)))
+                db))
 
 (defn generate-inverse-refs
   [db]
@@ -276,6 +300,9 @@
         direct-children-memoized (fix (memoize direct-children))]
     (u/map-values direct-children-memoized block-map)))
 
+;;; Mostly blocks can be rendered indpendently, but if there are references (and now sidenotes) there are dependencies
+
+
 (defn roam-db
   [roam-json]
   (->> roam-json
@@ -291,7 +318,7 @@
   [roam-json]
   (-> roam-json
       roam-db
-      add-hiccup-for-included-blocks)) ;TODO this unmarks pages, too aggressivel
+      ))
 
 ;;; Temp
 (def min* (partial u/min-by identity))
@@ -345,7 +372,6 @@
         block
         :else
         (expand-to block-map (get block-map (:parent block)) minsize)))
-
 
 (defn leaf?
   [block]
