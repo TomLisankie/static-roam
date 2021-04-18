@@ -1,6 +1,5 @@
 (ns static-roam.rendering
   (:require [static-roam.config :as config]
-            [static-roam.database :as db]
             [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [clojure.string :as str]
@@ -122,10 +121,16 @@
           (count (:id page)))
        10)))
 
+;;; God damn it, had to dupe this from database
+(defn displayed?
+  [block]
+  (or (:include? block)
+      (config/config :unexclude?)))
+
 (defn page-link
   [page & {:keys [alias class]}]
   (let [page-id (:id page)]
-    (if (db/displayed? page)
+    (if (displayed? page)
       [:a (u/clean-map
            {:href (utils/html-file-title page-id)
             ;; TODO behavior with empties should be configurable, I keep
@@ -160,6 +165,7 @@
        (let [ele-content (second ast-ele)]
          (unspan
           (case (first ast-ele)
+            nil nil
             :metadata-tag [:b [:a {:href (utils/html-file-title ele-content)}
                                (subs ele-content 0 (dec (count ele-content)))]]
             :page-link (page-link-by-name block-map (utils/remove-double-delimiters ele-content))
@@ -207,7 +213,9 @@
 
 (defn render
   [bm]
+  ;; Sometimes render incorporates other blocks; the memoize tries to ensure that the render is just done once. 
   (let [render-block (memoize #(block-hiccup % bm))]
-    (u/map-values bm #(if (db/displayed? %)
+    (u/map-values #(if (displayed? %)
                         (assoc % :hiccup (render-block %))
-                        %))))
+                        %)
+                  bm)))

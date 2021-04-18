@@ -1,5 +1,6 @@
 (ns static-roam.database
   (:require [static-roam.parser :as parser]
+            [static-roam.rendering :as render]
             [static-roam.utils :as utils]
             [static-roam.config :as config]
             [org.parkerici.multitool.core :as u]
@@ -96,7 +97,7 @@
                 :page-link [(utils/remove-double-delimiters (second struct))]
                 :blockquote (struct-entities (second struct))
                 [])))]
-    (struct-entities (:parsed block))))
+    (set (struct-entities (:parsed block)))))
 
 (defn- get-linked-references
   [block-id block-map]
@@ -271,11 +272,13 @@
                    %)
                 block-map))
 
+(defn parse
+  [db]
+  (u/map-values #(assoc % :parsed (parser/parse-to-ast (:content %))) db))
+
 (defn generate-refs
   [db]
-  (u/map-values #(-> %
-                     (assoc :parsed (parser/parse-to-ast (:content %)))
-                     (assoc :refs (block-refs %)))
+  (u/map-values #(assoc % :refs (block-refs %))
                 db))
 
 (defn generate-inverse-refs
@@ -307,11 +310,13 @@
   [roam-json]
   (->> roam-json
        create-block-map-no-links
+       parse
        generate-refs
        generate-inverse-refs
        compute-depths
        compute-includes
        add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
+       render/render
        ))
 
 (defn setup-block-map

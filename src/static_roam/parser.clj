@@ -1,10 +1,7 @@
 (ns static-roam.parser
   (:require [instaparse.core :as insta :refer [defparser]]
-            [taoensso.truss :as truss :refer (have have! have?)]
             [clojure.string :as str]
             [static-roam.config :as config]
-            [static-roam.utils :as utils]
-            [org.parkerici.multitool.core :as u]
             [clojure.java.io :as io]))
 
 ;;; Turns Roam block content into an intermediate form (AST)
