@@ -1,5 +1,6 @@
 (ns static-roam.rendering
   (:require [static-roam.config :as config]
+            [static-roam.parser :as parser]
             [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [clojure.string :as str]
@@ -154,12 +155,12 @@
         [:span.missing "Missing link: " page-name] ;; Turns out Roam can have links to nonexistant pages, eg from Import
         ))
 
-(defn- ele->hiccup
+(defn ele->hiccup
   [ast-ele block-map]
   (utils/debuggable
    :ele->hiccup [ast-ele]
    (let [recurse (fn [s]                 ;TODO probably needs a few more uses
-                   (ele->hiccup s block-map))] ; used to be, do we really need that ? (parser/parse-to-ast s)
+                   (ele->hiccup (parser/parse-to-ast s) block-map))] ; used to be, do we really need that ? 
      (if (string? ast-ele)
        ast-ele
        (let [ele-content (second ast-ele)]
@@ -204,7 +205,7 @@
 ;;; Used for converting things like italics in blocknames
 (defn block-content->hiccup
   [block-content]
-  (ele->hiccup block-content {}))
+  (ele->hiccup (parser/parse-to-ast block-content) {}))
 
 (defn block-hiccup
   "Convert Roam markup to Hiccup"
