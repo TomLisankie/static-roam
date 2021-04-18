@@ -234,7 +234,7 @@
   (utils/write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
   (let [id (str "view_" name)]
     [:div
-     [:div.graph {:id id :style (format "height: %px;" (+ height (if controls? 300 0)))}]
+     [:div.graph {:id id :style (format "height: %spx;" (+ height (if controls? 300 0)))}]
      [:script
       (format "vegaEmbed('#%s', 'graphs/%s.json');" id name)
       ]]))

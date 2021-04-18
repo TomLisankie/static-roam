@@ -9,7 +9,6 @@
   )
 
 ;;; Turn parsed content into hiccup. 
-
 (declare block-content->hiccup)         ;allow recursion on this
 
 ;;; TODO "alias" seems like a misnomer, these are mostly external links.
@@ -21,7 +20,7 @@
         alias-link (if internal?
                      (utils/html-file-title alias-dest)
                      alias-dest)
-        content (block-content->hiccup alias-text {})]
+        content (block-content->hiccup alias-text)]
     (if internal?
       [:a {:href alias-link} content]
       [:a.external {:href alias-link} content])))
@@ -86,6 +85,7 @@
     (second hiccup)
     hiccup))
 
+#_
 (defn generate-hiccup
   [block block-map]
   (if (:content block)
@@ -134,10 +134,10 @@
                              (filter identity
                                      (list (when (page-empty? page) "empty")
                                            class)))})
-       (block-content->hiccup (or alias page-id) {})]
+       (block-content->hiccup (or alias page-id))]
       (do
         (prn "ref to excluded page " page-id)
-        (block-content->hiccup (or alias page-id) {})))))
+        (block-content->hiccup (or alias page-id))))))
 
 (defn page-link-by-name
   [bm page-name & rest]
@@ -170,7 +170,7 @@
 ;                         (if (= (db/block-page block-map ref-block) *current-page*) ;Yeah nonclojurish sue me
 ;                           (generate-sidenote ref-block)
                            [:div.block-ref
-                            (generate-hiccup ref-block block-map)])
+                            (:hiccup ref-block)])
             :hashtag [:a {:href (utils/html-file-title ele-content)}
                       (utils/format-hashtag ele-content)]
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
@@ -194,6 +194,11 @@
             :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
             :hr [:hr]
             )))))))
+
+;;; Used for converting things like italics in blocknames
+(defn block-content->hiccup
+  [block-content]
+  (ele->hiccup block-content {}))
 
 (defn block-hiccup
   "Convert Roam markup to Hiccup"
