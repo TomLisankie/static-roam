@@ -5,7 +5,7 @@
             [static-roam.rendering :as render]
             [static-roam.graph :as graph]
             [static-roam.search :as search]
-            [static-roam.database :as database]
+            [static-roam.batadase :as bd]
             [org.parkerici.multitool.core :as u]
             ))
 
@@ -55,12 +55,12 @@
   [block-map r]
   (if (nil? (get block-map r))
     ""                                  ;TODO ugly
-    (let [page (database/block-page block-map (get block-map r))]
+    (let [page (bd/block-page block-map (get block-map r))]
       [:div
        "from " (render/page-link page)
        ;; TODO this might want to do an expand thing like in recent-changes page? Does't actually seem necessary here
        ;; TODO has been assuming this is in a low-level block, but that's not necessarily the case. For [[Introduction to [[Inventive Minds]]]], it includes the whole page!
-       ;; See database/expand-to, but we want to shrink in this case
+       ;; See bd/expand-to, but we want to shrink in this case
        [:div (block-template r block-map)]])))
 
 (defn linked-references-template
@@ -185,7 +185,7 @@
         contents
         [:div
          [:div
-          (render-date-range (database/date-range block))]
+          (render-date-range (bd/date-range block))]
          (when-not (:include? block)
            [:span [:b "EXCLUDED"]])       ;TODO make this pop more
          [:hr {}]
@@ -211,7 +211,7 @@
           ]]
 
         incoming-links-widget
-                (let [linked-refs (database/get-included-linked-references block-id block-map)]
+        (let [linked-refs (bd/get-included-linked-references block-id block-map)]
           (when-not (empty? linked-refs)
             [:div.card.my-4
              [:h5.card-header "Incoming links"]

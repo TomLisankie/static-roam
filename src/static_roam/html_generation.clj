@@ -1,11 +1,9 @@
 (ns static-roam.html-generation
-  (:require [clojure.string :as s]
-            [org.parkerici.multitool.core :as u]
+  (:require [org.parkerici.multitool.core :as u]
             [static-roam.utils :as utils]
             [hiccup.core :as hiccup]
             [static-roam.templating :as templating]
-            [static-roam.database :as db]
-            [static-roam.graph :as graph]
+            [static-roam.batadase :as bd]
             [static-roam.recent :as recent]
             [static-roam.index :as index]
             [static-roam.search :as search]
@@ -40,12 +38,12 @@
 
 (defn generate-content-pages
   [block-map output-dir]
-  (doseq [page (db/displayed-pages block-map)]
+  (doseq [page (bd/displayed-pages block-map)]
     (generate-content-page block-map output-dir page)))
 
 (defn generate-home-page
   [block-map output-dir]
-  (let [entry-points (db/entry-points block-map)]
+  (let [entry-points (bd/entry-points block-map)]
     (export-page
      (templating/home-page-hiccup
       entry-points

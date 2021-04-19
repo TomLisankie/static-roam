@@ -1,6 +1,6 @@
 (ns static-roam.recent
   (:require [static-roam.utils :as utils]
-            [static-roam.database :as database]
+            [static-roam.batadase :as bd]
             [static-roam.rendering :as render]
             [static-roam.templating :as templating]
             [org.parkerici.multitool.core :as u]
@@ -11,12 +11,12 @@
 
 (u/defn-memoized real-edit-time
   [block]
-  (second (database/date-range block)))
+  (second (bd/date-range block)))
 
 (defn trim-redundants-1
   [blocks]
   (cond (empty? (rest blocks)) blocks
-        (some #(database/block-contains? (first blocks) %) (rest blocks))
+        (some #(bd/block-contains? (first blocks) %) (rest blocks))
         (trim-redundants-1 (rest blocks))
         :else
         (cons (first blocks) (trim-redundants-1 (rest blocks)))))
@@ -38,16 +38,16 @@
        vals
        (filter :include?)
        (remove :special?)
-       (filter database/leaf?)
+       (filter bd/leaf?)
        (sort-by :edit-time u/>*)     
        (take 100)
        ;; Expand small ones TODO parameterize
-       (map #(database/expand-to block-map % 101))
+       (map #(bd/expand-to block-map % 101))
        ;; remove duplicates
        distinct
        trim-redundants
        ;; group by page
-       (map #(assoc % :page (:id (database/block-page block-map %))))
+       (map #(assoc % :page (:id (bd/block-page block-map %))))
        (group-by :page)
        vals
        (sort-by (fn [blocks] (u/max* (map real-edit-time blocks))))

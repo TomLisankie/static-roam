@@ -1,6 +1,7 @@
 (ns static-roam.rendering
   (:require [static-roam.config :as config]
             [static-roam.parser :as parser]
+            [static-roam.batadase :as bd]
             [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [clojure.string :as str]
@@ -14,8 +15,7 @@
 ;;; TODO "alias" seems like a misnomer, these are mostly external links.
 (defn- format-alias
   [alias-content]
-  (let [alias-text (second (re-find #"(?s)\[(.+?)\]" alias-content))
-        alias-dest (second (re-find #"(?s)\((.+?)\)" alias-content))
+  (let [[_ alias-text alias-dest] (re-find #"(?s)\[(.+?)\]\((.+?)\)" alias-content)
         internal? (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
         alias-link (if internal?
                      (utils/html-file-title alias-dest)
@@ -85,25 +85,11 @@
     (second hiccup)
     hiccup))
 
-#_
-(defn generate-hiccup
-  [block block-map]
-  (if (:content block)
-    (let [basic (block-content->hiccup (:content block) block-map)]
-      (if (> (:heading block) 0)
-        [(keyword (str "h" (:heading block))) basic]
-        basic))
-    (do
-      (prn "Missing content: " (:id block))
-      nil)))
-
 (defn format-codeblock
   [spec]
   (let [[_ _lang content] (re-matches #"(?sm)```(\w*)\n(.*)```\s*" spec)]
     ;; TODO there are packages that will do language-specific highlighting
     [:code.codeblock content]))
-
-
 
 ;;; Following 2 fns dup from database until I can untangle the ns mess
 ;;; And they have diverged...argh TODO
@@ -155,12 +141,16 @@
         [:span.missing "Missing link: " page-name] ;; Turns out Roam can have links to nonexistant pages, eg from Import
         ))
 
-(defn ele->hiccup
-  [ast-ele block-map]
+(defn generate-sidenote 
+  [ref-block]
+  [:span "TODO"])                        
+
+(defn- ele->hiccup
+  [ast-ele block-map & [block]]
   (utils/debuggable
    :ele->hiccup [ast-ele]
    (let [recurse (fn [s]                 ;TODO probably needs a few more uses
-                   (ele->hiccup (parser/parse-to-ast s) block-map))] ; used to be, do we really need that ? 
+                   (ele->hiccup (parser/parse-to-ast s) block-map block))] ; used to be, do we really need that ? 
      (if (string? ast-ele)
        ast-ele
        (let [ele-content (second ast-ele)]
@@ -174,10 +164,11 @@
                                                          ele-content)]
                           (page-link-by-name block-map page :alias alias))
             :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
-;                         (if (= (db/block-page block-map ref-block) *current-page*) ;Yeah nonclojurish sue me
-;                           (generate-sidenote ref-block)
+                         ;; ARGh can't work because of fucking namespace rules. POS!
+                         (if (and block (= (bd/block-page block-map ref-block) (bd/block-page block-map block)))
+                           (generate-sidenote ref-block)
                            [:div.block-ref
-                            (:hiccup ref-block)])
+                            (:hiccup ref-block)]))
             :hashtag [:a {:href (utils/html-file-title ele-content)}
                       (utils/format-hashtag ele-content)]
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
@@ -195,9 +186,9 @@
                           (throw (ex-info "Couldn't find youtube id" {:string ele-content}))))
             
             :bare-url (make-content-from-url ele-content)
-            :blockquote [:blockquote (ele->hiccup ele-content block-map)]
+            :blockquote [:blockquote (ele->hiccup ele-content block-map block)]
                                         ;ast-ele
-            :block `[:span ~@(map #(ele->hiccup % block-map) (rest ast-ele))]
+            :block `[:span ~@(map #(ele->hiccup % block-map block) (rest ast-ele))]
             :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
             :hr [:hr]
             )))))))
@@ -210,7 +201,14 @@
 (defn block-hiccup
   "Convert Roam markup to Hiccup"
   [block block-map]
-  (ele->hiccup (:parsed block) block-map))
+  (if (:parsed block)
+    (let [basic (ele->hiccup (:parsed block) block-map block)]
+      (if (> (:heading block) 0)
+        [(keyword (str "h" (:heading block))) basic]
+        basic))
+    (do
+      (prn "Missing content: " (:id block))
+      nil)))
 
 (defn render
   [bm]

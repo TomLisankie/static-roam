@@ -2,6 +2,7 @@
   (:require [static-roam.config :as config]
             [static-roam.utils :as utils]
             [static-roam.database :as database]
+            [static-roam.batadase :as bd]
             [static-roam.html-generation :as html-gen]
             [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
@@ -13,9 +14,8 @@
   (-> path-to-zip
       utils/read-roam-json-from-zip
       database/setup-block-map
-      ;; TODO this should pay more attention to config
       (html-gen/generated-page "Index" html-gen/generate-index-pages)
-      (html-gen/generated-page "New" html-gen/generate-recent-page)
+      (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO would make sense to put these under a config
       (html-gen/generated-page "Map" html-gen/generate-global-map)
       ))
 
@@ -33,14 +33,17 @@
    (u/map-filter (fn [b] (and (:page? b) b))
                  (vals @last-bm))))
 
-;;; Dumps included blocks in order; the idea is this should be diffable. Also slow.
+
 (defn block-dump
-  []
+  [& {:keys [all?]}]
+  "Dumps included blocks or all blocks in order; the idea is this should be diffable. Also slow."
   (ju/schppit
    "blocks.edn"
    (into (sorted-map)
          (u/map-values #(dissoc % :dchildren)
-                       (u/clean-map @last-bm (comp not :include?))))))
+                       (if all?
+                         @last-bm
+                         (u/clean-map @last-bm (comp not :include?)))))))
 
 (defn tap
   [bm]
@@ -62,7 +65,6 @@
 
 (defn gen-pages
   []
-  ;; TODO should clear out the whole output dir, but then would have to copy css etc
   (reset-output)
   (html-gen/generate-static-roam @last-bm (config/config :output-dir)))
 
@@ -74,7 +76,7 @@
       block-map
       tap
       (html-gen/generate-static-roam (config/config :output-dir)))
-  (prn (database/stats @last-bm))
+  (prn (bd/stats @last-bm))
   #_ (dump))
 
 

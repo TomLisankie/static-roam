@@ -1,12 +1,10 @@
 (ns static-roam.index
   (:require [static-roam.utils :as utils]
-            [static-roam.database :as db]
+            [static-roam.batadase :as bd]
             [static-roam.templating :as templating]
             [static-roam.rendering :as render]
             [static-roam.config :as config]
             [clojure.string :as s]))
-
-
 
 ;;; depth tree
 ;;; by size, # of refs (incoming/outgoing/both)
@@ -18,19 +16,19 @@
     :page-title "Index"                 ;kludge to match block-map and links
     }
    {:name "Date"
-    :sort-key (comp - inst-ms db/edit-time)
-    :render (comp utils/render-time db/edit-time)}
+    :sort-key (comp - inst-ms bd/edit-time)
+    :render (comp utils/render-time bd/edit-time)}
    {:name "Depth"
     :sort-key :depth
     :render :depth}
    {:name "Size"
-    :sort-key (comp - db/size)
-    :render #(format "%.1fK" (double (/ (db/size %) 1000)))}
+    :sort-key (comp - bd/size)
+    :render #(format "%.1fK" (double (/ (bd/size %) 1000)))}
    ])
 
 (defn make-index-pages
   [bm]
-  (let [pages (remove :special? (db/displayed-regular-pages bm))
+  (let [pages (remove :special? (bd/displayed-regular-pages bm))
         page-loc (fn [col] (str (or (:page-title col)
                                     (format "Index-%s" (:name col)))
                                 ".html"))]

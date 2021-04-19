@@ -1,6 +1,6 @@
 (ns static-roam.graph
   (:require [oz.core :as oz]
-            [static-roam.database :as db]
+            [static-roam.batadase :as bd]
             [static-roam.utils :as utils]
             [org.parkerici.multitool.core :as u]
             ))
@@ -30,37 +30,37 @@
 ;;; → db
 (defn block-neighbors
   [bm from n]
-  (let [neighbors (fn [b] (map bm (db/all-refs b)))]
+  (let [neighbors (fn [b] (map bm (bd/all-refs b)))]
     (neighborhood from n neighbors)))
 
 ;;; → db
 (u/defn-memoized degree [block]
-  (count (db/all-refs block)))
+  (count (bd/all-refs block)))
 
 ;;; TODO max-degree is a hack and I don't like it – without it, if you hit a high-degree node you'll get too much in the graph
 ;;; some kind of smart filter would be better
 (defn page-neighbors
   [bm from n max-degree]
-  (let [neighbors (fn [b] (take max-degree (map bm (db/page-refs bm b))))]
+  (let [neighbors (fn [b] (take max-degree (map bm (bd/page-refs bm b))))]
     (neighborhood from n neighbors)))
 
 (defn graph-data
   [block-map {:keys [radius-from radius max-degree] :or {radius 2 max-degree 8}}]
-  (let [pages (->> (db/displayed-regular-pages block-map)
+  (let [pages (->> (bd/displayed-regular-pages block-map)
                    (filter (if radius-from
                              (let [neighborhood (set (map :content (page-neighbors block-map (get block-map radius-from) radius max-degree)))]
                                #(contains? neighborhood (:content %)))
                              identity))
                    (map (fn [index block] (assoc block
                                                  :index index
-                                                 :page-refs (db/page-refs block-map block)
+                                                 :page-refs (bd/page-refs block-map block)
                                                  :link (utils/html-file-title (:content block))))
                         (range)))
         indexed (u/index-by :id pages)
         ;; Starting nodes, either radius-frame or an entry point if doing the whole graph
         start? (fn [b] (if radius-from  
                          (= (:id b) radius-from)
-                         (db/entry-point? block-map b)))
+                         (bd/entry-point? block-map b)))
         ]
     [{:name "node-data"
       :values (map (fn [b]
