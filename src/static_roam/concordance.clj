@@ -26,7 +26,7 @@
   [bm]
   (->> bm
        (db/displayed-pages)
-       (map (partial db/block-text bm))
+       (map (partial db/block-full-text bm))
        (mapcat (u/safely tokens))
        nlp/remove-ruthlessly))
 

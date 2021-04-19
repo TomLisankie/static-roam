@@ -13,7 +13,7 @@
     {:id index                          ;TODO not sure this is necessary, we don't use it
      :url (utils/html-file-title (:id page))
      :title (:id page)
-     :body (bd/block-text bm page)}))
+     :body (bd/block-full-text bm page)}))
 
 (defn write-index
   [bm output-dir]

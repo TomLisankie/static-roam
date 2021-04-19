@@ -2,6 +2,7 @@
   (:require [static-roam.config :as config]
             [static-roam.utils :as utils]
             [static-roam.database :as database]
+            [static-roam.rendering :as render]
             [static-roam.batadase :as bd]
             [static-roam.html-generation :as html-gen]
             [me.raynes.fs :as fs]
@@ -63,9 +64,14 @@
    (utils/html-file-title page)
    (config/config :output-dir)))
 
+(defn rerender
+  []
+  (swap! last-bm render/render))
+
 (defn gen-pages
   []
   (reset-output)
+  (rerender)
   (html-gen/generate-static-roam @last-bm (config/config :output-dir)))
 
 (defn -main

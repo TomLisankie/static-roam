@@ -1,8 +1,8 @@
 (ns static-roam.templating
   (:require [clojure.string :as s]
+            [static-roam.rendering :as render]
             [static-roam.config :as config]
             [static-roam.utils :as utils]
-            [static-roam.rendering :as render]
             [static-roam.graph :as graph]
             [static-roam.search :as search]
             [static-roam.batadase :as bd]
@@ -181,7 +181,7 @@
 (defn block-page-hiccup
   [block-id block-map output-dir]
   (let [block (get block-map block-id)
-        title (:hiccup block)
+        title (bd/block-local-text block)
         contents
         [:div
          [:div

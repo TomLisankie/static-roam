@@ -204,8 +204,10 @@
   [s]
   (re-matches #"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})" s))
 
-(defn block-text
-  [block-map block]
+
+
+(defn block-local-text
+  [block]
   (letfn [(text [thing]
             (cond (string? thing)
                   (if (url? thing)
@@ -216,12 +218,16 @@
                   (vector? thing)
                   (mapcat text (rest thing))
                   :else
-                  ()))
-          (block-local-text [block] (str/join " " (text (:hiccup block))))
-          (block-full-text [block] (str/join " " (cons (block-local-text block)
-                                                       (map #(block-full-text (get block-map %))
-                                                            (:children block)))))]
-    (block-full-text block)))
+                  ()))]
+    (str/join " " (text (:hiccup block)))))
+
+
+(defn block-full-text
+  [block-map block]
+  (str/join " " (cons (block-local-text block)
+                      (map #(block-full-text block-map (get block-map %))
+                           (:children block)))))
+
 
   ;; TODO filter for include
 
