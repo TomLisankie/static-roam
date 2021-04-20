@@ -9,6 +9,11 @@
             [static-roam.search :as search]
             [static-roam.config :as config]))
 
+;;; Translate Hiccup into actual pages.
+;;; NOTE: I wish Hiccup had an option to prettyprint HTML, but it doesn't
+;;; This works https://prettydiff.com/?m=beautify&html
+;;;  actually no, it introduces spaces that have an effect on rendering! Fuck!
+
 (defn page-hiccup
   [block-map output-dir block]
   (let [block-id (:id block)]
@@ -40,6 +45,8 @@
   [block-map output-dir]
   (doseq [page (bd/displayed-pages block-map)]
     (generate-content-page block-map output-dir page)))
+
+;;; If there are any more special pages; should get more declarative about these generators.
 
 (defn generate-home-page
   [block-map output-dir]

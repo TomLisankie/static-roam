@@ -6,6 +6,7 @@
             [clojure.data.json :as json]
             [clojure.string :as str]
             [org.parkerici.multitool.core :as u]
+            [taoensso.truss :as truss :refer (have have! have?)]
             )
   )
 
@@ -141,9 +142,15 @@
         [:span.missing "Missing link: " page-name] ;; Turns out Roam can have links to nonexistant pages, eg from Import
         ))
 
-(defn generate-sidenote 
-  [ref-block]
-  [:span "TODO"])                        
+(declare block-hiccup)
+
+;;; TODO Should get reset at start of run 
+(def *sidenotes* (atom {}))  ;map from containing id to sidenote ids
+
+(defn record-sidenote
+  [sidenote-block containing-block]
+  ;; TODO really want to find ancestor of container
+  (swap! *sidenotes* update-in [(:id containing-block)] conj (:id sidenote-block)))
 
 (defn- ele->hiccup
   [ast-ele block-map & [block]]
@@ -165,8 +172,10 @@
                           (page-link-by-name block-map page :alias alias))
             :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
                          ;; ARGh can't work because of fucking namespace rules. POS!
-                         (if (and block (= (bd/block-page block-map ref-block) (bd/block-page block-map block)))
-                           (generate-sidenote ref-block)
+                         (if (and block (= (bd/block-page block-map ref-block)
+                                           (bd/block-page block-map block)))
+                           (do (record-sidenote ref-block block)
+                               [:span "*"]) ;TODO superscript, highlight, whatever
                            [:div.block-ref
                             (:hiccup ref-block)]))
             :hashtag [:a {:href (utils/html-file-title ele-content)}
@@ -210,11 +219,68 @@
       (prn "Missing content: " (:id block))
       nil)))
 
+;;; This renders individual blocks into hiccup. Blocks and their children is handled by block-full-hiccup and friends below,
 (defn render
   [bm]
+  (reset! *sidenotes* {})
   ;; Sometimes render incorporates other blocks; the memoize tries to ensure that the render is just done once. 
   (let [render-block (memoize #(block-hiccup % bm))]
     (u/map-values #(if (displayed? %)
                         (assoc % :hiccup (render-block %))
                         %)
                   bm)))
+
+(defn roam-url
+  [block-id]
+  (str (config/config :roam-base-url) block-id))
+
+(declare render-sidenotes)
+(declare block-full-hiccup)
+
+ ;Has to do full hiccup to include children
+(defn block-full-hiccup-sidenotes
+  [block-id block-map & [depth]]
+  {:pre [(have? string? block-id)]}
+  (let [depth (or depth 0)]
+    (let [block (get block-map block-id)
+          base
+          [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
+           (if (or (nil? (:hiccup block))                          ;TODO ech
+                   (= (:content block) block-id))
+             nil
+             [:li.block
+              (when (config/config :dev-mode)
+                [:a.edit {:href (roam-url block-id)
+                          :target "_roam"}
+                 "[e]"])                      ;TODO nicer icons
+              (when-not (:include? block)
+                [:span.edit 
+                 "[X]"])
+              (:hiccup block)
+              ])
+           (map #(block-full-hiccup % block-map (inc depth))
+                (:children block))
+           ]]
+      (if-let [sidenotes (get @*sidenotes* block-id)]
+        [:div
+         (render-sidenotes block-map sidenotes)
+         base]
+        base
+        ))))
+
+(defn render-sidenotes
+  [block-map sidenotes]
+  (for [s sidenotes]
+    [:div.sidenote
+     "*" (block-full-hiccup-sidenotes s block-map 1)]))
+
+(defn sidenote?
+  [id]
+  ;; TODO want a once macro
+  (contains? ((memoize (fn [] (set (flatten (vals @*sidenotes*)))))) id))
+
+;;; The real top-level call
+(defn block-full-hiccup
+  [block-id block-map & [depth]]
+  (when-not (sidenote? block-id)
+    (block-full-hiccup-sidenotes block-id block-map depth)))

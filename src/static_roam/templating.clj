@@ -24,31 +24,7 @@
         prop-val-dict (metadata-properties property-block-content)]
     prop-val-dict))
 
-(defn roam-url
-  [block-id]
-  (str (config/config :roam-base-url) block-id))
 
-(defn block-template
-  [block-id block-map & [depth]]
-  (let [depth (or depth 0)
-        block (get block-map block-id)]
-    [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
-     (if (or (nil? (:hiccup block))                          ;TODO ech
-             (= (:content block) block-id))
-       nil
-       [:li.block
-        (when (config/config :dev-mode)
-          [:a.edit {:href (roam-url block-id)
-                    :target "_roam"}
-           "[e]"])                      ;TODO nicer icons
-        (when-not (:include? block)
-          [:span.edit 
-           "[X]"])
-        (:hiccup block)
-        ])
-     (map #(block-template % block-map (inc depth))
-          (:children block))
-     ]))
 
 ;;; Annoying amount of id/block switcheroo
 (defn linked-reference-template
@@ -61,7 +37,7 @@
        ;; TODO this might want to do an expand thing like in recent-changes page? Does't actually seem necessary here
        ;; TODO has been assuming this is in a low-level block, but that's not necessarily the case. For [[Introduction to [[Inventive Minds]]]], it includes the whole page!
        ;; See bd/expand-to, but we want to shrink in this case
-       [:div (block-template r block-map)]])))
+       [:div (render/block-full-hiccup r block-map)]])))
 
 (defn linked-references-template
   [references block-map]
@@ -189,7 +165,7 @@
          (when-not (:include? block)
            [:span [:b "EXCLUDED"]])       ;TODO make this pop more
          [:hr {}]
-         (block-template block-id block-map)
+         (render/block-full-hiccup block-id block-map)
          [:hr {}]]
 
         map-widget

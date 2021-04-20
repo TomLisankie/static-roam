@@ -233,3 +233,14 @@ hr {
     width: 100%;
     /* height is computed */
 }
+
+.sidenote {
+    float: right;
+    clear: right;
+    width: 250px;
+    margin-right: -350px;
+    /* TODO border, shrink, asterisk or whatever */
+    margin-right: -350px;
+    position: relative;
+    font-size: 80%;
+}
