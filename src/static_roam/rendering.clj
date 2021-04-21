@@ -144,13 +144,15 @@
 
 (declare block-hiccup)
 
-;;; TODO Should get reset at start of run 
-(def *sidenotes* (atom {}))  ;map from containing id to sidenote ids
+;;; map from containing id to seq of sidenote ids
+;;; gets reset at start of run 
+(def *sidenotes* (atom {}))  
 
 (defn record-sidenote
-  [sidenote-block containing-block]
+  [block-map sidenote-block containing-block]
   ;; TODO really want to find ancestor of container
-  (swap! *sidenotes* update-in [(:id containing-block)] conj (:id sidenote-block)))
+  (let [anchor-block (bd/block-ancestor-of-depth block-map containing-block 1)]
+    (swap! *sidenotes* update-in [(:id anchor-block)] conj (:id sidenote-block))))
 
 (defn- ele->hiccup
   [ast-ele block-map & [block]]
@@ -174,8 +176,8 @@
                          ;; ARGh can't work because of fucking namespace rules. POS!
                          (if (and block (= (bd/block-page block-map ref-block)
                                            (bd/block-page block-map block)))
-                           (do (record-sidenote ref-block block)
-                               [:span "*"]) ;TODO superscript, highlight, whatever
+                           (do (record-sidenote block-map ref-block block)
+                               [:span.superscript]) 
                            [:div.block-ref
                             (:hiccup ref-block)]))
             :hashtag [:a {:href (utils/html-file-title ele-content)}
@@ -272,7 +274,8 @@
   [block-map sidenotes]
   (for [s sidenotes]
     [:div.sidenote
-     "*" (block-full-hiccup-sidenotes s block-map 1)]))
+     [:span.superscript.side]
+     (block-full-hiccup-sidenotes s block-map 1)]))
 
 (defn sidenote?
   [id]

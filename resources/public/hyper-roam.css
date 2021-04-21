@@ -244,3 +244,30 @@ hr {
     position: relative;
     font-size: 80%;
 }
+
+.sidenote > .block {
+    display: inline;
+}
+
+.sidenote > .nondent {
+    display: inline;
+}
+
+.superscript {
+    position: relative;
+    top: -0.3rem;
+    left: -0.2rem;
+    color: var(--link);
+}
+
+.superscript::before {
+    content: "*"; 
+}
+
+/* combine with .superscript to render in sidebar */
+.side {
+    left: -0.5rem;
+    width: 0px;
+    color: var(--link);
+    float: left;
+}
