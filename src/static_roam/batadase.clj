@@ -29,14 +29,6 @@
   (and (:parent block)
        (get block-map (:parent block))))
 
-;;; Used for sidenotes, which require some awkwward hacks.
-(defn block-ancestor-of-depth
-  [block-map block depth]
-  (cond (= (:depth block) depth) block
-        (nil? block) nil
-        :else
-        (block-ancestor-of-depth block-map (:parent block) depth)))
-
 (defn block-children
   [block-map block]
   (map block-map (:children block)))

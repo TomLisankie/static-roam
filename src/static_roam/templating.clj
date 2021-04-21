@@ -24,8 +24,6 @@
         prop-val-dict (metadata-properties property-block-content)]
     prop-val-dict))
 
-
-
 ;;; Annoying amount of id/block switcheroo
 (defn linked-reference-template
   [block-map r]

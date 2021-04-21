@@ -150,8 +150,7 @@
 
 (defn record-sidenote
   [block-map sidenote-block containing-block]
-  ;; TODO really want to find ancestor of container
-  (let [anchor-block (bd/block-ancestor-of-depth block-map containing-block 1)]
+  (let [anchor-block containing-block]
     (swap! *sidenotes* update-in [(:id anchor-block)] conj (:id sidenote-block))))
 
 (defn- ele->hiccup

@@ -65,6 +65,6 @@
        " "
        [:span (utils/render-time edit-time)]]
       (for [block (take 3 group)] ;limit to 3 chunks
-        [:div.ragged (templating/block-template (:id block) block-map)])])])
+        [:div.ragged (render/block-hiccup block block-map)])])])
 
 

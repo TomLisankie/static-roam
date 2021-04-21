@@ -52,8 +52,15 @@ Daily notes pages are excluded by default, but can be included by adding
 
 There is currently no way to specify "export everything", but that wouldn't be hard to add.
 
+# Sidenotes
+
+Sidenotes are awkward due to Roam and CSS limitiations. Static-roam leverages block references ... (actually write this stuff in Roam and incorporate it into AMMDI)
+
+
+
 # Config
 
 There are a bunch of options in the config file and there probably should be more. 
 
 TODO document them.
+
