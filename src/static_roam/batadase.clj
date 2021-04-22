@@ -221,13 +221,11 @@
                   ()))]
     (str/join " " (text (:hiccup block)))))
 
-
 (defn block-full-text
   [block-map block]
   (str/join " " (cons (block-local-text block)
                       (map #(block-full-text block-map (get block-map %))
                            (:children block)))))
-
 
   ;; TODO filter for include
 
@@ -245,7 +243,6 @@
   (filter #(str/starts-with? % "http")
           (all-links block-map)))
 
-;;; TODO included-entities
 (defn all-refs [block]
   (set/union
    (set (:children block))

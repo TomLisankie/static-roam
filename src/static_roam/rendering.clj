@@ -144,14 +144,21 @@
 
 (declare block-hiccup)
 
-;;; map from containing id to seq of sidenote ids
-;;; gets reset at start of run 
-(def *sidenotes* (atom {}))  
+;;; Blocks used as sidenotes. 
+;;; Yes this is global state and bad practice. Shoot me.
+;;; I think there is a bad bug with this; rendering happens on blocks in "parallel", so no guarantee that referring block with be rendered before sidenote.
+;;; TODO Should change to render on demand, would fix that and speed things up
+(def *sidenotes* (atom #{}))
 
-(defn record-sidenote
-  [block-map sidenote-block containing-block]
-  (let [anchor-block containing-block]
-    (swap! *sidenotes* update-in [(:id anchor-block)] conj (:id sidenote-block))))
+(defn sidenote
+  [block-map sidenote-block]
+  (let [render [:span
+                [:span.superscript]
+                [:div.sidenote
+                 [:span.superscript.side]
+                 (block-full-hiccup (:id sidenote-block) block-map)]]]
+    (swap! *sidenotes* conj (:id sidenote-block))
+    render))
 
 (defn- ele->hiccup
   [ast-ele block-map & [block]]
@@ -175,8 +182,7 @@
                          ;; ARGh can't work because of fucking namespace rules. POS!
                          (if (and block (= (bd/block-page block-map ref-block)
                                            (bd/block-page block-map block)))
-                           (do (record-sidenote block-map ref-block block)
-                               [:span.superscript]) 
+                           (sidenote block-map ref-block)
                            [:div.block-ref
                             (:hiccup ref-block)]))
             :hashtag [:a {:href (utils/html-file-title ele-content)}
@@ -223,7 +229,7 @@
 ;;; This renders individual blocks into hiccup. Blocks and their children is handled by block-full-hiccup and friends below,
 (defn render
   [bm]
-  (reset! *sidenotes* {})
+-  (reset! *sidenotes* #{})
   ;; Sometimes render incorporates other blocks; the memoize tries to ensure that the render is just done once. 
   (let [render-block (memoize #(block-hiccup % bm))]
     (u/map-values #(if (displayed? %)
@@ -235,54 +241,43 @@
   [block-id]
   (str (config/config :roam-base-url) block-id))
 
-(declare render-sidenotes)
 (declare block-full-hiccup)
 
  ;Has to do full hiccup to include children
 (defn block-full-hiccup-sidenotes
   [block-id block-map & [depth]]
   {:pre [(have? string? block-id)]}
-  (let [depth (or depth 0)]
-    (let [block (get block-map block-id)
-          base
-          [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
-           (if (or (nil? (:hiccup block))                          ;TODO ech
-                   (= (:content block) block-id))
-             nil
-             [:li.block
-              (when (config/config :dev-mode)
-                [:a.edit {:href (roam-url block-id)
-                          :target "_roam"}
-                 "[e]"])                      ;TODO nicer icons
-              (when-not (:include? block)
-                [:span.edit 
-                 "[X]"])
-              (:hiccup block)
-              ])
-           (map #(block-full-hiccup % block-map (inc depth))
-                (:children block))
-           ]]
-      (if-let [sidenotes (get @*sidenotes* block-id)]
-        [:div
-         (render-sidenotes block-map sidenotes)
-         base]
-        base
-        ))))
-
-(defn render-sidenotes
-  [block-map sidenotes]
-  (for [s sidenotes]
-    [:div.sidenote
-     [:span.superscript.side]
-     (block-full-hiccup-sidenotes s block-map 1)]))
+    (let [depth (or depth 0)
+          block (get block-map block-id)]
+        [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
+         (if (or (nil? (:hiccup block))                          ;TODO ech
+                 (= (:content block) block-id))
+           nil
+           [:li.block
+            (when (config/config :dev-mode)
+              [:a.edit {:href (roam-url block-id)
+                        :target "_roam"}
+               "[e]"])                      ;TODO nicer icons
+            (when-not (:include? block)
+              [:span.edit 
+               "[X]"])
+            (:hiccup block)
+            ])
+         (map #(block-full-hiccup % block-map (inc depth))
+              (:children block))
+         ]
+        ))
 
 (defn sidenote?
   [id]
-  ;; TODO want a once macro
-  (contains? ((memoize (fn [] (set (flatten (vals @*sidenotes*)))))) id))
+  (contains? @*sidenotes* id))
 
 ;;; The real top-level call
 (defn block-full-hiccup
   [block-id block-map & [depth]]
   (when-not (sidenote? block-id)
     (block-full-hiccup-sidenotes block-id block-map depth)))
+
+(defn page-hiccup
+  [block-id block-map]
+  (block-full-hiccup block-id block-map))

@@ -93,14 +93,13 @@
               []
               ;; Would make sense to do some of this in parser/transform-to-ast
               (case (first struct)
+                ;; :block-ref – but you don't want to follow those up for inclusion
                 :block (mapcat struct-entities (rest struct))
                 :hashtag [(utils/format-hashtag (second struct))]
                 :page-link [(utils/remove-double-delimiters (second struct))]
                 :blockquote (struct-entities (second struct))
                 [])))]
     (set (struct-entities (:parsed block)))))
-
-
 
 ;;; New version computes degree as well as acctually the map
 ;;; Seems to compute the same set as other method

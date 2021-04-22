@@ -163,7 +163,7 @@
          (when-not (:include? block)
            [:span [:b "EXCLUDED"]])       ;TODO make this pop more
          [:hr {}]
-         (render/block-full-hiccup block-id block-map)
+         (render/page-hiccup block-id block-map)
          [:hr {}]]
 
         map-widget
