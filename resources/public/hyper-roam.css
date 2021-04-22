@@ -234,14 +234,15 @@ hr {
     /* height is computed */
 }
 
+/* Sacrificing a goat to the CSS gods */
 .sidenote {
     float: right;
     clear: right;
+    position: absolute;
+    display: inline-flex;	/* gets the vertical alignment right */
+    left: 780px;
     width: 250px;
-    margin-right: -350px;
-    /* TODO border, shrink, asterisk or whatever */
-    margin-right: -350px;
-    position: relative;
+    height: 0;			/* keeps the sidenote from fucking with the main layout */
     font-size: 80%;
 }
 

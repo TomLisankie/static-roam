@@ -1,6 +1,7 @@
 (ns static-roam.search
   (:require [org.parkerici.multitool.core :as u]
             [static-roam.batadase :as bd]
+            [static-roam.rendering :as render]
             [static-roam.utils :as utils])
   )
 
@@ -13,7 +14,7 @@
     {:id index                          ;TODO not sure this is necessary, we don't use it
      :url (utils/html-file-title (:id page))
      :title (:id page)
-     :body (bd/block-full-text bm page)}))
+     :body (render/block-full-text bm page)}))
 
 (defn write-index
   [bm output-dir]

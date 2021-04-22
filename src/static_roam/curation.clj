@@ -15,6 +15,7 @@
 
 ;;; Finds where the same ref appears >1 time in a block, usually the result
 ;;; of overagressive Roam auto-linking.
+#_
 (def weirdos
   (filter #(and (:content %)
                 (not (= (count (database/content-refs (:content %)))
@@ -61,16 +62,19 @@
                          :trace-redirects true
                          :redirect-strategy :graceful}))
 
-;;; TODO could be parallelized
 (defn check-links
   [bm]
   (let [bads (atom nil)]
     (doseq [l (database/all-external-links bm)]
-      (prn l)
-      (try
-        (check-link l)
-        (catch Throwable e (swap! bads conj [l e]))))
-    @bads))
+      (future-call
+       #(try
+          (prn l)
+          (check-link l)
+          (catch Throwable e (swap! bads conj [l e])))))
+    bads))
+
+;;; OK...next step is to generate archive.org links where possible, andd substitute them...how to do that? Write json for import? Can that do modifications? Need the Roam API...
+
 
 (defn prettify
   [bads]

@@ -64,14 +64,9 @@
    (utils/html-file-title page)
    (config/config :output-dir)))
 
-(defn rerender
-  []
-  (swap! last-bm render/render))
-
 (defn gen-pages
   []
   (reset-output)
-  (rerender)
   (html-gen/generate-static-roam @last-bm (config/config :output-dir)))
 
 (defn -main

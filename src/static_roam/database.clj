@@ -1,6 +1,5 @@
 (ns static-roam.database
   (:require [static-roam.parser :as parser]
-            [static-roam.rendering :as render]
             [static-roam.batadase :as bd]
             [static-roam.utils :as utils]
             [static-roam.config :as config]
@@ -167,7 +166,6 @@
        compute-depths
        compute-includes
        add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
-       render/render
        ))
 
 (defn setup-block-map

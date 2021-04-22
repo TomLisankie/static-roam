@@ -54,7 +54,6 @@
 
 (defn block-page
   [block-map block]
-  {:pre [(have? block? block)]}
   (if-let [parent (block-parent block-map block)]
     (block-page block-map parent)
     block))
@@ -200,38 +199,14 @@
   [block]
   (empty? (:chidlren block)))
 
-(defn url?
-  [s]
-  (re-matches #"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})" s))
 
-
-
-(defn block-local-text
-  [block]
-  (letfn [(text [thing]
-            (cond (string? thing)
-                  (if (url? thing)
-                    ()
-                    (list thing))
-                  (map? thing)
-                  ()
-                  (vector? thing)
-                  (mapcat text (rest thing))
-                  :else
-                  ()))]
-    (str/join " " (text (:hiccup block)))))
-
-(defn block-full-text
-  [block-map block]
-  (str/join " " (cons (block-local-text block)
-                      (map #(block-full-text block-map (get block-map %))
-                           (:children block)))))
 
   ;; TODO filter for include
 
 (defn block-links
   [block]
   (u/walk-collect #(or (:href %) (:src %)) ;must be some more elegant way to express this
+                  ;; TODO this no work no more
                   (:hiccup block)))
 
 (defn all-links

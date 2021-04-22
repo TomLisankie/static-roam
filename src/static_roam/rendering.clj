@@ -11,7 +11,10 @@
   )
 
 ;;; Turn parsed content into hiccup. 
+
 (declare block-content->hiccup)         ;allow recursion on this
+(declare block-full-hiccup)
+(declare block-full-hiccup-sidenotes)
 
 ;;; TODO "alias" seems like a misnomer, these are mostly external links.
 (defn- format-alias
@@ -144,21 +147,18 @@
 
 (declare block-hiccup)
 
-;;; Blocks used as sidenotes. 
+;;; Blocks used as sidenotes get recorded here so they skip their normal render
 ;;; Yes this is global state and bad practice. Shoot me.
-;;; I think there is a bad bug with this; rendering happens on blocks in "parallel", so no guarantee that referring block with be rendered before sidenote.
-;;; TODO Should change to render on demand, would fix that and speed things up
-(def *sidenotes* (atom #{}))
+(def sidenotes (atom #{}))
 
 (defn sidenote
   [block-map sidenote-block]
-  (let [render [:span
-                [:span.superscript]
-                [:div.sidenote
-                 [:span.superscript.side]
-                 (block-full-hiccup (:id sidenote-block) block-map)]]]
-    (swap! *sidenotes* conj (:id sidenote-block))
-    render))
+  (swap! sidenotes conj (:id sidenote-block))
+  [:span
+   [:span.superscript]
+   [:div.sidenote
+    [:span.superscript.side]
+    (block-full-hiccup-sidenotes (:id sidenote-block) block-map)]])
 
 (defn- ele->hiccup
   [ast-ele block-map & [block]]
@@ -184,7 +184,7 @@
                                            (bd/block-page block-map block)))
                            (sidenote block-map ref-block)
                            [:div.block-ref
-                            (:hiccup ref-block)]))
+                            (block-hiccup ref-block block-map)]))
             :hashtag [:a {:href (utils/html-file-title ele-content)}
                       (utils/format-hashtag ele-content)]
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
@@ -214,7 +214,8 @@
   [block-content]
   (ele->hiccup (parser/parse-to-ast block-content) {}))
 
-(defn block-hiccup
+;;; In lieu of putting this in the blockmap
+(u/defn-memoized block-hiccup
   "Convert Roam markup to Hiccup"
   [block block-map]
   (if (:parsed block)
@@ -226,51 +227,33 @@
       (prn "Missing content: " (:id block))
       nil)))
 
-;;; This renders individual blocks into hiccup. Blocks and their children is handled by block-full-hiccup and friends below,
-(defn render
-  [bm]
--  (reset! *sidenotes* #{})
-  ;; Sometimes render incorporates other blocks; the memoize tries to ensure that the render is just done once. 
-  (let [render-block (memoize #(block-hiccup % bm))]
-    (u/map-values #(if (displayed? %)
-                        (assoc % :hiccup (render-block %))
-                        %)
-                  bm)))
-
 (defn roam-url
   [block-id]
   (str (config/config :roam-base-url) block-id))
-
-(declare block-full-hiccup)
 
  ;Has to do full hiccup to include children
 (defn block-full-hiccup-sidenotes
   [block-id block-map & [depth]]
   {:pre [(have? string? block-id)]}
-    (let [depth (or depth 0)
-          block (get block-map block-id)]
-        [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
-         (if (or (nil? (:hiccup block))                          ;TODO ech
-                 (= (:content block) block-id))
-           nil
-           [:li.block
-            (when (config/config :dev-mode)
-              [:a.edit {:href (roam-url block-id)
-                        :target "_roam"}
-               "[e]"])                      ;TODO nicer icons
-            (when-not (:include? block)
-              [:span.edit 
-               "[X]"])
-            (:hiccup block)
-            ])
-         (map #(block-full-hiccup % block-map (inc depth))
-              (:children block))
-         ]
-        ))
+  (let [depth (or depth 0)
+        block (get block-map block-id)]
+     (when (:include? block)
+    [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
+       [:li.block
+        (when (config/config :dev-mode)
+          [:a.edit {:href (roam-url block-id)
+                    :target "_roam"}
+           "[e]"])                      ;TODO nicer icons
+        (when-not (:include? block)     ;TODO now never true
+          [:span.edit 
+           "[X]"])
+        (block-hiccup block block-map)]
+       (map #(block-full-hiccup % block-map (inc depth))
+            (:children block))])))
 
 (defn sidenote?
   [id]
-  (contains? @*sidenotes* id))
+  (contains? @sidenotes id))
 
 ;;; The real top-level call
 (defn block-full-hiccup
@@ -281,3 +264,28 @@
 (defn page-hiccup
   [block-id block-map]
   (block-full-hiccup block-id block-map))
+
+(defn url?
+  [s]
+  (re-matches #"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})" s))
+
+(defn block-local-text
+  [block]
+  (letfn [(text [thing]
+            (cond (string? thing)
+                  (if (url? thing)
+                    ()
+                    (list thing))
+                  (map? thing)
+                  ()
+                  (vector? thing)
+                  (mapcat text (rest thing))
+                  :else
+                  ()))]
+    (str/join " " (text (block-hiccup block {})))))
+
+(defn block-full-text
+  [block-map block]
+  (str/join " " (cons (block-local-text block)
+                      (map #(block-full-text block-map (get block-map %))
+                           (:children block)))))
