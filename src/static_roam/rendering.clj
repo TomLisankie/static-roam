@@ -16,7 +16,7 @@
 (declare block-full-hiccup)
 (declare block-full-hiccup-sidenotes)
 
-;;; TODO "alias" seems like a misnomer, these are mostly external links.
+;;; "alias" seems like a misnomer, these are mostly external links.
 (defn- format-alias
   [alias-content]
   (let [[_ alias-text alias-dest] (re-find #"(?s)\[(.+?)\]\((.+?)\)" alias-content)
@@ -92,43 +92,21 @@
 (defn format-codeblock
   [spec]
   (let [[_ _lang content] (re-matches #"(?sm)```(\w*)\n(.*)```\s*" spec)]
-    ;; TODO there are packages that will do language-specific highlighting
+    ;; There are packages that will do language-specific highlighting, don't care at the moment.
     [:code.codeblock content]))
-
-;;; Following 2 fns dup from database until I can untangle the ns mess
-;;; And they have diverged...argh TODO
-(def size
-  (memoize
-   (fn [page]
-     (reduce +
-             (count (:content page 0))
-             (map size
-                  (filter :include? (:dchildren page)))))))
-
-(defn page-empty?
-  [page]
-  (when-not (:special? page)
-    (< (- (size page)
-          (count (:id page)))
-       10)))
-
-;;; God damn it, had to dupe this from database
-(defn displayed?
-  [block]
-  (or (:include? block)
-      (config/config :unexclude?)))
 
 (defn page-link
   [page & {:keys [alias class]}]
+  {:pre [(have? bd/block? page)]}
   (let [page-id (:id page)]
-    (if (displayed? page)
+    (if (bd/displayed? page)
       [:a (u/clean-map
            {:href (utils/html-file-title page-id)
             ;; TODO behavior with empties should be configurable, I keep
             ;; changing my own mind about it.
             :class (str/join " "
                              (filter identity
-                                     (list (when (page-empty? page) "empty")
+                                     (list (when (bd/page-empty? page) "empty")
                                            class)))})
        (block-content->hiccup (or alias page-id))]
       (do
@@ -160,7 +138,7 @@
     [:span.superscript.side]
     (block-full-hiccup-sidenotes (:id sidenote-block) block-map)]])
 
-(defn- ele->hiccup
+(defn ele->hiccup
   [ast-ele block-map & [block]]
   (utils/debuggable
    :ele->hiccup [ast-ele]
@@ -220,7 +198,7 @@
   [block block-map]
   (if (:parsed block)
     (let [basic (ele->hiccup (:parsed block) block-map block)]
-      (if (> (:heading block) 0)
+      (if (> (:heading block -1) 0)
         [(keyword (str "h" (:heading block))) basic]
         basic))
     (do
@@ -237,8 +215,8 @@
   {:pre [(have? string? block-id)]}
   (let [depth (or depth 0)
         block (get block-map block-id)]
-     (when (:include? block)
-    [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
+    (when (:include? block)
+      [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
        [:li.block
         (when (config/config :dev-mode)
           [:a.edit {:href (roam-url block-id)
@@ -247,7 +225,8 @@
         (when-not (:include? block)     ;TODO now never true
           [:span.edit 
            "[X]"])
-        (block-hiccup block block-map)]
+        (when-not (:page? block)        ;Page content is title and rendered elsewhere
+          (block-hiccup block block-map))]
        (map #(block-full-hiccup % block-map (inc depth))
             (:children block))])))
 

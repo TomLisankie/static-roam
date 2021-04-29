@@ -55,6 +55,22 @@
 
 ;;; Find bad links
 
+  ;; TODO filter for include?
+(defn block-links
+  [block]
+  (u/walk-collect #(or (:href %) (:src %)) ;must be some more elegant way to express this
+                  ;; TODO this no work no more
+                  (:hiccup block)))
+
+(defn all-links
+  [block-map]
+  (distinct (mapcat block-links (displayed-blocks block-map))))
+
+(defn all-external-links
+  [block-map]
+  (filter #(str/starts-with? % "http")
+          (all-links block-map)))
+
 (defn check-link
   [url]
   (clj-http.client/head url

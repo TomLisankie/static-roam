@@ -45,7 +45,6 @@
   "Forward page refs. Returns set of ids"
   [page]
   (apply clojure.set/union
-         ;; TODO include? should be a parameter
          (map :refs (filter :include? (block-descendents page)))))
 
 (defn block? [x]
@@ -182,10 +181,10 @@
 
 (defn page-empty?
   [page]
-  (< (- (size page)
+  (and (not (:special? page))
+       (< (- (size page)
         (count (:id page)))
-        10))
-
+        10)))
 
 (defn expand-to [block-map block minsize]
   (cond (>= (size block) minsize)
@@ -198,25 +197,6 @@
 (defn leaf?
   [block]
   (empty? (:chidlren block)))
-
-
-
-  ;; TODO filter for include
-
-(defn block-links
-  [block]
-  (u/walk-collect #(or (:href %) (:src %)) ;must be some more elegant way to express this
-                  ;; TODO this no work no more
-                  (:hiccup block)))
-
-(defn all-links
-  [block-map]
-  (distinct (mapcat block-links (displayed-blocks block-map))))
-
-(defn all-external-links
-  [block-map]
-  (filter #(str/starts-with? % "http")
-          (all-links block-map)))
 
 (defn all-refs [block]
   (set/union

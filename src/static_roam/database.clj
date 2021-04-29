@@ -63,28 +63,6 @@
                 roam-json))
    :children :parent))
 
-;;; TODO "((foobar))"
-#_
-(defn content-refs-0
-  [string]
-  (letfn [(struct-entities [struct]
-            (if (string? struct)
-              []
-              ;; Would make sense to do some of this in parser/transform-to-ast
-              (case (first struct)
-                :block (mapcat struct-entities (rest struct))
-                :hashtag [(utils/format-hashtag (second struct))]
-                :page-link [(utils/remove-double-delimiters (second struct))]
-                :blockquote (struct-entities (second struct))
-                [])))]
-    (struct-entities (parser/parse-to-ast string))))
-
-#_
-(defn content-refs
-  [string]
-  (set (and string
-            (content-refs-0 string))))
-
 (defn block-refs
   [block]
   (letfn [(struct-entities [struct]

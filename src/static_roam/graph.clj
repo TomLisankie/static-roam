@@ -210,24 +210,6 @@
 
 ;;; Static render
 
-
-
-;; obso
-#_ 
-(defn generate-map
-  "Writes out graph json and returns the page hiccup"
-  [bm output-dir {:keys [name] :as options}]
-  (write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
-  (template/page-hiccup
-    [:div
-     [:div#view {:style "width: 100%; height: 1000px;"}] ;TODO parameterize
-     [:script
-      (format "vegaEmbed('#view_%s', 'graphs/%s.json');" name name)
-      ]]
-    "Map" bm
-    [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
-     [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]]))
-
 (defn render-graph
   "Writes out the graph json and returns the hiccup to embed it"
   [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]
