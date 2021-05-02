@@ -153,7 +153,7 @@
         visible-blocks (if (config/config :unexclude?)
                           blocks
                           (filter :include? blocks))
-        visible-dates (map :edit-time visible-blocks)]
+        visible-dates (filter identity (map :edit-time visible-blocks))]
     [(min* visible-dates) (max* visible-dates)]))
 
 (defn stats [bm]

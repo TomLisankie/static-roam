@@ -75,6 +75,8 @@
                 :hashtag [(utils/format-hashtag (second struct))]
                 :page-link [(utils/remove-double-delimiters (second struct))]
                 :blockquote (struct-entities (second struct))
+                :alias (if-let [v (second (re-find #"\[.*\]\(\[\[(.*)\]\]\)" (second struct)))];kluge alert
+                         [v] [])
                 [])))]
     (set (struct-entities (:parsed block)))))
 
