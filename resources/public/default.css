@@ -1,17 +1,28 @@
 
+/* These are ugly; you should pick better ones for your site */
+:root {
+    --background: white;
+    --navbar-background: green;
+    --navbar-foreground: red; 
+    --footer-background: cyan;
+    --link: pink;
+    --blockquote: gray;  
+    --blockquote-border: darkred;
+}
 
 body {
+    background-color: var(--background);
     font-family: Lato;
     font-size: 14pt;
     line-height: 1.5; 
 }
 
 .main {
-    margin-top: 100px;
+    margin-top: 80px;
 }
 
 .block {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .title {
@@ -19,10 +30,21 @@ body {
     margin-bottom: 20px;
 }
 
+hr {
+    width: 100%;    /* Otherwise hr s do not show up in blocks... */
+}
+
 .navbar {
+    background-color: var(--navbar-background);
+    z-index: 1000;		/* should be greater than .graph */
+}
+
+.navbar-brand {
+    /* margin-left: 26px; */
 }
 
 .nav-link {
+    color: var(--navbar-foreground) !important;	
     font-weight: bold;
     padding-right: 1rem;
     padding-left: 1rem;
@@ -41,19 +63,28 @@ li {
     margin-left: -80px;
 }
 
-/* Gyrations to get colored list bullets */
+/* Gyrations to get colored list bullets (which I don't even use any more, but should be an option )*/
 .main ul li::before {
     /* content: "\2022";  bullet */
+    /* content: "\2aa2";  my fave ⪢ */
+    /* content: "\30fb";  bite the no bullet  */
+    color: var(--link);
+  /* color: #4E176E; 		 */
     display: inline-block; 
     vertical-align: top;
     margin-right: 0.5em;
 }
 
+/* Links */
+
 a {
+    color: var(--link); 
     font-weight: 500;	/* slightly bold */
 }
 
 a:hover {
+    background-color: #eeeee0; 
+    color: var(--link) !important; 
     text-decoration: none;
     box-shadow: 0 0 0 5px #eeeee0;
 }
@@ -80,17 +111,20 @@ h2 {
 
 blockquote {
     white-space: break-spaces;
+    background: var(--blockquote);
     padding-left: 20px;
     padding-right: 10px;
     padding-top: 10px;
     padding-bottom: 10px;
     margin-bottom: 0px;
+    border-left: 3px solid var(--blockquote-border);
     border-radius: 10px;
     width: 90%;
 }
 
-/* aka linked references */
+/* Incoming links (sidebar) */
 .incoming {
+
 }
 
 .incoming h3 {
@@ -121,18 +155,21 @@ blockquote {
     padding-inline-start: 0;
 }
 
+/* Page title */
 .ptitle {
-    /* gets title left-aligned with text, but a kludge and not sure it will work with different fonts etc  */
-    display: inline-block;
 }
 
 img {
-    /* center images */
-    margin-left: auto;
-    margin-right: auto;
     max-width: 90%;		/* TODO should have click-to-see-full-size as in Roam */
 }
 
+.imga {
+    /* center images */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* center videos (TODO not working, I think because they are within a <span>?a) */
 iframe {
     margin-left: auto;
     margin-right: auto;
@@ -142,27 +179,18 @@ iframe {
     font-size: small;
 }
 
-.navbar-brand {
-}
-
 .edit {
     margin-left: 5px;
 }
 
-/* header of recent chenges sections */
-.pheader {
-    padding: 2px;
-    margin-bottom: 3px;
-    margin-top: 15px;
-}
-
 .footer {
+    background-color: var(--footer-background);
 }
 
 /* For recent changes, should have more semantic name */
 .ragged {
     border-radius: 25px 15px 225px 15px/15px 225px 15px 255px;    
-    border:dashed 3px red;
+    border:dashed 3px var(--link);
     margin: 5px;
     margin-left: 15px;
     padding-left: 7px;
@@ -173,3 +201,64 @@ iframe {
     font-size: 10pt;
 }
 
+/* Search related */
+
+.searchentry {
+    text-indent: -5px;
+}
+
+/* Empty search results */
+.searchnada {
+    color: gray;
+    font-style: italic;
+    padding-left: 30px;
+}
+
+/* Graph related */
+
+.graph {
+    z-index: 999;		/* big but less than .navbar */
+    width: 100%;
+    /* height is computed */
+}
+
+/* Sidenote related */
+
+/* Sacrificing a goat to the CSS gods */
+.sidenote {
+    float: right;
+    clear: right;
+    position: absolute;
+    display: inline-flex;	/* gets the vertical alignment right */
+    left: 780px;
+    width: 250px;
+    height: 0;			/* keeps the sidenote from fucking with the main layout */
+    font-size: 80%;
+}
+
+.sidenote > .block {
+    display: inline;
+}
+
+.sidenote > .nondent {
+    display: inline;
+}
+
+.superscript {
+    position: relative;
+    top: -0.3rem;
+    left: -0.2rem;
+    color: var(--link);
+}
+
+.superscript::before {
+    content: "*"; 
+}
+
+/* combine with .superscript to render in sidebar */
+.side {
+    left: -0.5rem;
+    width: 0px;
+    color: var(--link);
+    float: left;
+}

@@ -8,6 +8,9 @@
  :site-css ["../assets/default.css"]
  :short-title "MyGarden"
  :main-page "My Beautiful Garden"
+ :colophon ["Copyright © " [:a {:href "http://mysite.com" :style "color: white;"} "MySite"] " 2020-2021"]
+ :google-analytics "G-whatever"         ;or nil to leave out
  :right-navbar ["About" "Index" "New" "Map"]
+ :roam-base-url "https://roamresearch.com/#/app/mygraph/page/"
  :bullets? false                        ;TODO not implemented 
  }
