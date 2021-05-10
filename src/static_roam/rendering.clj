@@ -185,6 +185,8 @@
             :block `[:span ~@(map #(ele->hiccup % block-map block) (rest ast-ele))]
             :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
             :hr [:hr]
+            ;; See https://www.mathjax.org/ This produces an inline LaTex rendering.
+            :latex [:span.math.display (str "\\(" (utils/remove-double-delimiters ele-content) "\\)")]
             )))))))
 
 ;;; Used for converting things like italics in blocknames

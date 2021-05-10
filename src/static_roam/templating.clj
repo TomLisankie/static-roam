@@ -79,6 +79,9 @@
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
      ;; Using slightly-bold font for links for whatever reason.
      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lato:wght@400;500&display=swap"}]
+     ;; TODO this should be conditional on latex appearing on the page
+     ;; see https://docs.mathjax.org/en/latest/web/typeset.html#load-for-math
+     [:script {:src "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" :type "text/javascript"}]
      ~@(search/search-head)             ;search is on every page
      ~@head-extra
      ]
