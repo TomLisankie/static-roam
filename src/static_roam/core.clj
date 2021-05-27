@@ -30,7 +30,7 @@
 (defn page-dump
   []
   (ju/schppit
-   (str (config/config :output-dir) "/pages.edn")
+   (str (config/config :output-dir) "pages.edn")
    (u/map-filter (fn [b] (and (:page? b) b))
                  (vals @last-bm))))
 

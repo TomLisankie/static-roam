@@ -138,7 +138,7 @@
 
 (defn roam-db
   [roam-json]
-  (->> roam-json
+  (-> roam-json
        create-block-map-no-links
        parse
        generate-refs
