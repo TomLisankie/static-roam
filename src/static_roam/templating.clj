@@ -174,7 +174,8 @@
         [:div.card.my-4
          [:h5.card-header "Map"]
          [:div.card-body {:style "padding: 2px;"}
-          (graph/render-graph
+          ;; TODO possible config to do embedded vs external
+          (graph/render-graph-embedded
            block-map
            output-dir
            {:name (utils/clean-page-title block-id)

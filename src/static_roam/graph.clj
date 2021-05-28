@@ -2,6 +2,7 @@
   (:require [oz.core :as oz]
             [static-roam.batadase :as bd]
             [static-roam.utils :as utils]
+            [clojure.data.json :as json]
             [org.parkerici.multitool.core :as u]
             ))
 
@@ -219,6 +220,17 @@
      [:div.graph {:id id :style (format "height: %spx;" (+ height (if controls? 300 0)))}]
      [:script
       (format "vegaEmbed('#%s', 'graphs/%s.json');" id name)
+      ]]))
+
+(defn render-graph-embedded
+  "the hiccup to embed graph, including the json"
+  [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]
+  (let [json (json/write-str (spec bm options))
+        id (str "view_" name)]
+    [:div
+     [:div.graph {:id id :style (format "height: %spx;" (+ height (if controls? 300 0)))}]
+     [:script
+      (format "const spec = %s;  vegaEmbed.embed('#%s', spec);"  json id)
       ]]))
 
 (defn vega-head

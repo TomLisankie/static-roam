@@ -21,7 +21,6 @@
   (utils/write-json (str output-dir "/index.js")
                     (index bm)))
 
-
 (defn search-head
   []
   [[:script {:src "http://elasticlunr.com/elasticlunr.min.js"}] ;TODO temp
