@@ -8,13 +8,19 @@
     --link: pink;
     --blockquote: gray;  
     --blockquote-border: darkred;
+    --body-face: Lara;
+    --header-face: Varela Round;
 }
 
 body {
     background-color: var(--background);
-    font-family: Lato;
+    font-family: var(--body-face);
     font-size: 14pt;
-    line-height: 1.5; 
+    line-height: 1.4; 
+}
+
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+    font-family: var(--header-face);
 }
 
 .main {
@@ -35,6 +41,7 @@ hr {
 }
 
 .navbar {
+    font-family: var(--header-face);
     background-color: var(--navbar-background);
     z-index: 1000;		/* should be greater than .graph */
 }
@@ -89,7 +96,7 @@ a:hover {
     box-shadow: 0 0 0 5px #eeeee0;
 }
 
-.external {
+.external:hover {
     background-image: url(external-link.svg);
     background-position: center right;
     background-repeat: no-repeat;
@@ -176,6 +183,7 @@ iframe {
 }
 
 .date {
+    font-family: var(--header-face);
     font-size: small;
 }
 
@@ -184,13 +192,19 @@ iframe {
 }
 
 .footer {
+    font-family: var(--header-face);
     background-color: var(--footer-background);
 }
 
 /* For recent changes, should have more semantic name */
+.pheader {
+    margin-top: 1em;
+    font-family: var(--header-face);    
+}
+
 .ragged {
     border-radius: 25px 15px 225px 15px/15px 225px 15px 255px;    
-    border:dashed 3px var(--link);
+    border:dashed 3px var(--navbar-background);
     margin: 5px;
     margin-left: 15px;
     padding-left: 7px;
