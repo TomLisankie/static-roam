@@ -61,14 +61,14 @@
 
 ;;; TODO much of this should be configurable
 (defn page-hiccup
-  [contents page-title block-map & {:keys [head-extra widgets]}]
+  [contents title-text title-hiccup block-map & {:keys [head-extra widgets]}]
   `[:html
     [:head
      ~(analytics-1)
      ~(analytics-2)
      [:meta {:charset "utf-8"}]
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-     [:title ~(str (config/config :short-title) ": " page-title)]
+     [:title ~(str (config/config :short-title) ": " title-text)]
      [:link {:rel "stylesheet"
              :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
              :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
@@ -113,7 +113,7 @@
        [:div.col-lg-8
         "<!-- Title -->"
         [:div.ptitle
-         [:h1 ~page-title]
+         [:h1 ~title-hiccup]
          ~contents
 
         ]]
@@ -150,6 +150,7 @@
                                       :include-all? (config/config :unexclude?)
                                       })
    "Map"
+   "Map"
    bm
    :head-extra (graph/vega-head)))
 
@@ -160,7 +161,8 @@
 (defn block-page-hiccup
   [block-id block-map output-dir]
   (let [block (get block-map block-id)
-        title (render/block-local-text block)
+        title-hiccup (render/block-content->hiccup (:content block))
+        title-text (render/block-local-text block)
         contents
         [:div
          [:div
@@ -200,21 +202,9 @@
                (linked-references-template linked-refs block-map)]]]))
 
         ]
-    (page-hiccup contents title block-map :head-extra (graph/vega-head) :widgets [map-widget incoming-links-widget])
+    (page-hiccup contents title-text title-hiccup block-map :head-extra (graph/vega-head) :widgets [map-widget incoming-links-widget])
     ))
 
-
-(defn home-page-hiccup
-  [entry-points block-map]
-  (page-hiccup 
-   [:div.main.page-content {:aria-label "Content"}
-     [:div.wrapper
-       [:h2.post-list-heading "Entry Points"]
-      [:ul.post-list
-       ;; TOD sort
-       (map (fn [page] [:li [:h3 (render/page-link page)]]) entry-points)]]]
-   (get (site-metadata block-map) "Title")
-   block-map))
 
 
 

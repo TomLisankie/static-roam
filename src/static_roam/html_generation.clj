@@ -48,21 +48,12 @@
 
 ;;; If there are any more special pages; should get more declarative about these generators.
 
-(defn generate-home-page
-  [block-map output-dir]
-  (let [entry-points (bd/entry-points block-map)]
-    (export-page
-     (templating/home-page-hiccup
-      entry-points
-      block-map)
-     "/pages/index.html"
-     output-dir)))
-
 (defn generate-recent-page
   [block-map output-dir]
   (export-page
    (templating/page-hiccup
     (recent/recent-page-content block-map)
+    "Recently changed"
     "Recently changed"
     block-map)
    "/pages/New.html"

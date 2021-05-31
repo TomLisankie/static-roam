@@ -53,8 +53,9 @@
                    (for [col indexes]
                      [:td
                       ((:render col) page)])])
-                ]]]
+                ]]
+             title  (format "Index by %s" name)]
          {(str "/pages/" (page-loc index))    ;pkm
-          (templating/page-hiccup hiccup (format "Index by %s" name) bm)}
+          (templating/page-hiccup hiccup title title bm)}
          )))))
 
