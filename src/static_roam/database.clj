@@ -98,6 +98,7 @@
                   block-map)))]
       (reduce (partial propagate 0) block-map (map :id (bd/entry-points block-map))))))
 
+;;; This is where inclusion is computed.
 (defn compute-includes
   [block-map]
   (u/map-values #(assoc % :include? (not (nil? (:depth %)))) block-map))

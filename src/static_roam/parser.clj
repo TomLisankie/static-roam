@@ -38,9 +38,7 @@
 (defparser block-parser
   (slurp parser-file))
 
-;;; Turned off memoization, should need it 
-;;; Performance hack, 115 → 84 sec
-;;; Should turn off in repl → TODO idea for multitool
+;;; Turned off memoization, shouldn't need it 
 (defn parse-to-ast
   "Converts a string of block syntax to an abstract syntax tree for SR markup."
   [block-content]

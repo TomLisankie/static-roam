@@ -163,8 +163,8 @@
                            (sidenote block-map ref-block)
                            [:div.block-ref
                             (block-hiccup ref-block block-map)]))
-            :hashtag [:a {:href (utils/html-file-title ele-content)}
-                      (utils/format-hashtag ele-content)]
+            :hashtag (page-link-by-name block-map 
+                                        (utils/format-hashtag ele-content))
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
             :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]
             :italic [:i (recurse (utils/remove-double-delimiters ele-content))]
