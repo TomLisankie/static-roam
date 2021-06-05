@@ -240,7 +240,6 @@ iframe {
 
 /* Sacrificing a goat to the CSS gods */
 .sidenote {
-    float: right;
     clear: right;
     position: absolute;
     display: inline-flex;	/* gets the vertical alignment right */
@@ -257,6 +256,13 @@ iframe {
 .sidenote > .nondent {
     display: inline;
 }
+
+.left-sidenote {
+    left: -250px;
+    float: left;		/* not clear this does */
+}
+
+/* for sidenote supscripts */
 
 .superscript {
     position: relative;

@@ -134,7 +134,7 @@
   (swap! sidenotes conj (:id sidenote-block))
   [:span
    [:span.superscript]
-   [:div.sidenote
+   [:div.sidenote.left-sidenote         ;TODO option to render on right, but that bumps into rh column
     [:span.superscript.side]
     (block-full-hiccup-sidenotes (:id sidenote-block) block-map)]])
 
