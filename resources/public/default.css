@@ -231,7 +231,7 @@ iframe {
 /* Graph related */
 
 .graph {
-    z-index: 999;		/* big but less than .navbar */
+    z-index: 998;		/* big but less than .navbar */
     width: 100%;
     /* height is computed */
 }
@@ -243,10 +243,15 @@ iframe {
     clear: right;
     position: absolute;
     display: inline-flex;	/* gets the vertical alignment right */
-    left: 780px;
-    width: 250px;
-    height: 0;			/* keeps the sidenote from fucking with the main layout */
+    left: 770px;
+    width: 380px;
+    padding-right: 100px;
+    /* padding-top: 10px;  puts some whitespace on top, but fucks with alignment of asterisks */    
+    padding-bottom: 10px;
     font-size: 80%;
+    z-index: 999;
+    background: white;
+    opacity: 0.8;
 }
 
 .sidenote > .block {
@@ -257,9 +262,12 @@ iframe {
     display: inline;
 }
 
+
+/* this is kind of narrow, probably should widen the margin */
+/* actually doesn't work as well as I thought */
 .left-sidenote {
-    left: -250px;
-    float: left;		/* not clear this does */
+    left: -100px;
+    width: 100px;
 }
 
 /* for sidenote supscripts */

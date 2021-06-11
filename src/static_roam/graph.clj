@@ -1,6 +1,7 @@
 (ns static-roam.graph
   (:require [oz.core :as oz]
             [static-roam.batadase :as bd]
+            [static-roam.rendering :as render]
             [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [org.parkerici.multitool.core :as u]
@@ -66,7 +67,7 @@
     [{:name "node-data"
       :values (map (fn [b]
                      ;;  :size (- 20 (or (:depth b) 0)) (not working)
-                     {:name (:id b)
+                     {:name (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
                       :link (:link b)
                       :index (:index b)
                       :group (cond (start? b)
