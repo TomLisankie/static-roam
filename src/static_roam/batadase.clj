@@ -85,7 +85,6 @@
 
 (defn page-refs
   [bm page]
-  (prn :page-refs (:id page))
   (set/union (forward-page-refs page)
              (backward-page-refs bm page)))
 

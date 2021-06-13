@@ -57,7 +57,7 @@
    (u/index-by :id
                (u/walk-collect
                 (fn [thing]
-                  (when (map? thing)
+                  (when (:uid thing)
                     (block-properties thing)))
                 roam-json))
    :children :parent))
@@ -139,19 +139,15 @@
 (defn roam-db
   [roam-json]
   (-> roam-json
-       create-block-map-no-links
-       parse
-       generate-refs
-       generate-inverse-refs
-       compute-depths
-       compute-includes
-       add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
-       ))
-
-(defn setup-block-map
-  [roam-json]
-  (-> roam-json
-      roam-db
+      create-block-map-no-links
+      parse
+      generate-refs
+      generate-inverse-refs
+      compute-depths
+      compute-includes
+      add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
       ))
+
+
 
 

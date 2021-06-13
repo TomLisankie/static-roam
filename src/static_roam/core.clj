@@ -14,7 +14,7 @@
   (prn :reading-from path-to-zip)       ;TODO I suppose real logger is called for
   (-> path-to-zip
       utils/read-roam-json-from-zip
-      database/setup-block-map
+      database/roam-db
       (html-gen/generated-page "Index" html-gen/generate-index-pages)
       (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO would make sense to put these under a config
       (html-gen/generated-page "Map" html-gen/generate-global-map)
