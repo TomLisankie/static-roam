@@ -20,31 +20,13 @@
 
 ;;; TODO generating a json file per page is a pain. Maybe encode it in the html file? Probably page graphs should be smaller anyway, they are too crowded as it is.
 
-
-;;; → multitool
-(defn neighborhood
-  [from n neighbors]
-  (if (zero? n)
-    (set (list from))
-    (set (cons from (mapcat #(neighborhood % (- n 1) neighbors)
-                            (neighbors from))))))
-
-;;; → db
-(defn block-neighbors
-  [bm from n]
-  (let [neighbors (fn [b] (map bm (bd/all-refs b)))]
-    (neighborhood from n neighbors)))
-
-;;; → db
-(u/defn-memoized degree [block]
-  (count (bd/all-refs block)))
-
 ;;; TODO max-degree is a hack and I don't like it – without it, if you hit a high-degree node you'll get too much in the graph
 ;;; some kind of smart filter would be better
+;;; max-degree is really max-distance 
 (defn page-neighbors
   [bm from n max-degree]
-  (let [neighbors (fn [b] (take max-degree (map bm (bd/page-refs bm b))))]
-    (neighborhood from n neighbors)))
+  (let [neighbors (fn [b] (take max-degree (filter identity (map bm (bd/page-refs bm b)))))]
+    (u/neighborhood from n neighbors)))
 
 (defn graph-data
   [block-map {:keys [radius-from radius max-degree] :or {radius 2 max-degree 8}}]

@@ -36,7 +36,7 @@
   ;; get the 100 latest changed leaf blocks TODO parameterize
   (->> block-map
        vals
-       (filter :include?)
+       (filter bd/displayed?)
        (remove :special?)
        (filter bd/leaf?)
        (sort-by :edit-time u/>*)     

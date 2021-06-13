@@ -20,6 +20,13 @@
       (html-gen/generated-page "Map" html-gen/generate-global-map)
       ))
 
+(defn pp-export
+  [path-to-zip]
+  (->> path-to-zip
+      utils/read-roam-json-from-zip
+      (ju/schppit "block-dump.edn")))
+
+
 (defonce last-bm (atom nil))
 
 (defn pages
@@ -59,10 +66,7 @@
 
 (defn gen-page
   [page]
-  (html-gen/export-page
-   (html-gen/generate-content-page @last-bm (config/config :output-dir) (get @last-bm page))
-   (utils/html-file-title page)
-   (config/config :output-dir)))
+  (html-gen/generate-content-page @last-bm (config/config :output-dir) (get @last-bm page)))
 
 (defn gen-pages
   []
@@ -73,6 +77,7 @@
   [& [path-to-config]]
   (config/set-config (or path-to-config "default-config.edn"))
   (reset-output)
+  (u/memoize-reset)
   (-> (utils/latest-export)
       block-map
       tap

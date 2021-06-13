@@ -217,14 +217,14 @@
   {:pre [(have? string? block-id)]}
   (let [depth (or depth 0)
         block (get block-map block-id)]
-    (when (:include? block)
+    (when (bd/displayed? block)
       [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
        [:li.block
         (when (config/config :dev-mode)
           [:a.edit {:href (roam-url block-id)
                     :target "_roam"}
            "[e]"])                      ;TODO nicer icons
-        (when-not (:include? block)     ;TODO now never true
+        (when-not (bd/included? block)
           [:span.edit 
            "[X]"])
         (when-not (:page? block)        ;Page content is title and rendered elsewhere

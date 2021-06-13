@@ -57,8 +57,7 @@
    (u/index-by :id
                (u/walk-collect
                 (fn [thing]
-                  (when (and (map? thing)
-                             (:edit-time thing))
+                  (when (map? thing)
                     (block-properties thing)))
                 roam-json))
    :children :parent))
@@ -85,7 +84,7 @@
 (defn compute-depths
   "Computes depths from entry points"
   [block-map]
-  (let [exit-point? (memoize #(bd/exit-point? block-map (get block-map %)))] ;performance hack
+  (let [exit-point? (u/memoize-named :exit-point #(bd/exit-point? block-map (get block-map %)))] ;performance hack
     (letfn [(propagate [depth block-map from]
               (let [current-depth (or (get-in block-map [from :depth]) 1000)]
                 (if (and (contains? block-map from)
@@ -131,7 +130,7 @@
                             direct-children
                             ))
                       (:children block))))
-        direct-children-memoized (fix (memoize direct-children))]
+        direct-children-memoized (fix (u/memoize-named :direct-children direct-children))]
     (u/map-values direct-children-memoized block-map)))
 
 ;;; Mostly blocks can be rendered indpendently, but if there are references (and now sidenotes) there are dependencies

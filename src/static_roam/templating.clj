@@ -193,7 +193,7 @@
           ]]
 
         incoming-links-widget
-        (let [linked-refs (bd/get-included-linked-references block-id block-map)]
+        (let [linked-refs (bd/get-displayed-linked-references block-id block-map)]
           (when-not (empty? linked-refs)
             [:div.card.my-4
              [:h5.card-header "Incoming links"]

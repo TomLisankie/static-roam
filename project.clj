@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [me.raynes/fs "1.4.6"]
-                 [org.parkerici/multitool "0.0.13"]
+                 [org.parkerici/multitool "0.0.15"]
                  [org.clojure/data.json "1.1.0"]
                  [com.taoensso/truss "1.6.0"]
                  [hiccup "1.0.5"]
