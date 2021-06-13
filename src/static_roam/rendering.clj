@@ -16,6 +16,11 @@
 (declare block-full-hiccup)
 (declare block-full-hiccup-sidenotes)
 
+;;; Boostrap icons, see css and https://icons.getbootstrap.com/
+(defn- icon
+  [name]
+  [:i {:class (str "bi-" name)}])
+
 ;;; "alias" seems like a misnomer, these are mostly external links.
 (defn- format-alias
   [alias-content]
@@ -207,6 +212,8 @@
       (prn "Missing content: " (:id block))
       nil)))
 
+;;; TODO this doesn't work, should be using block-id rather than page titles
+;;; Static-roam fucks this up...sigh, should have rolled my own from the start
 (defn roam-url
   [block-id]
   (str (config/config :roam-base-url) block-id))
@@ -223,10 +230,11 @@
         (when (config/config :dev-mode)
           [:a.edit {:href (roam-url block-id)
                     :target "_roam"}
-           "[e]"])                      ;TODO nicer icons
+           (icon "pencil")
+           ])           
         (when-not (bd/included? block)
           [:span.edit 
-           "[X]"])
+           (icon "file-lock2")])
         (when-not (:page? block)        ;Page content is title and rendered elsewhere
           (block-hiccup block block-map))]
        (map #(block-full-hiccup % block-map (inc depth))
@@ -271,3 +279,5 @@
   (str/join " " (cons (block-local-text block)
                       (map #(block-full-text block-map (get block-map %))
                            (:children block)))))
+
+
