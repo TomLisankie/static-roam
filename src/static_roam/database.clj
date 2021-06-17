@@ -102,14 +102,18 @@
   [block-map]
   (u/map-values #(assoc % :include? (not (nil? (:depth %)))) block-map))
 
+;;; → multitool
+(defn pmap-values [f hashmap]
+  (zipmap (keys hashmap) (pmap f (vals hashmap))))
+
 (defn parse
   [db]
-  (u/map-values #(assoc % :parsed (parser/parse-to-ast (:content %))) db))
+  (pmap-values #(assoc % :parsed (parser/parse-to-ast (:content %))) db))
 
 (defn generate-refs
   [db]
-  (u/map-values #(assoc % :refs (block-refs %))
-                db))
+  (pmap-values #(assoc % :refs (block-refs %))
+               db))
 
 (defn generate-inverse-refs
   [db]
@@ -131,7 +135,7 @@
                             ))
                       (:children block))))
         direct-children-memoized (fix (u/memoize-named :direct-children direct-children))]
-    (u/map-values direct-children-memoized block-map)))
+    (pmap-values direct-children-memoized block-map)))
 
 ;;; Mostly blocks can be rendered indpendently, but if there are references (and now sidenotes) there are dependencies
 
