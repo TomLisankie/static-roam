@@ -22,9 +22,13 @@
   [:i {:class (str "bi-" name)}])
 
 ;;; "alias" seems like a misnomer, these are mostly external links.
+(defn parse-alias
+  [alias-content]
+  (re-find #"(?s)\[(.+?)\]\((.+?)\)" alias-content))
+
 (defn- format-alias
   [alias-content]
-  (let [[_ alias-text alias-dest] (re-find #"(?s)\[(.+?)\]\((.+?)\)" alias-content)
+  (let [[_ alias-text alias-dest] (parse-alias alias-content)
         internal? (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
         alias-link (if internal?
                      (utils/html-file-title alias-dest)

@@ -23,12 +23,11 @@
   (str (utils/clean-page-title page-name) ".md"))
 
 (defn page-link
-  [page-name]
-  (format "[%s](%s)" page-name (md-file-name page-name)))
+  [page-name & [link-text]]
+  (format "[%s](%s)" (or link-text page-name) (md-file-name page-name)))
 
 (defn parsed->markdown
   [parse]
-  (prn parse)
   (if (string? parse)
     parse
     (case (first parse)
@@ -36,7 +35,10 @@
       :blockquote (str "> " (parsed->markdown (second parse)))
       :page-link (page-link (utils/remove-double-delimiters (second parse)))
       :hashtag (page-link (utils/format-hashtag (second parse)))
-      :alias (second parse)             ;TODO might have to process for page links
+      :alias (let [[_ text target] (render/parse-alias (second parse))]
+               (if (str/starts-with? target "[[")
+                 (page-link (utils/remove-double-delimiters target) text)
+                 (second parse)))
       ;; TODO [:page-alias "{{alias:[[Meditations on Meditations on Moloch]]Meditations on Moloch}}"]
       :page-alias (second parse)
 
