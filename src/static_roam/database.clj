@@ -57,10 +57,12 @@
    (u/index-by :id
                (u/walk-collect
                 (fn [thing]
-                  (when (:uid thing)
+                  (when (and (:uid thing)
+                             (:edit-time thing))
                     (block-properties thing)))
                 roam-json))
-   :children :parent))
+   :children :parent
+   ))
 
 (defn block-refs
   [block]
@@ -149,7 +151,7 @@
       generate-inverse-refs
       compute-depths
       compute-includes
-      add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
+      add-direct-children              ; makes it easier to use, harder to dump. This needs to be last
       ))
 
 

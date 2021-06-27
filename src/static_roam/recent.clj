@@ -36,6 +36,7 @@
   ;; get the 100 latest changed leaf blocks TODO parameterize
   (->> block-map
        vals
+       (filter bd/block?)               ;shouldn't be necessary but there is some weird shit
        (filter bd/displayed?)
        (remove :special?)
        (filter bd/leaf?)

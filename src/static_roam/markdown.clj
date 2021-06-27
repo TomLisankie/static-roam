@@ -2,6 +2,7 @@
   "Rendering to Markdown"
   (:require [static-roam.config :as config]
             [static-roam.batadase :as bd]
+            [static-roam.rendering :as render]
             [static-roam.utils :as utils]
             [clojure.string :as str]
             [org.parkerici.multitool.core :as u]
@@ -10,8 +11,7 @@
             )
   )
 
-;;; TODO [[links]] don't render into anything useful. Nor # unsuprisingly.
-;;; Need to be rendered as [Agency](Agency.md) (but spaces in names don't work)
+;;; TODO blank lines can cause rendering weirdness (see [[Media Science]] – maybe just omit them)
 
 ;;; TODO → multitool
 (u/defn-memoized n-chars
@@ -26,10 +26,18 @@
   [page-name & [link-text]]
   (format "[%s](%s)" (or link-text page-name) (md-file-name page-name)))
 
+(defn youtube-link
+  [md]
+  (let [youtube-id (render/get-youtube-id md)
+        img-link (format "https://img.youtube.com/vi/%s/0.jpg" youtube-id)
+        video-link (format "https://youtu.be/%s" youtube-id)]
+    (if youtube-id
+      (format "[![](%s)](%s)" img-link video-link)
+      md)))
+
 (defn parsed->markdown
   [parse]
-  (if (string? parse)
-    parse
+  (if (vector? parse)
     (case (first parse)
       :block (str/join "" (map parsed->markdown (rest parse)))
       :blockquote (str "> " (parsed->markdown (second parse)))
@@ -42,18 +50,21 @@
       ;; TODO [:page-alias "{{alias:[[Meditations on Meditations on Moloch]]Meditations on Moloch}}"]
       :page-alias (second parse)
 
-      (:italic :bold) (second parse)
+      (:italic :bold :image :code-block :code-line :hr) (second parse)
       :metadata-tag (second parse)
       :bare-url (second parse)          ;github is ok with this, not sure about other markdown
       :todo "◘"                         ;I guess
       :block-ref (second parse)         ;TODO
-      )))
+      :youtube (youtube-link (second parse))
+      (prn :gotcha parse)
+      )
+    parse))
       
+;;;; Note: in most cases, we could just use :content, but links and other things
+;;; need transform so md is reconstructed from the parse
 (defn markdown-content
   [block]
-  (if (empty? (:refs block))
-    (:content block)
-    (parsed->markdown (:parsed block))))
+  (parsed->markdown (:parsed block)))
 
 ;;; Returns list of lines
 (defn block->md

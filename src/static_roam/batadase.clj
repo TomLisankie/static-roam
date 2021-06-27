@@ -13,19 +13,24 @@
   (and (map? x)
        (string? (:id x))))
 
+(defn assert-block
+  [x]
+  (or (block? x)
+      (throw (ex-info "Not a block" {:thing x}))))
+
 ;;; included? means reachable from an entry point
 ;;; displayed? means actually generated. Usually these are the same, except when the :unexcluded? config is set, meaning we want to see everything, included or not.
 
 (defn included?
   ([block]
-   (assert (block? block))
+   (assert-block block)
    (:include? block))
   ([block-map block-id]
    (included? (get block-map block-id))))
 
 (defn displayed?
   ([block]
-   (assert (block? block))
+   (assert-block block)
    (if (config/config :unexclude?)
      true
      (:include? block)))
