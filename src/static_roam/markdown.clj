@@ -11,8 +11,6 @@
             )
   )
 
-;;; TODO blank lines can cause rendering weirdness (see [[Media Science]] – maybe just omit them)
-
 ;;; TODO → multitool
 (u/defn-memoized n-chars
   [n char]
@@ -21,6 +19,10 @@
 (defn md-file-name
   [page-name]
   (str (utils/clean-page-title page-name) ".md"))
+
+(defn html-file-name
+  [page-name]
+  (str (utils/clean-page-title page-name) ".html"))
 
 (defn page-link
   [page-name & [link-text]]
@@ -56,7 +58,7 @@
       :todo "◘"                         ;I guess
       :block-ref (second parse)         ;TODO
       :youtube (youtube-link (second parse))
-      (prn :gotcha parse)
+      (throw (ex-info "Don't know how to translate to markdown" {:block parse}))
       )
     parse))
       
@@ -77,15 +79,30 @@
                (markdown-content block))
           (filter identity (mapcat (partial block->md (+ 1 depth)) (:dchildren block))))))
 
+(defn render-date-range
+  [[from to]]
+  (when (and from to)
+    (str (utils/render-time from) " - " (utils/render-time to))))
+
+(defn real-url
+  [page]
+  (str (config/config :real-base-url) (html-file-name (:content page))))
+
+(defn real-page-pointer
+  [page]
+  (format "> This is a markdown backup. The [real page is part of %s](%s).\n\n"
+          (config/config :main-page)
+          (real-url page)))
+
 (defn page->md
   [block]
   (let [title (:content block)
-        footer-lines []                 ;TODO?
+        footer-lines []                 ;TODO colophon is in hiccup 
         header-lines
-        (list title
+        (list (real-page-pointer block)
+              title
               (n-chars (count title) \=)
-              ;; TODO
-              ;; (render-date-range (bd/date-range block))
+              (render-date-range (bd/date-range block))
               )]
     (concat header-lines
             (mapcat (partial block->md 0) (:dchildren block))

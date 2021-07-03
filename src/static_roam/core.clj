@@ -2,7 +2,7 @@
   (:require [static-roam.config :as config]
             [static-roam.utils :as utils]
             [static-roam.database :as database]
-            [static-roam.rendering :as render]
+            [static-roam.markdown :as md]
             [static-roam.batadase :as bd]
             [static-roam.html-generation :as html-gen]
             [me.raynes.fs :as fs]
@@ -82,6 +82,8 @@
       block-map
       tap
       (html-gen/generate-static-roam (config/config :output-dir)))
+  (when (config/config :markdown-output-dir)
+    (md/write-all-pages @last-bm (config/config :markdown-output-dir)))
   (prn (bd/stats @last-bm))
   #_ (dump))
 
