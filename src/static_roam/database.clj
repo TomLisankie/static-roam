@@ -57,11 +57,12 @@
    (u/index-by :id
                (u/walk-collect
                 (fn [thing]
-                  (when (and (map? thing)
+                  (when (and (:uid thing)
                              (:edit-time thing))
                     (block-properties thing)))
                 roam-json))
-   :children :parent))
+   :children :parent
+   ))
 
 (defn block-refs
   [block]
@@ -85,7 +86,7 @@
 (defn compute-depths
   "Computes depths from entry points"
   [block-map]
-  (let [exit-point? (memoize #(bd/exit-point? block-map (get block-map %)))] ;performance hack
+  (let [exit-point? (u/memoize-named :exit-point #(bd/exit-point? block-map (get block-map %)))] ;performance hack
     (letfn [(propagate [depth block-map from]
               (let [current-depth (or (get-in block-map [from :depth]) 1000)]
                 (if (and (contains? block-map from)
@@ -98,18 +99,23 @@
                   block-map)))]
       (reduce (partial propagate 0) block-map (map :id (bd/entry-points block-map))))))
 
+;;; This is where inclusion is computed.
 (defn compute-includes
   [block-map]
   (u/map-values #(assoc % :include? (not (nil? (:depth %)))) block-map))
 
+;;; → multitool
+(defn pmap-values [f hashmap]
+  (zipmap (keys hashmap) (pmap f (vals hashmap))))
+
 (defn parse
   [db]
-  (u/map-values #(assoc % :parsed (parser/parse-to-ast (:content %))) db))
+  (pmap-values #(assoc % :parsed (parser/parse-to-ast (:content %))) db))
 
 (defn generate-refs
   [db]
-  (u/map-values #(assoc % :refs (block-refs %))
-                db))
+  (pmap-values #(assoc % :refs (block-refs %))
+               db))
 
 (defn generate-inverse-refs
   [db]
@@ -130,28 +136,24 @@
                             direct-children
                             ))
                       (:children block))))
-        direct-children-memoized (fix (memoize direct-children))]
-    (u/map-values direct-children-memoized block-map)))
+        direct-children-memoized (fix (u/memoize-named :direct-children direct-children))]
+    (pmap-values direct-children-memoized block-map)))
 
 ;;; Mostly blocks can be rendered indpendently, but if there are references (and now sidenotes) there are dependencies
 
 
 (defn roam-db
   [roam-json]
-  (->> roam-json
-       create-block-map-no-links
-       parse
-       generate-refs
-       generate-inverse-refs
-       compute-depths
-       compute-includes
-       add-direct-children              ;experimental, makes it easier to use, harder to dump. This needs to be last
-       ))
-
-(defn setup-block-map
-  [roam-json]
   (-> roam-json
-      roam-db
+      create-block-map-no-links
+      parse
+      generate-refs
+      generate-inverse-refs
+      compute-depths
+      compute-includes
+      add-direct-children              ; makes it easier to use, harder to dump. This needs to be last
       ))
+
+
 
 

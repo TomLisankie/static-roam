@@ -5,6 +5,8 @@
               [static-roam.core :as core]
               [clojure.set :as set]
               [org.parkerici.multitool.core :as u]
+              [me.raynes.fs :as fs]
+              [clojure.string :as str]
               ))
 
 ;;; Curation functions. For use via REPL; not wired into main program.
@@ -96,3 +98,18 @@
   [bads]
   (for [b bads]
     [(first b) (:status (ex-data (second b))) (:reason-phrase (ex-data (second b)))]))
+
+
+;;; Check output and ensure all local html links are valid.
+;;; This finds a lot of missing things due to Zoetero import, plus
+; :missing "Topics.html" :in "play.html"
+; :missing "Topics.html" :in "agency.html"
+; :missing "Mastery-of-Non-Mastery.html" :in "mimesis.html"
+(defn check-output-links
+  []
+  (doseq [f (fs/list-dir "output/pages")]
+    (doseq [link (map second (re-seq #"href=\"(.*?)\"" (slurp f)))]
+      (if (str/starts-with? link "http")
+        nil                             ;ignore external links
+        (when-not (fs/exists? (str "output/pages/" link))
+          (prn :missing link :in (.getName f)))))))

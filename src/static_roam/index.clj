@@ -14,6 +14,7 @@
     :sort-key (comp s/upper-case :content)
     :render render/page-link
     :page-title "Index"                 ;kludge to match block-map and links
+    :col-width "65%"
     }
    {:name "Date"
     :sort-key (comp - inst-ms bd/edit-time)
@@ -41,7 +42,8 @@
                 ;; col headers
                 [:tr
                  (for [col indexes]
-                   [:th {:scope "col"}
+                   [:th {:scope "col" :style (when (:col-width col)
+                                               (format "width: %s;" (:col-width col)))}
                     (if (= (:name col) name)
                       (:name col)
                       [:a {:href (page-loc col)} (:name col)])])]]
@@ -51,8 +53,9 @@
                    (for [col indexes]
                      [:td
                       ((:render col) page)])])
-                ]]]
+                ]]
+             title  (format "Index by %s" name)]
          {(str "/pages/" (page-loc index))    ;pkm
-          (templating/page-hiccup hiccup (format "Index by %s" name) bm)}
+          (templating/page-hiccup hiccup title title bm)}
          )))))
 

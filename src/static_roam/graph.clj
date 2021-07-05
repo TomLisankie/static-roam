@@ -1,7 +1,9 @@
 (ns static-roam.graph
   (:require [oz.core :as oz]
             [static-roam.batadase :as bd]
+            [static-roam.rendering :as render]
             [static-roam.utils :as utils]
+            [clojure.data.json :as json]
             [org.parkerici.multitool.core :as u]
             ))
 
@@ -18,31 +20,13 @@
 
 ;;; TODO generating a json file per page is a pain. Maybe encode it in the html file? Probably page graphs should be smaller anyway, they are too crowded as it is.
 
-
-;;; → multitool
-(defn neighborhood
-  [from n neighbors]
-  (if (zero? n)
-    (set (list from))
-    (set (cons from (mapcat #(neighborhood % (- n 1) neighbors)
-                            (neighbors from))))))
-
-;;; → db
-(defn block-neighbors
-  [bm from n]
-  (let [neighbors (fn [b] (map bm (bd/all-refs b)))]
-    (neighborhood from n neighbors)))
-
-;;; → db
-(u/defn-memoized degree [block]
-  (count (bd/all-refs block)))
-
 ;;; TODO max-degree is a hack and I don't like it – without it, if you hit a high-degree node you'll get too much in the graph
 ;;; some kind of smart filter would be better
+;;; max-degree is really max-distance 
 (defn page-neighbors
   [bm from n max-degree]
-  (let [neighbors (fn [b] (take max-degree (map bm (bd/page-refs bm b))))]
-    (neighborhood from n neighbors)))
+  (let [neighbors (fn [b] (take max-degree (filter identity (map bm (bd/page-refs bm b)))))]
+    (u/neighborhood from n neighbors)))
 
 (defn graph-data
   [block-map {:keys [radius-from radius max-degree] :or {radius 2 max-degree 8}}]
@@ -65,7 +49,7 @@
     [{:name "node-data"
       :values (map (fn [b]
                      ;;  :size (- 20 (or (:depth b) 0)) (not working)
-                     {:name (:id b)
+                     {:name (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
                       :link (:link b)
                       :index (:index b)
                       :group (cond (start? b)
@@ -219,6 +203,17 @@
      [:div.graph {:id id :style (format "height: %spx;" (+ height (if controls? 300 0)))}]
      [:script
       (format "vegaEmbed('#%s', 'graphs/%s.json');" id name)
+      ]]))
+
+(defn render-graph-embedded
+  "the hiccup to embed graph, including the json"
+  [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]
+  (let [json (json/write-str (spec bm options))
+        id (str "view_" name)]
+    [:div
+     [:div.graph {:id id :style (format "height: %spx;" (+ height (if controls? 300 0)))}]
+     [:script
+      (format "const spec = %s;  vegaEmbed.embed('#%s', spec);"  json id)
       ]]))
 
 (defn vega-head

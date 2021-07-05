@@ -16,10 +16,19 @@
 (declare block-full-hiccup)
 (declare block-full-hiccup-sidenotes)
 
+;;; Boostrap icons, see css and https://icons.getbootstrap.com/
+(defn- icon
+  [name]
+  [:i {:class (str "bi-" name)}])
+
 ;;; "alias" seems like a misnomer, these are mostly external links.
+(defn parse-alias
+  [alias-content]
+  (re-find #"(?s)\[(.+?)\]\((.+?)\)" alias-content))
+
 (defn- format-alias
   [alias-content]
-  (let [[_ alias-text alias-dest] (re-find #"(?s)\[(.+?)\]\((.+?)\)" alias-content)
+  (let [[_ alias-text alias-dest] (parse-alias alias-content)
         internal? (or (= \( (first alias-dest)) (= \[ (first alias-dest)))
         alias-link (if internal?
                      (utils/html-file-title alias-dest)
@@ -134,7 +143,7 @@
   (swap! sidenotes conj (:id sidenote-block))
   [:span
    [:span.superscript]
-   [:div.sidenote
+   [:div.sidenote                     ;TODO option to render on left/right, but
     [:span.superscript.side]
     (block-full-hiccup-sidenotes (:id sidenote-block) block-map)]])
 
@@ -163,8 +172,8 @@
                            (sidenote block-map ref-block)
                            [:div.block-ref
                             (block-hiccup ref-block block-map)]))
-            :hashtag [:a {:href (utils/html-file-title ele-content)}
-                      (utils/format-hashtag ele-content)]
+            :hashtag (page-link-by-name block-map 
+                                        (utils/format-hashtag ele-content))
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
             :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]
             :italic [:i (recurse (utils/remove-double-delimiters ele-content))]
@@ -185,6 +194,8 @@
             :block `[:span ~@(map #(ele->hiccup % block-map block) (rest ast-ele))]
             :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
             :hr [:hr]
+            ;; See https://www.mathjax.org/ This produces an inline LaTex rendering.
+            :latex [:span.math.display (str "\\(" (utils/remove-double-delimiters ele-content) "\\)")]
             )))))))
 
 ;;; Used for converting things like italics in blocknames
@@ -205,6 +216,8 @@
       (prn "Missing content: " (:id block))
       nil)))
 
+;;; TODO this doesn't work, should be using block-id rather than page titles
+;;; Static-roam fucks this up...sigh, should have rolled my own from the start
 (defn roam-url
   [block-id]
   (str (config/config :roam-base-url) block-id))
@@ -215,16 +228,17 @@
   {:pre [(have? string? block-id)]}
   (let [depth (or depth 0)
         block (get block-map block-id)]
-    (when (:include? block)
+    (when (bd/displayed? block)
       [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
        [:li.block
         (when (config/config :dev-mode)
           [:a.edit {:href (roam-url block-id)
                     :target "_roam"}
-           "[e]"])                      ;TODO nicer icons
-        (when-not (:include? block)     ;TODO now never true
+           (icon "pencil")
+           ])           
+        (when-not (bd/included? block)
           [:span.edit 
-           "[X]"])
+           (icon "file-lock2")])
         (when-not (:page? block)        ;Page content is title and rendered elsewhere
           (block-hiccup block block-map))]
        (map #(block-full-hiccup % block-map (inc depth))
@@ -249,6 +263,7 @@
   (re-matches #"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})" s))
 
 (defn block-local-text
+  "just the text of a block, formatting removed"
   [block]
   (letfn [(text [thing]
             (cond (string? thing)
@@ -261,10 +276,12 @@
                   (mapcat text (rest thing))
                   :else
                   ()))]
-    (str/join " " (text (block-hiccup block {})))))
+    (str/join "" (text (block-hiccup block {})))))
 
 (defn block-full-text
   [block-map block]
   (str/join " " (cons (block-local-text block)
                       (map #(block-full-text block-map (get block-map %))
                            (:children block)))))
+
+

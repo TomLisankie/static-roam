@@ -2,7 +2,7 @@
   (:require [static-roam.config :as config]
             [static-roam.utils :as utils]
             [static-roam.database :as database]
-            [static-roam.rendering :as render]
+            [static-roam.markdown :as md]
             [static-roam.batadase :as bd]
             [static-roam.html-generation :as html-gen]
             [me.raynes.fs :as fs]
@@ -14,11 +14,18 @@
   (prn :reading-from path-to-zip)       ;TODO I suppose real logger is called for
   (-> path-to-zip
       utils/read-roam-json-from-zip
-      database/setup-block-map
+      database/roam-db
       (html-gen/generated-page "Index" html-gen/generate-index-pages)
       (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO would make sense to put these under a config
       (html-gen/generated-page "Map" html-gen/generate-global-map)
       ))
+
+(defn pp-export
+  [path-to-zip]
+  (->> path-to-zip
+      utils/read-roam-json-from-zip
+      (ju/schppit "block-dump.edn")))
+
 
 (defonce last-bm (atom nil))
 
@@ -30,7 +37,7 @@
 (defn page-dump
   []
   (ju/schppit
-   (str (config/config :output-dir) "/pages.edn")
+   (str (config/config :output-dir) "pages.edn")
    (u/map-filter (fn [b] (and (:page? b) b))
                  (vals @last-bm))))
 
@@ -59,10 +66,7 @@
 
 (defn gen-page
   [page]
-  (html-gen/export-page
-   (html-gen/generate-content-page @last-bm (config/config :output-dir) (get @last-bm page))
-   (utils/html-file-title page)
-   (config/config :output-dir)))
+  (html-gen/generate-content-page @last-bm (config/config :output-dir) (get @last-bm page)))
 
 (defn gen-pages
   []
@@ -73,10 +77,13 @@
   [& [path-to-config]]
   (config/set-config (or path-to-config "default-config.edn"))
   (reset-output)
+  (u/memoize-reset)
   (-> (utils/latest-export)
       block-map
       tap
       (html-gen/generate-static-roam (config/config :output-dir)))
+  (when (config/config :markdown-output-dir)
+    (md/write-all-pages @last-bm (config/config :markdown-output-dir)))
   (prn (bd/stats @last-bm))
   #_ (dump))
 

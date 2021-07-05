@@ -1,3 +1,5 @@
+/* Boostrap icons */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css");
 
 /* These are ugly; you should pick better ones for your site */
 :root {
@@ -8,13 +10,19 @@
     --link: pink;
     --blockquote: gray;  
     --blockquote-border: darkred;
+    --body-face: Lara;
+    --header-face: Varela Round;
 }
 
 body {
     background-color: var(--background);
-    font-family: Lato;
+    font-family: var(--body-face);
     font-size: 14pt;
-    line-height: 1.5; 
+    line-height: 1.4; 
+}
+
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+    font-family: var(--header-face);
 }
 
 .main {
@@ -35,6 +43,7 @@ hr {
 }
 
 .navbar {
+    font-family: var(--header-face);
     background-color: var(--navbar-background);
     z-index: 1000;		/* should be greater than .graph */
 }
@@ -89,7 +98,7 @@ a:hover {
     box-shadow: 0 0 0 5px #eeeee0;
 }
 
-.external {
+.external:hover {
     background-image: url(external-link.svg);
     background-position: center right;
     background-repeat: no-repeat;
@@ -176,6 +185,7 @@ iframe {
 }
 
 .date {
+    font-family: var(--header-face);
     font-size: small;
 }
 
@@ -184,13 +194,19 @@ iframe {
 }
 
 .footer {
+    font-family: var(--header-face);
     background-color: var(--footer-background);
 }
 
 /* For recent changes, should have more semantic name */
+.pheader {
+    margin-top: 1em;
+    font-family: var(--header-face);    
+}
+
 .ragged {
     border-radius: 25px 15px 225px 15px/15px 225px 15px 255px;    
-    border:dashed 3px var(--link);
+    border:dashed 3px var(--navbar-background);
     margin: 5px;
     margin-left: 15px;
     padding-left: 7px;
@@ -217,7 +233,7 @@ iframe {
 /* Graph related */
 
 .graph {
-    z-index: 999;		/* big but less than .navbar */
+    z-index: 998;		/* big but less than .navbar */
     width: 100%;
     /* height is computed */
 }
@@ -226,14 +242,17 @@ iframe {
 
 /* Sacrificing a goat to the CSS gods */
 .sidenote {
-    float: right;
     clear: right;
     position: absolute;
     display: inline-flex;	/* gets the vertical alignment right */
-    left: 780px;
-    width: 250px;
-    height: 0;			/* keeps the sidenote from fucking with the main layout */
+    left: 770px;
+    width: 380px;
+    padding-right: 100px;
+    /* padding-top: 10px;  puts some whitespace on top, but fucks with alignment of asterisks */    
+    padding-bottom: 10px;
     font-size: 80%;
+    z-index: 999;
+    background: white;
 }
 
 .sidenote > .block {
@@ -243,6 +262,16 @@ iframe {
 .sidenote > .nondent {
     display: inline;
 }
+
+
+/* this is kind of narrow, probably should widen the margin */
+/* actually doesn't work as well as I thought */
+.left-sidenote {
+    left: -100px;
+    width: 100px;
+}
+
+/* for sidenote supscripts */
 
 .superscript {
     position: relative;

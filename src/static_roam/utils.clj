@@ -4,6 +4,7 @@
             [clojure.java.io :as io]
             [clojure.string :as s]
             [org.parkerici.multitool.core :as u]
+            [org.parkerici.multitool.cljcore :as ju]
             [clojure.data.json :as json]
             [static-roam.config :as config]
             )
@@ -21,12 +22,13 @@
 
 ;;; TODO timezone correction
 (u/def-lazy latest-export-time
-  (->> (latest-export)
-       fs/base-name
-       (re-find #"-(\d*)\.")
-       second
-       u/coerce-numeric
-       java.util.Date.))
+  (if-let [export-date (->> (latest-export)
+                            fs/base-name
+                            (re-find #"-(\d*)\.")
+                            second
+                            u/coerce-numeric)]
+    (java.util.Date. export-date)
+    (ju/now)))
 
 (defn unzip-roam-json
   "Takes the path to a zipfile `source` and unzips it to `target-dir`, returning the path of the target file"

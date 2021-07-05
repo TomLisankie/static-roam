@@ -5,11 +5,11 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [me.raynes/fs "1.4.6"]
-                 [org.parkerici/multitool "0.0.13"]
                  [org.clojure/data.json "2.0.2"]
                  [org.clojure/data.xml "0.2.0-alpha6"] ;just for blogger
-;                 [org.clojars.simon_brooke/html-to-md "0.3.0"]
+;                 [org.clojars.simon_brooke/html-to-md "0.3.0"] 
                  [html-to-md/html-to-md "0.3.0"]
+                 [org.parkerici/multitool "0.0.15"]
                  [com.taoensso/truss "1.6.0"]
                  [hiccup "1.0.5"]
                  [instaparse "1.4.10"]

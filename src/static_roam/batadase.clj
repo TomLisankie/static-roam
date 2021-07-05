@@ -9,14 +9,42 @@
 
 ;;; Database accessors. The name is a PROTEST against the feature of Clojure I hate most, rigid limits on namespace reference
 
+(defn block? [x]
+  (and (map? x)
+       (string? (:id x))))
+
+(defn assert-block
+  [x]
+  (or (block? x)
+      (throw (ex-info "Not a block" {:thing x}))))
+
+;;; included? means reachable from an entry point
+;;; displayed? means actually generated. Usually these are the same, except when the :unexcluded? config is set, meaning we want to see everything, included or not.
+
+(defn included?
+  ([block]
+   (assert-block block)
+   (:include? block))
+  ([block-map block-id]
+   (included? (get block-map block-id))))
+
+(defn displayed?
+  ([block]
+   (assert-block block)
+   (if (config/config :unexclude?)
+     true
+     (:include? block)))
+  ([block-map block-id]
+   (displayed? (get block-map block-id))))
+
 (defn- get-linked-references
   [block-id block-map]
   (filter #(get-in block-map [% :id])      ;trying to filter out bogus entries, not working
           (get-in block-map [block-id :linked-by])))
 
-(defn get-included-linked-references
+(defn get-displayed-linked-references
   [block-id block-map]
-  (filter #(get-in block-map [% :include?])
+  (filter (partial displayed? block-map)
           (get-linked-references block-id block-map)))
 
 ;;; Some new accessors
@@ -45,11 +73,7 @@
   "Forward page refs. Returns set of ids"
   [page]
   (apply clojure.set/union
-         (map :refs (filter :include? (block-descendents page)))))
-
-(defn block? [x]
-  (and (map? x)
-       (string? (:id x))))
+         (map :refs (filter displayed? (block-descendents page)))))
 
 (defn block-page
   [block-map block]
@@ -60,7 +84,7 @@
 (defn backward-page-refs
   [bm page]
   (map :content
-       (filter :include?
+       (filter displayed?
                (map (comp (partial block-page bm) bm)
                     (:linked-by page)))))
 
@@ -75,24 +99,17 @@
 
 (defn included-pages
   [block-map]
-  (filter :include? (pages block-map)))
+  (filter included? (pages block-map)))
 
 (defn displayed-pages
   [block-map]
-  (if (config/config :unexclude?)
-    (pages block-map)
-    (included-pages block-map)))
+  (filter displayed? (pages block-map)))
 
 (defn displayed-blocks
   [block-map]
-  (if (config/config :unexclude?)
-    (vals block-map)
-    (filter :include? (vals block-map))))
+  (filter displayed? (vals block-map)))
 
-(defn displayed?
-  [block]
-  (or (:include? block)
-      (config/config :unexclude?)))
+
 
 (defn displayed-regular-pages
   [block-map]
@@ -165,26 +182,23 @@
 
 ;;; These could be part of the map but it's easier this way
 
-(def edit-time
-  (memoize
-   (fn 
-     [page]
-     (second (date-range page)))))
+(u/defn-memoized edit-time
+  [page]
+  (second (date-range page)))
 
-(def size
-  (memoize
-   (fn [page]
-     (reduce +
-             (count (or (:content page) 0))
-             (map size
-                  (filter :include? (:dchildren page)))))))
+(u/defn-memoized size
+  [page]
+  (reduce +
+          (count (:content page ""))
+          (map size
+               (filter displayed? (:dchildren page)))))
 
 (defn page-empty?
   [page]
   (and (not (:special? page))
        (< (- (size page)
-        (count (:id page)))
-        10)))
+             (count (:id page)))
+          10)))
 
 (defn expand-to [block-map block minsize]
   (cond (>= (size block) minsize)

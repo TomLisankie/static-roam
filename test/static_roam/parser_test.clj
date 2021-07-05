@@ -16,8 +16,10 @@
     (is (contains? parsed [:youtube "{{youtube: https://youtu.be/5iI_0wnwIpU}}"]))
     (is (contains? parsed [:bold "**IMPORTANT**"]))
     (is (contains? parsed [:italic "__emphasis__"]))
-    (is (contains? parsed [:highlight "^^pop out^^"]))
-    (is (contains? parsed [:strikethrough "~~old news~~"]))))
+    ;; Turned off for performance
+    #_ (is (contains? parsed [:highlight "^^pop out^^"]))
+    #_ (is (contains? parsed [:strikethrough "~~old news~~"]))
+    ))
 
 
 (deftest hashtag-parse-test
@@ -76,9 +78,8 @@ And its fallen Emanation, the Spectre and its cruel Shadow.")))))
          (parse-to-ast "I was under the #influence, officer"))))
 
 
-
-
-
-
-
-
+(deftest image-test
+  (is (= [:block
+          [:image
+           "![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fhyperphor%2FyQ6S-ONK3c.png?alt=media&token=e3c079a8-2245-4fac-9772-483443e74b65)"]]
+         (parse-to-ast "![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fhyperphor%2FyQ6S-ONK3c.png?alt=media&token=e3c079a8-2245-4fac-9772-483443e74b65)"))))
