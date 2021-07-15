@@ -151,6 +151,7 @@
   [ast-ele block-map & [block]]
   (utils/debuggable
    :ele->hiccup [ast-ele]
+   ;; TODO this approach is broken, it hides page-refs within italics. 
    (let [recurse (fn [s]                 ;TODO probably needs a few more uses
                    (ele->hiccup (parser/parse-to-ast s) block-map block))] ; used to be, do we really need that ? 
      (if (string? ast-ele)

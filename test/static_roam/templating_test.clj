@@ -16,9 +16,8 @@
           :edit-time #inst "2021-05-31T03:47:57.271-00:00"
           :page? true,
           :id "__On Purpose__" ,
-          :linked-by ("4lyUmvrSG" "ED49XZE47" "RV3NnoLkd" "Ev4huCO_g"),
           :depth 4,
           :parsed [:block [:italic "__On Purpose__"]],
           :heading -1}
-        hiccup  (block-page-hiccup "__On Purpose__"  {"__On Purpose__" page} "/output") ]
+        hiccup (block-page-hiccup "__On Purpose__"  {"__On Purpose__" page} "/output") ]
     (is (structure-contains? [:h1 [:i "On Purpose"]] hiccup))))

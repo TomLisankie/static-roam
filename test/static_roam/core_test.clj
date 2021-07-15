@@ -122,7 +122,7 @@
       (is (vector? roam-json))
       (is (= 2 (count roam-json)))
       (testing "block map"
-        (let [block-map (database/setup-block-map roam-json)
+        (let [block-map (database/roam-db roam-json)
               clean-block-map (u/map-values #(dissoc % :dchildren :parsed) block-map)]
           (is (map? block-map))
           (is (= 10 (count block-map)))

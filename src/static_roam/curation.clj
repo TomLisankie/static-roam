@@ -2,11 +2,13 @@
     (:require [static-roam.config :as config]
               [static-roam.utils :as utils]
               [static-roam.database :as database]
+              [static-roam.batadase :as bd]
               [static-roam.core :as core]
               [clojure.set :as set]
               [org.parkerici.multitool.core :as u]
               [me.raynes.fs :as fs]
               [clojure.string :as str]
+              [clj-http.client :as client]
               ))
 
 ;;; Curation functions. For use via REPL; not wired into main program.
@@ -57,36 +59,30 @@
 
 ;;; Find bad links
 
-  ;; TODO filter for include?
 (defn block-links
   [block]
-  (u/walk-collect #(or (:href %) (:src %)) ;must be some more elegant way to express this
-                  ;; TODO this no work no more
-                  (:hiccup block)))
+  (u/walk-collect #(and (string? %)
+                        (str/starts-with? % "http")
+                        %)
+                  (:parsed block)))
 
 (defn all-links
   [block-map]
-  (distinct (mapcat block-links (displayed-blocks block-map))))
-
-(defn all-external-links
-  [block-map]
-  (filter #(str/starts-with? % "http")
-          (all-links block-map)))
+  (distinct (mapcat block-links (bd/displayed-blocks block-map))))
 
 (defn check-link
   [url]
-  (clj-http.client/head url
-                        {:cookie-policy :standard
-                         :trace-redirects true
-                         :redirect-strategy :graceful}))
+  (client/head url
+               {:cookie-policy :standard
+                :trace-redirects true
+                :redirect-strategy :graceful}))
 
 (defn check-links
   [bm]
   (let [bads (atom nil)]
-    (doseq [l (database/all-external-links bm)]
+    (doseq [l (all-links bm)]
       (future-call
        #(try
-          (prn l)
           (check-link l)
           (catch Throwable e (swap! bads conj [l e])))))
     bads))
@@ -113,3 +109,10 @@
         nil                             ;ignore external links
         (when-not (fs/exists? (str "output/pages/" link))
           (prn :missing link :in (.getName f)))))))
+
+
+(defn wayback
+  [url]
+  (let [resp (client/get "http://archive.org/wayback/available"
+                         {:query-params {:url url}})]
+    (clojure.data.json/read-str (:body resp) :keyword-fn keyword)))

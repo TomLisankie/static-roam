@@ -11,9 +11,8 @@
 
 (defn- get-block-id
   [block-json]
-  (if (:title block-json)
-    (:title block-json)
-    (:uid block-json)))
+  (or (:title block-json)
+      (:uid block-json)))
 
 (defn- block-properties
   [block-json]
@@ -57,7 +56,7 @@
    (u/index-by :id
                (u/walk-collect
                 (fn [thing]
-                  (when (and (:uid thing)
+                  (when (and (get-block-id thing)
                              (:edit-time thing))
                     (block-properties thing)))
                 roam-json))
