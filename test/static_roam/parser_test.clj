@@ -15,7 +15,7 @@
     (is (contains? parsed [:alias "[fasfa]([[Hello page]])"]))
     (is (contains? parsed [:youtube "{{youtube: https://youtu.be/5iI_0wnwIpU}}"]))
     (is (contains? parsed [:bold "**IMPORTANT**"]))
-    (is (contains? parsed [:italic "__emphasis__"]))
+    (is (contains? parsed [:italic "__" "emphasis" "__"]))
     ;; Turned off for performance
     #_ (is (contains? parsed [:highlight "^^pop out^^"]))
     #_ (is (contains? parsed [:strikethrough "~~old news~~"]))

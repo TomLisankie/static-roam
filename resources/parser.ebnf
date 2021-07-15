@@ -5,7 +5,8 @@ block = blockquote | (syntax-in-block / text)*
 
 <syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | metadata-tag | code-line | code-block | youtube | bold | italic | bare-url | page-alias | hr | latex ) (* add query later*)
 
-page-link = #"\[\[.*?\]\]"
+(* page links do not want their innards parsed *)
+page-link = #"\[\[.*?\]\]" 
 alias = #"\[([^\[\]]+?)\]\(.+?\)"  (* Note this hairy but correct char class that means everything but square brackets *)
 image = #"!\[(.*?)\]\(.*?\)"   (* image = "!" alias doesn't quite work *)
 hashtag = #"\#[\w-:]+" | #"#\[\[.*?\]\]"
@@ -17,7 +18,7 @@ code-block = #"(?is)^```.*```"
 youtube = #"\{\{youtube: .*?\}\}" | #"\{\{\[\[youtube\]\]: .*?:.*?\}\}" | #"\{\{\[\[video\]\]: .*?:.*?\}\}"
 page-alias = #"\{\{alias\:\[\[.+\]\].*\}\}"
 bold = #"\*\*.*?\*\*"
-italic = #"\_\_.*?\_\_"
+italic = "__", (syntax-in-block / text)* , "__"
 (* Don't use these so turning off for performance
  strikethrough = #"\~\~.*?\~\~"
  highlight = #"\^\^.*?\^\^" *)

@@ -57,11 +57,10 @@ And its fallen Emanation, the Spectre and its cruel Shadow.") {}))))
  and so is this.```") {})))))
 
 (deftest markup-in-page-names-test
-  (mc/with-mock [utils/html-file-title :link-url]
-    (is (= [:a {:href :link-url :class "empty"} [:i "foo"]] 
-           (block-hiccup (fake-block "[[__foo__]]")
-                         (assoc fake-block-map "__foo__"
-                                {:id "__foo__" :include? true :page? true :content "eh"}))))))
+  (is (= [:a {:href "__foo__.html" :class "empty"} [:i "foo"]] 
+         (block-hiccup (fake-block "[[__foo__]]")
+                       (assoc fake-block-map "__foo__"
+                              {:id "__foo__" :include? true :page? true :content "eh"})))))
 
 (deftest italic-link-bug
   (testing "link inside italics"

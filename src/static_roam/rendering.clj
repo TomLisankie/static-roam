@@ -147,13 +147,25 @@
     [:span.superscript.side]
     (block-full-hiccup-sidenotes (:id sidenote-block) block-map)]])
 
+;;; Not strictly necessary, but makes tests come out better
+(defn- maybe-conc-string
+  [seq]
+  (if (every? string? seq)
+    [(str/join seq)]
+    seq))
+
 (defn ele->hiccup
   [ast-ele block-map & [block]]
   (utils/debuggable
    :ele->hiccup [ast-ele]
    ;; TODO this approach is broken, it hides page-refs within italics. 
-   (let [recurse (fn [s]                 ;TODO probably needs a few more uses
-                   (ele->hiccup (parser/parse-to-ast s) block-map block))] ; used to be, do we really need that ? 
+   (letfn [(recurse [s]                 ;TODO probably needs a few more uses
+             (ele->hiccup (parser/parse-to-ast s) block-map block))
+           (nrecurse [seq]
+             (mapv #(if (string? seq)
+                      seq
+                      (ele->hiccup % block-map block))
+                    seq))] 
      (if (string? ast-ele)
        ast-ele
        (let [ele-content (second ast-ele)]
@@ -177,7 +189,7 @@
                                         (utils/format-hashtag ele-content))
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
             :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]
-            :italic [:i (recurse (utils/remove-double-delimiters ele-content))]
+            :italic `[:i ~@(maybe-conc-string (nrecurse (subvec ast-ele 2 (- (count ast-ele) 1))))]
             :bold [:b (recurse (utils/remove-double-delimiters ele-content))]
             :alias (format-alias ele-content)
             :image (format-image ele-content)

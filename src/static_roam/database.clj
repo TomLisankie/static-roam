@@ -107,9 +107,13 @@
 (defn pmap-values [f hashmap]
   (zipmap (keys hashmap) (pmap f (vals hashmap))))
 
+(defn parse-block
+  [block]
+  (assoc block :parsed (parser/parse-to-ast (:content block)))  )
+
 (defn parse
   [db]
-  (pmap-values #(assoc % :parsed (parser/parse-to-ast (:content %))) db))
+  (pmap-values parse-block db))
 
 (defn generate-refs
   [db]

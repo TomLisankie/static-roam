@@ -1,5 +1,6 @@
 (ns static-roam.templating-test
   (:require [static-roam.templating :refer :all]
+            [static-roam.database :as db]
             [org.parkerici.multitool.core :as u]
             [clojure.test :refer :all]))
 
@@ -8,8 +9,10 @@
   [elt struct]
   (u/walk-find #(= % elt) struct))
 
+
 (deftest formatted-page-title-test
   (let [page 
+        (db/parse-block
         '{:include? true,
           :content "__On Purpose__",
           :refs #{},
@@ -17,7 +20,6 @@
           :page? true,
           :id "__On Purpose__" ,
           :depth 4,
-          :parsed [:block [:italic "__On Purpose__"]],
-          :heading -1}
+          :heading -1})
         hiccup (block-page-hiccup "__On Purpose__"  {"__On Purpose__" page} "/output") ]
     (is (structure-contains? [:h1 [:i "On Purpose"]] hiccup))))

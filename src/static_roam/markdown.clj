@@ -56,6 +56,7 @@
       :metadata-tag (second parse)
       :bare-url (second parse)          ;github is ok with this, not sure about other markdown
       :todo "◘"                         ;I guess
+      :done "⌧"                         ;I guess
       :block-ref (second parse)         ;TODO
       :youtube (youtube-link (second parse))
       (throw (ex-info "Don't know how to translate to markdown" {:block parse}))
