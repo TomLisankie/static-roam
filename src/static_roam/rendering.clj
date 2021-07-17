@@ -190,7 +190,7 @@
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
             :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]
             :italic `[:i ~@(maybe-conc-string (nrecurse (subvec ast-ele 2 (- (count ast-ele) 1))))]
-            :bold [:b (recurse (utils/remove-double-delimiters ele-content))]
+            :bold `[:b ~@(maybe-conc-string (nrecurse (subvec ast-ele 2 (- (count ast-ele) 1))))]
             :alias (format-alias ele-content)
             :image (format-image ele-content)
             :todo [:input {:type "checkbox" :disabled "disabled"}]

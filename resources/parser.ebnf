@@ -17,11 +17,11 @@ code-block = #"(?is)^```.*```"
 (* query = #"\{\{query: .*?:.*?\}\}" | #"\{\{[[query]]: .*?:.*?\}\}" *)
 youtube = #"\{\{youtube: .*?\}\}" | #"\{\{\[\[youtube\]\]: .*?:.*?\}\}" | #"\{\{\[\[video\]\]: .*?:.*?\}\}"
 page-alias = #"\{\{alias\:\[\[.+\]\].*\}\}"
-bold = #"\*\*.*?\*\*"
+bold = "**", (syntax-in-block / text)* , "**"
 italic = "__", (syntax-in-block / text)* , "__"
 (* Don't use these so turning off for performance
- strikethrough = #"\~\~.*?\~\~"
- highlight = #"\^\^.*?\^\^" *)
+ strikethrough = "~~", (syntax-in-block / text)* , "~~"
+ highlight = "^^", (syntax-in-block / text)* , "^^"  *)
 todo = "{{[[TODO]]}}"
 done = "{{[[DONE]]}}"
 block-embed = #"\{\{embed: .*?\}\}" | #"\{\{\[\[embed\]\]: .*?\}\}"
