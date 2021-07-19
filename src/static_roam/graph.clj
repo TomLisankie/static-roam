@@ -47,21 +47,22 @@
                          (bd/entry-point? block-map b)))
         ]
     [{:name "node-data"
-      :values (map (fn [b]
-                     ;;  :size (- 20 (or (:depth b) 0)) (not working)
-                     {:name (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
-                      :link (:link b)
-                      :index (:index b)
-                      :group (cond (start? b)
-                                   7
-                                   (:include? b)
-                                   1
-                                   :else
-                                   8)   ;only shows up in private mode
-                      ;; This is the AREA of the circle
-                      :size (+ 50 (Math/pow (* 3 (- 12 (:depth b 0))) 2))
-                      })
-                   pages)}
+      :values (sort-by :group           ; this is to make vega's color choices deterministic
+                       (map (fn [b]
+                              ;;  :size (- 20 (or (:depth b) 0)) (not working)
+                              {:name (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
+                               :link (:link b)
+                               :index (:index b)
+                               :group (cond (start? b)
+                                            0
+                                            (:include? b)
+                                            1
+                                            :else
+                                            8)   ;only shows up in private mode
+                               ;; This is the AREA of the circle
+                               :size (+ 50 (Math/pow (* 3 (- 12 (:depth b 0))) 2))
+                               })
+                            pages))}
      {:name "link-data"
       :values (remove #(or (nil? (:target %))
                            ;; TODO links are symmetrical so this removes the redundnt half 

@@ -119,7 +119,8 @@
                                            class)))})
        (block-content->hiccup (or alias page-id))]
       (do
-        (prn "ref to excluded page " page-id)
+        ;; This is normal but a sign that target might want to be exposed.
+        (prn (str "ref to excluded page: " page-id))
         (block-content->hiccup (or alias page-id))))))
 
 (defn page-link-by-name

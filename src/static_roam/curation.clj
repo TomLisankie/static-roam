@@ -116,3 +116,5 @@
   (let [resp (client/get "http://archive.org/wayback/available"
                          {:query-params {:url url}})]
     (clojure.data.json/read-str (:body resp) :keyword-fn keyword)))
+
+;;; TODO convert bare URLs into [label](url)
