@@ -23,6 +23,7 @@
 ;;; TODO max-degree is a hack and I don't like it – without it, if you hit a high-degree node you'll get too much in the graph
 ;;; some kind of smart filter would be better
 ;;; max-degree is really max-distance 
+
 (defn page-neighbors
   [bm from n max-degree]
   (let [neighbors (fn [b] (take max-degree (filter identity (map bm (bd/page-refs bm b)))))]
@@ -47,7 +48,7 @@
                          (bd/entry-point? block-map b)))
         ]
     [{:name "node-data"
-      :values (sort-by :group           ; this is to make vega's color choices deterministic
+      :values (sort-by :index           ; Order matters; links refer to position, not index field
                        (map (fn [b]
                               ;;  :size (- 20 (or (:depth b) 0)) (not working)
                               {:name (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
@@ -76,9 +77,7 @@
 
 (defn spec
   [block-map {:keys [width height controls? link-distance node-charge node-radius] :as options :or {link-distance 60 node-charge -100 node-radius 20}}]
-  `{:description
-    "A node-link diagram of Roam pages and links."
-    :$schema "https://vega.github.io/schema/vega/v5.json"
+  `{:$schema "https://vega.github.io/schema/vega/v5.json"
     :data ~(graph-data block-map options)
     :autosize "none"
     :width ~(or width 1000)
@@ -169,8 +168,8 @@
      {:name "nodeCharge" :value ~node-charge :bind ~(and controls? {:input "range" :min -100 :max 10 :step 1})}
      {:name "linkDistance" :value ~link-distance :bind ~(and controls? {:input "range" :min 5 :max 100 :step 1})}
      {:name "static" :value false :bind ~(and controls? {:input "checkbox"})}
-     {:description "State variable for active node fix status."
-      :name "fix"
+     ;; "State variable for active node fix status."
+     {:name "fix"
       :value false
       :on
       [{:events "symbol:mouseout[!event.buttons], window:mouseup" :update "false"}
@@ -178,12 +177,12 @@
        {:events "[symbol:mousedown, window:mouseup] > window:mousemove!"
         :update "xy()"
         :force true}]}
-     {:description "Graph node most recently interacted with."
-      :name "node"
+     ;; :description "Graph node most recently interacted with."
+     {:name "node"
       :value nil
       :on [{:events "symbol:mouseover" :update "fix === true ? item() : node"}]}
-     {:description "Flag to restart Force simulation upon data changes."
-      :name "restart"
+     ;; :description "Flag to restart Force simulation upon data changes."
+     {:name "restart"
       :value false
       :on [{:events {:signal "fix"} :update "fix && fix.length"}]}]
     })

@@ -198,10 +198,9 @@
             :done [:input {:type "checkbox" :disabled "disabled" :checked "checked"}]
             :code-line [:code (utils/remove-n-surrounding-delimiters 1 ele-content)]
             :code-block (format-codeblock ele-content)
-            :youtube (youtube-vid-embed
-                      (or (get-youtube-id ele-content)
-                          (throw (ex-info "Couldn't find youtube id" {:string ele-content}))))
-            
+            :youtube (if-let [youtube-id (get-youtube-id ele-content)]
+                       (youtube-vid-embed youtube-id)
+                       [:span "Non-youtube video" ele-content]) ;TODO temp, do something better
             :bare-url (make-content-from-url ele-content)
             :blockquote [:blockquote (ele->hiccup ele-content block-map block)]
                                         ;ast-ele

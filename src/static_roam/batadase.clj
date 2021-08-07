@@ -167,9 +167,7 @@
 ;;; I suppose the median time might be more informative – or an Ed Tufte minigraph
 (defn date-range [page]
   (let [blocks (block-descendents page)
-        visible-blocks (if (config/config :unexclude?)
-                          blocks
-                          (filter :include? blocks))
+        visible-blocks (filter displayed? blocks)
         visible-dates (filter identity (map :edit-time visible-blocks))]
     [(min* visible-dates) (max* visible-dates)]))
 

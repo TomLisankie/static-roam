@@ -56,7 +56,8 @@
    (u/index-by :id
                (u/walk-collect
                 (fn [thing]
-                  (when (get-block-id thing) ;was filtering on edit-time but some blocks can be missing it
+                  (when (and (get-block-id thing)
+                             (> (count thing) 1)) ;try to exclude :refs
                     (block-properties thing)))
                 roam-json))
    :children :parent

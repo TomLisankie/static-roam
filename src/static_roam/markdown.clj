@@ -60,8 +60,7 @@
       :done "⌧"                         ;I guess
       :block-ref (second parse)         ;TODO
       :youtube (youtube-link (second parse))
-      (throw (ex-info "Don't know how to translate to markdown" {:block parse}))
-      )
+      (prn "Don't know how to translate to markdown" parse)) ;TODO log/warn
     parse))
       
 ;;;; Note: in most cases, we could just use :content, but links and other things
@@ -114,7 +113,7 @@
   [block file]
   (ju/file-lines-out file (page->md block)))
 
-(defn write-all-pages
+(defn write-displayed-pages
   [bm directory]
   (doseq [page (bd/displayed-pages bm)]
     (write-page page (str directory (md-file-name (:content page))))))

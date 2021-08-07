@@ -74,16 +74,19 @@
   (html-gen/generate-static-roam @last-bm (config/config :output-dir)))
 
 (defn -main
-  [& [path-to-config]]
-  (config/set-config (or path-to-config "default-config.edn"))
+  [& [config-or-path]]
+  (if (map? config-or-path)
+    (config/set-config-map config-or-path)
+    (config/set-config-path (or config-or-path "default-config.edn")))
   (reset-output)
   (u/memoize-reset)
   (-> (utils/latest-export)
       block-map
       tap
       (html-gen/generate-static-roam (config/config :output-dir)))
+  ;; TODO options for writing all pages
   (when (config/config :markdown-output-dir)
-    (md/write-all-pages @last-bm (config/config :markdown-output-dir)))
+    (md/write-displayed-pages @last-bm (config/config :markdown-output-dir)))
   (prn (bd/stats @last-bm))
   #_ (dump))
 

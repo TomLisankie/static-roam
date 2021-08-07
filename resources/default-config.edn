@@ -1,4 +1,4 @@
-;;; TODOr document these
+;;; TODO document these
 {:source "~/Downloads"
  :entry-tags ["EntryPoint"]
  :exit-tags #or [#split [#env ROAM_EXIT_TAGS] ["ExitPoint" "Private"]]

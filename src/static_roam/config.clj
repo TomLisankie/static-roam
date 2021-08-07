@@ -11,11 +11,15 @@
 
 (def the-config (atom {}))
 
-(defn set-config
+(defn set-config-map
+  [m]
+  (reset! the-config m))
+
+(defn set-config-path
   [path]
-  (reset! the-config
-          (aero/read-config
-           (io/resource path)))
+  (set-config-map 
+   (aero/read-config
+    (io/resource path)))
   (pprint/pprint @the-config))
 
 (defn config
