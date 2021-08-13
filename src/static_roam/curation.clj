@@ -118,3 +118,10 @@
     (clojure.data.json/read-str (:body resp) :keyword-fn keyword)))
 
 ;;; TODO convert bare URLs into [label](url)
+
+
+;;; Highly connected nodes
+(defn fan
+  [bm]
+  (let [bm (u/map-values #(assoc % :fan (count (bd/page-refs bm %))) bm)]
+    (map (juxt :content :fan) (take 50 (reverse (sort-by :fan (filter :fan (vals bm))))))))

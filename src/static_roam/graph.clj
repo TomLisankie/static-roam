@@ -13,7 +13,7 @@
 ;;; TODO better link highlighting
 ;;; TODO maybe color for recency?
 ;;; TODO on side map in private mode, highlight excluded
-;;; TODO on maps, empty pages should be visually distinguished
+;;; TODO on maps, empty pages should be visually distinguished (or removed, which is DONE)
 ;;; Starting to require a legend though
 
 ;;; TODO would be more Roam-ish to have a normal Map page with a special tag that put the vega stuff there. Then it could be linked to in the normal way.  OOOH also partial maps would be easy! Maybe in the sidebar... Mini-maps centered on current page.
@@ -26,7 +26,7 @@
 
 (defn page-neighbors
   [bm from n max-degree]
-  (let [neighbors (fn [b] (take max-degree (filter identity (map bm (bd/page-refs bm b)))))]
+  (let [neighbors (fn [b] (take max-degree (remove bd/page-empty? (map bm (bd/page-refs bm b)))))]
     (u/neighborhood from n neighbors)))
 
 (defn graph-data
