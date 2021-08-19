@@ -14,8 +14,8 @@
     (is (contains? parsed [:hashtag "#yessereebob"]))
     (is (contains? parsed [:alias "[fasfa]([[Hello page]])"]))
     (is (contains? parsed [:youtube "{{youtube: https://youtu.be/5iI_0wnwIpU}}"]))
-    (is (contains? parsed [:bold "**" "IMPORTANT" "**"]))
-    (is (contains? parsed [:italic "__" "emphasis" "__"]))
+    (is (contains? parsed [:bold "IMPORTANT"]))
+    (is (contains? parsed [:italic "emphasis"]))
     ;; Turned off for performance
     #_ (is (contains? parsed [:highlight "^^" "pop out" "^^"]))
     #_ (is (contains? parsed [:strikethrough "~~" "old news" "~~"]))
@@ -83,4 +83,45 @@ And its fallen Emanation, the Spectre and its cruel Shadow.")))))
           [:image
            "![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fhyperphor%2FyQ6S-ONK3c.png?alt=media&token=e3c079a8-2245-4fac-9772-483443e74b65)"]]
          (parse-to-ast "![](https://firebasestorage.googleapis.com/v0/b/firescript-577a2.appspot.com/o/imgs%2Fapp%2Fhyperphor%2FyQ6S-ONK3c.png?alt=media&token=e3c079a8-2245-4fac-9772-483443e74b65)"))))
-"
+
+;;; The comma was causing problems.
+(deftest weird-italics-bug
+  (is (= [:block "oh " [:italic "fuck"] " this, it is " [:italic "nonsense"] " please"]
+         (parse-to-ast "oh __fuck__ this, it is __nonsense__ please")))
+  (is (= [:block "oh " [:italic "fuck"] " this. it is " [:italic "nonsense"] " please"]
+         (parse-to-ast "oh __fuck__ this. it is __nonsense__ please")))
+  (is (= [:block "foo, "
+          [:italic "bar"]
+          " blag "
+          [:italic "The" " " "Confidence" " " "Man"]
+          " and"]
+         (parse-to-ast "foo, __bar__ blag __The Confidence Man__ and")))
+  (is (= [:block "foo, "
+          [:italic "bar"]
+          " blag "
+          [:italic "The" " " "Confidence" " " "Man"]
+          " and "]
+         (parse-to-ast "foo, __bar__ blag __The Confidence Man__ and ")))
+  ;; Apparently this one is very tough to parse, maybe due to the heavy literary pretentiousness
+  (let [dis-content "Anyway, __White Noise__ is thematically timely and one of the best novels of the late 20th century according to Harold Bloom, who placed it in the tradition of \"American comic apocalypses\" that includes Melville's __The Confidence Man__ and [[Thomas Pynchon]]'s __Crying of Lot 49__. (I guess I'd put __[[Infinite Jest]]__ and the work of [[Philip K Dick]] in that bucket as well).  And it's due to be [turned into a movie](https://www.latimes.com/entertainment-arts/story/2021-01-14/adam-driver-greta-gerwig-and-noah-baumbach-reunite-for-adaptation-of-don-delillos-white-noise) this year."]
+    (= [:block
+        "Anyway, "
+        [:italic "White" " " "Noise"]
+        " is thematically timely and one of the best novels of the late 20th century according to Harold Bloom, who placed it in the tradition of \"American comic apocalypses\" that includes Melville's "
+        [:italic "The" " " "Confidence" " " "Man"]
+        " and "
+        [:page-link "[[Thomas Pynchon]]"]
+        "'s "
+        [:italic "Crying" " " "of" " " "Lot" " " "49"]
+        ". (I guess I'd put "
+        [:italic [:page-link "[[Infinite Jest]]"]]
+        " and the work of "
+        [:page-link "[[Philip K Dick]]"]
+        " in that bucket as well).  And it's due to be "
+        [:alias
+         "[turned into a movie](https://www.latimes.com/entertainment-arts/story/2021-01-14/adam-driver-greta-gerwig-and-noah-baumbach-reunite-for-adaptation-of-don-delillos-white-noise)"]
+        " this year."]
+       (parse-to-ast dis-content)
+       )))
+
+

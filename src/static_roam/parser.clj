@@ -6,6 +6,7 @@
 
 ;;; Turns Roam block content into an intermediate form (AST)
 
+;;; TODO Maybe walk this over parser output
 (defn- combine-adjacent-strings
   "In a sequence of strings mixed with other values, returns the same sequence with adjacent strings concatenated.
    (If the sequence contains only strings, use clojure.string/join instead.)"

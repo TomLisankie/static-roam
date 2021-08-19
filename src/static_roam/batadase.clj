@@ -165,10 +165,14 @@
 ;;; Prob needs to deal with missing data
 ;;; Also, to be proper, :create-time should be used as well
 ;;; I suppose the median time might be more informative – or an Ed Tufte minigraph
+
+;;; Some bogus dates creep in somehow, this removes them (TODO figure this out better)
+(def earliest-date  #inst "2020-01-01T00:00")
+
 (defn date-range [page]
   (let [blocks (block-descendents page)
         visible-blocks (filter displayed? blocks)
-        visible-dates (filter identity (map :edit-time visible-blocks))]
+        visible-dates (filter (partial u/<* earliest-date) (map :edit-time visible-blocks))]
     [(min* visible-dates) (max* visible-dates)]))
 
 (defn stats [bm]

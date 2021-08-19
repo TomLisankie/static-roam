@@ -17,8 +17,8 @@ code-block = #"(?is)^```.*```"
 (* query = #"\{\{query: .*?:.*?\}\}" | #"\{\{[[query]]: .*?:.*?\}\}" *)
 youtube = #"\{\{youtube: .*?\}\}" | #"\{\{\[\[youtube\]\]: .*?:.*?\}\}" | #"\{\{\[\[video\]\]: .*?:.*?\}\}"
 page-alias = #"\{\{alias\:\[\[.+\]\].*\}\}"
-bold = "**", (syntax-in-block / text)* , "**"
-italic = "__", (syntax-in-block / text)* , "__"
+bold = <"**">, (!bold syntax-in-block / text)* , <"**">
+italic = <"__">, (!italic syntax-in-block / text)* , <"__">
 (* Don't use these so turning off for performance
  strikethrough = "~~", (syntax-in-block / text)* , "~~"
  highlight = "^^", (syntax-in-block / text)* , "^^"  *)
@@ -30,7 +30,8 @@ blockquote = <"> "> block
 hr = "---"
 latex= #"\$\$(.*?)\$\$"
 
-text = #'[A-Za-z0-9]+|[\s\W_]+?'
+(* should match all punc that is not otherwise used for syntax, not sure I have everything  *)
+text = #'[A-Za-z0-9\.\,\!\"\'\?]+|[\s\W]+?' 
 
 
 
