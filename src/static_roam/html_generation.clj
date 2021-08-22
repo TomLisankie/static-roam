@@ -48,6 +48,8 @@
 
 ;;; If there are any more special pages; should get more declarative about these generators.
 
+;;; Yeah this sucks, each special page has like 3 parts where 1 would do (here, templating, and core).
+
 (defn generate-recent-page
   [block-map output-dir]
   (export-page
@@ -70,6 +72,13 @@
   (export-page
    (templating/map-page bm output-dir)
    "/pages/Map.html"
+   output-dir))
+
+(defn generate-dataviz
+  [bm output-dir]
+  (export-page
+   (templating/dataviz-page bm output-dir)
+   "/pages/DataViz.html"
    output-dir))
 
 (defn generate-static-roam

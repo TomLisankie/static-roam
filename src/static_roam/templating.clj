@@ -154,6 +154,16 @@
    bm
    :head-extra (graph/vega-head)))
 
+(defn dataviz-page
+  [bm output-dir]
+  ;;; TODO write data faile
+  (page-hiccup
+   (graph/render-dataviz bm output-dir)
+   "DataViz"
+   "DataViz"
+   bm
+   :head-extra (graph/vega-lite-head)))
+
 (defn render-date-range
   [[from to]]
   [:div.date (utils/render-time from) " - " (utils/render-time to)])

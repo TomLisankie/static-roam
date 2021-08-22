@@ -18,6 +18,7 @@
       (html-gen/generated-page "Index" html-gen/generate-index-pages)
       (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO would make sense to put these under a config
       (html-gen/generated-page "Map" html-gen/generate-global-map)
+      (html-gen/generated-page "DataViz" html-gen/generate-dataviz)
       ))
 
 (defn pp-export
@@ -25,7 +26,6 @@
   (->> path-to-zip
       utils/read-roam-json-from-zip
       (ju/schppit "block-dump.edn")))
-
 
 (defonce last-bm (atom nil))
 

@@ -29,18 +29,25 @@
   (let [neighbors (fn [b] (take max-degree (remove bd/page-empty? (map bm (bd/page-refs bm b)))))]
     (u/neighborhood from n neighbors)))
 
+(defn graph-pages
+  [block-map]
+  (bd/displayed-regular-pages block-map))
+
 (defn graph-data
+  "radius-from: name of central page"
   [block-map {:keys [radius-from radius max-degree] :or {radius 2 max-degree 8}}]
-  (let [pages (->> (bd/displayed-regular-pages block-map)
-                   (filter (if radius-from
-                             (let [neighborhood (set (map :content (page-neighbors block-map (get block-map radius-from) radius max-degree)))]
-                               #(contains? neighborhood (:content %)))
-                             identity))
-                   (map (fn [index block] (assoc block
-                                                 :index index
-                                                 :page-refs (bd/page-refs block-map block)
-                                                 :link (utils/html-file-title (:content block))))
-                        (range)))
+  (let [pages (->> block-map
+                  graph-pages
+                  (filter (if radius-from
+                            (let [neighborhood (set (map :content (page-neighbors block-map (get block-map radius-from) radius max-degree)))]
+                              #(contains? neighborhood (:content %)))
+                            identity))
+                  (map (fn [index block] (assoc block
+                                                :index index
+                                                :page-refs (bd/page-refs block-map block)
+                                                :link (utils/html-file-title (:content block))))
+                       (range))
+                  )
         indexed (u/index-by :id pages)
         ;; Starting nodes, either radius-frame or an entry point if doing the whole graph
         start? (fn [b] (if radius-from  
@@ -50,6 +57,7 @@
     [{:name "node-data"
       :values (sort-by :index           ; Order matters; links refer to position, not index field
                        (map (fn [b]
+                              ;; TODO why not use actual size???
                               ;;  :size (- 20 (or (:depth b) 0)) (not working)
                               {:name (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
                                :link (:link b)
@@ -205,21 +213,76 @@
       (format "vegaEmbed('#%s', 'graphs/%s.json');" id name)
       ]]))
 
+(defn render-vega-embedded
+  "Render an arbitrary Vega specs"
+  [spec name height]
+  (let [json (json/write-str spec)
+        id (str "view_" name)]
+    [:div
+     [:div.graph {:id id :style (format "height: %spx;" height)}]
+     [:script
+      (format "const spec = %s;  vegaEmbed.embed('#%s', spec);" json id)
+      ]]))
+
 (defn render-graph-embedded
   "the hiccup to embed graph, including the json"
   [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]
-  (let [json (json/write-str (spec bm options))
-        id (str "view_" name)]
-    [:div
-     [:div.graph {:id id :style (format "height: %spx;" (+ height (if controls? 300 0)))}]
-     [:script
-      (format "const spec = %s;  vegaEmbed.embed('#%s', spec);"  json id)
-      ]]))
+  (render-vega-embedded (spec bm options) name (+ height (if controls? 300 0))))
+
+;;; See https://vega.github.io/vega-lite/usage/embed.html
 
 (defn vega-head
   []
-  [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.0"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.16.0"}]
+  [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.2"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.17.0"}]
    ])
 
+(defn vega-lite-head
+  []
+  [[:script {:src "https://cdn.jsdelivr.net/npm/vega@5.20.2"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/vega-lite@5.1.0"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/vega-embed@6.17.0"}]
+   ])
 
+;;; Experiments
+
+(defn page-data
+  "Generate a data table of pages (TODO or blocks) suitable for passing to Vega"
+  [block-map]
+  (for [page (graph-pages block-map)
+        :let [[start end] (bd/date-range page)]]
+    {:title (:content page)
+     :fan (count (bd/page-refs block-map page))     ;TODO separate in and out 
+     :size (bd/size page)
+     :depth (:depth page)
+     :start (str start)
+     :end (str end)
+     :link (utils/html-file-title (:content page))
+     ; TODO size in blocks would be interesting maybe
+     }
+    ))
+
+(defn write-page-data
+  [bm output-dir]
+  (utils/write-json (str output-dir "/pages/graphs/pages.json") (page-data bm)))
+
+(def view1-spec
+  {:mark {:type "point",
+          :tooltip {:content "data.title"}}
+   :data {:url "graphs/pages.json"}
+   :encoding
+   {:x {:field "end", :type "temporal"}
+    :y {:field "fan", :type "quantitative"},
+    :size {:field "size" :type "quantitative"},
+    :href {:field "link"}
+    }
+   :height 500,
+   :width 700})
+
+(defn render-dataviz
+  [bm output-dir]
+  (write-page-data bm output-dir)       ;doing this side-effecty thing here feels janky
+  (render-vega-embedded
+   view1-spec
+   "dataviz"
+   500))
