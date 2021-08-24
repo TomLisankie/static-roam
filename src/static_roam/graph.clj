@@ -219,7 +219,7 @@
   (let [json (json/write-str spec)
         id (str "view_" name)]
     [:div
-     [:div.graph {:id id :style (format "height: %spx;" height)}]
+     [:div.graph {:id id :style (and height (format "height: %spx;" height))}]
      [:script
       (format "const spec = %s;  vegaEmbed.embed('#%s', spec);" json id)
       ]]))
@@ -259,6 +259,9 @@
      :end (str end)
      :link (utils/html-file-title (:content page))
      ; TODO size in blocks would be interesting maybe
+     :group (cond (bd/entry-point? block-map page) 2
+                  (:include? page) 1
+                  :else 0)
      }
     ))
 
@@ -267,17 +270,20 @@
   (utils/write-json (str output-dir "/pages/graphs/pages.json") (page-data bm)))
 
 (def view1-spec
-  {:mark {:type "point",
-          :tooltip {:content "data.title"}}
+  {:mark {:type "point"
+;          :tooltip true                 ;for debugging
+          }
    :data {:url "graphs/pages.json"}
    :encoding
    {:x {:field "end", :type "temporal"}
-    :y {:field "fan", :type "quantitative"},
+    :y {:field "fan", :type "quantitative" :scale {:type "symlog"}},
+    :color {:field "group" :type "nominal"}
     :size {:field "size" :type "quantitative"},
+    :tooltip {:field "title"}
     :href {:field "link"}
     }
    :height 500,
-   :width 700})
+   :width 600})
 
 (defn render-dataviz
   [bm output-dir]
@@ -285,4 +291,4 @@
   (render-vega-embedded
    view1-spec
    "dataviz"
-   500))
+   nil))
