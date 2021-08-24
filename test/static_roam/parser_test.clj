@@ -125,3 +125,19 @@ And its fallen Emanation, the Spectre and its cruel Shadow.")))))
        )))
 
 
+(deftest underscore-bug
+  (is (= [:block "this is pretty basic and should work"]
+         (parse-to-ast "this is pretty basic and should work")))
+  (is (= [:block "this is pretty_basic and should work"]
+         (parse-to-ast "this is pretty_basic and should work"))))
+
+(deftest three-italians-bug
+  (is (= [:block
+          "blah "
+          [:italic "Epistemology"]
+          ", "
+          [:italic "Agency"]
+          ", and "
+          [:italic "Curiosity"]
+          ", "]
+         (parse-to-ast "blah __Epistemology__, __Agency__, and __Curiosity__, "))))

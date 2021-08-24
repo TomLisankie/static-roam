@@ -31,6 +31,7 @@
     :url-link-url-parts     (fn [& chars]
                               (clojure.string/join chars))
     :text                   (fn [s] s)
+    :textier                   (fn [s] s)
     }
    tree))
 
@@ -45,17 +46,4 @@
   [block-content]
   (when block-content 
     (transform-to-ast (block-parser block-content))))
-
-
-
-
-
-
-
-
-
-
-
-
-
 
