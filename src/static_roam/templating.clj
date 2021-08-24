@@ -176,7 +176,8 @@
         contents
         [:div
          [:div
-          (render-date-range (bd/date-range block))]
+          (u/ignore-errors
+           (render-date-range (bd/date-range block)))]
          (when-not (:include? block)
            [:span [:b "EXCLUDED"]])       ;TODO make this pop more
          [:hr {}]

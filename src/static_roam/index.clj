@@ -4,6 +4,7 @@
             [static-roam.templating :as templating]
             [static-roam.rendering :as render]
             [static-roam.config :as config]
+            [org.parkerici.multitool.core :as u]
             [clojure.string :as s]))
 
 ;;; depth tree
@@ -17,6 +18,7 @@
     :col-width "65%"
     }
    {:name "Date"
+    :filter-key bd/edit-time
     :sort-key (comp - inst-ms bd/edit-time)
     :render (comp utils/render-time bd/edit-time)}
    {:name "Depth"
@@ -35,7 +37,7 @@
                                 ".html"))]
     (apply
      merge
-     (for [{:keys [name sort-key] :as index} indexes]
+     (for [{:keys [name sort-key filter-key] :as index :or {filter-key identity}} indexes]
        (let [hiccup
               [:table.table.table-sm.table-hover 
                [:thead
@@ -48,11 +50,12 @@
                       (:name col)
                       [:a {:href (page-loc col)} (:name col)])])]]
                [:tbody 
-                (for [page (sort-by sort-key pages)]
+                (for [page (sort-by sort-key (filter filter-key pages))]
                   [:tr
                    (for [col indexes]
                      [:td
-                      ((:render col) page)])])
+                      (u/ignore-errors
+                       ((:render col) page))])])
                 ]]
              title  (format "Index by %s" name)]
          {(str "/pages/" (page-loc index))    ;pkm
