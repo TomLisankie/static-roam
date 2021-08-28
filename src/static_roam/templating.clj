@@ -86,29 +86,55 @@
      ~@(search/search-head)             ;search is on every page
      ~@head-extra
      ]
-   [:body
-    [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
-     [:div.container
-      ~(render/page-link-by-name block-map (config/config :main-page) :class "navbar-brand")
-      #_
-      [:button.navbar-toggler
-       {:type "button",
-        :data-toggle "collapse",
-        :data-target "#navbarResponsive",
-        :aria-controls "navbarResponsive",
-        :aria-expanded "false",
-        :aria-label "Toggle navigation"}
-       [:span.navbar-toggler-icon]]
-      [:div.collapse.navbar-collapse
-       {:id "navbarResponsive"}
-       ;; TODO make active page machinery mork
-       [:ul.navbar-nav.ml-auto
-        ~@(for [page (config/config :right-navbar)]
-            [:li.nav-item (render/page-link-by-name block-map page :class "nav-link")])
-        ]]]]
-    [:div.container
-     [:div.main
+    [:body
+     [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
+      [:div.container
+       ~(render/page-link-by-name block-map (config/config :main-page) :class "navbar-brand")
+       #_
+       [:button.navbar-toggler
+        {:type "button",
+         :data-toggle "collapse",
+         :data-target "#navbarResponsive",
+         :aria-controls "navbarResponsive",
+         :aria-expanded "false",
+         :aria-label "Toggle navigation"}
+        [:span.navbar-toggler-icon]]
+       [:div.collapse.navbar-collapse
+        {:id "navbarResponsive"}
+        ;; TODO make active page machinery mork
+        [:ul.navbar-nav.ml-auto
+         ~@(for [page (config/config :right-navbar)]
+             [:li.nav-item (render/page-link-by-name block-map page :class "nav-link")])
+         ]]]]
+     [:div.container.main
       [:div.row
+       "<!-- Sidebar Widgets Column -->"
+       [:div.col-md-4
+        "<!-- Search Widget -->"
+        [:div.card.my-4
+         [:h5.card-header [:span {:style ~(utils/css-style {:line-height "2"})} ;makes it line up, god knows why its necessary
+                           "Search"]
+          [:input.form-control {:id "searcht"
+                                :type "text"
+                                ;; :placeholder "Search for..."
+                                :onkeyup "keypress(event)"
+                                :style ~(utils/css-style
+                                         {:float "right"
+                                          :display "flex"
+                                          :width "75%"})
+                                }]
+          ]
+         [:div.card-body
+          ;; output goes here
+          [:div#searcho {:style ~(utils/css-style
+                                  {:margin-left "10px"
+                                   :margin-top "5px"
+                                   :display "none" ;javascript changes this when there are results
+                                   })}] 
+          ]]
+        ~@widgets
+        ]
+
        "<!-- Post Content Column -->"
        [:div.col-lg-8
         "<!-- Title -->"
@@ -116,32 +142,16 @@
          [:h1 ~title-hiccup]
          ~contents
 
-        ]]
-       "<!-- Sidebar Widgets Column -->"
-       [:div.col-md-4
-        "<!-- Search Widget -->"
-        [:div.card.my-4
-         [:h5.card-header "Search"]
-         [:div.card-body
-          [:div.input-group
-           [:input.form-control {:id "searcht"
-                                 :type "text"
-                                 :placeholder "Search for..."
-                                 :onkeyup "keypress(event)"}]
-           ;; Doing search on text enter so no longer needed
-           #_ [:span.input-group-append [:button.btn.btn-secondary {:type "button" :onclick "doSearch();"} "Go"]]]
-          [:div#searcho {:style "margin-left: 10px; margin-top: 5px;"}] ;output goes here
-          ]]
-        ~@widgets
-        ]]]]
-    "<!-- Footer -->"
-    [:footer.py-5.footer
-     [:div.container
-      ~(when (config/config :colophon)
-        `[:p.m-0.text-center.text-white ~@(config/config :colophon)])
-      [:p.m-0.text-center.text-white.small "Exported " ~(utils/render-time @utils/latest-export-time)]]
-     ]
-    ]])
+         ]]
+       ]]
+     "<!-- Footer -->"
+     [:footer.py-5.footer
+      [:div.container
+       ~(when (config/config :colophon)
+          `[:p.m-0.text-center.text-white ~@(config/config :colophon)])
+       [:p.m-0.text-center.text-white.small "Exported " ~(utils/render-time @utils/latest-export-time)]]
+      ]
+     ]])
 
 (defn map-page
   [bm output-dir]

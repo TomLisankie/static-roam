@@ -25,6 +25,10 @@ body {
     font-family: var(--header-face);
 }
 
+.container {
+    max-width: 1300px;
+}
+
 .main {
     margin-top: 80px;
 }

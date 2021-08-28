@@ -125,3 +125,10 @@
   [bm]
   (let [bm (u/map-values #(assoc % :fan (count (bd/page-refs bm %))) bm)]
     (map (juxt :content :fan) (take 50 (reverse (sort-by :fan (filter :fan (vals bm))))))))
+
+;;; Find blocks containing a given string.
+;;; To be usefufl, probably wants to return pages
+; (static-roam.batadase/block-page @last-bm (get @last-bm dblock))
+(defn grep
+  [bm string]
+  (filter #(re-find (re-pattern string) (or (:content %) "")) (vals bm)))

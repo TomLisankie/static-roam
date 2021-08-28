@@ -123,4 +123,7 @@
    (/ x 0)))
 )
 
-
+(defn css-style
+  [smap]
+  (s/join " " (map (fn [[prop val]] (format "%s: %s;" (name prop) val)) smap)))
+  

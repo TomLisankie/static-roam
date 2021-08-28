@@ -67,6 +67,7 @@ function insertLink(container, url, title) {
 // TODO should limit to first n
 function displayResults(results) {
     var out = document.getElementById('searcho');
+    out.style.display = 'block'; 
     out.innerHTML = "";
     if (results.length == 0) {
 	insertText(out, "No results") // TODO style
