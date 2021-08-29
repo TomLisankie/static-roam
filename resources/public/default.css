@@ -110,7 +110,9 @@ a:hover {
 }
 
 .empty {
-    text-decoration: line-through;
+    /* People hate this */
+    /* text-decoration: line-through; */
+    color: gray;
 }
 
 
@@ -249,7 +251,7 @@ iframe {
     clear: right;
     position: absolute;
     display: inline-flex;	/* gets the vertical alignment right */
-    left: 770px;
+    left: 960px;
     width: 380px;
     padding-right: 100px;
     /* padding-top: 10px;  puts some whitespace on top, but fucks with alignment of asterisks */    

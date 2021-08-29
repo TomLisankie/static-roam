@@ -44,7 +44,7 @@
       :block (str/join "" (map parsed->markdown (rest parse)))
       :blockquote (str "> " (parsed->markdown (second parse)))
       :page-link (page-link (utils/remove-double-delimiters (second parse)))
-      :hashtag (page-link (utils/format-hashtag (second parse)))
+      :hashtag (page-link (utils/parse-hashtag (second parse)))
       :alias (let [[_ text target] (render/parse-alias (second parse))]
                (if (str/starts-with? target "[[")
                  (page-link (utils/remove-double-delimiters target) text)

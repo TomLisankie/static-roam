@@ -74,13 +74,6 @@
    "/pages/Map.html"
    output-dir))
 
-(defn generate-dataviz
-  [bm output-dir]
-  (export-page
-   (templating/dataviz-page bm output-dir)
-   "/pages/DataViz.html"
-   output-dir))
-
 (defn generate-static-roam
   [block-map output-dir]
   (generate-content-pages block-map output-dir)

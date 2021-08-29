@@ -79,7 +79,7 @@
   [s removed]
   (reduce str (remove #((set removed) %) s)))
 
-(defn format-hashtag
+(defn parse-hashtag
   [hashtag]
   (if (= \[ (second hashtag))
     (remove-double-delimiters (subs hashtag 1))

@@ -72,7 +72,7 @@
               (case (first struct)
                 ;; :block-ref – but you don't want to follow those up for inclusion
                 :block (mapcat struct-entities (rest struct))
-                :hashtag [(utils/format-hashtag (second struct))]
+                :hashtag [(utils/parse-hashtag (second struct))]
                 :page-link [(utils/remove-double-delimiters (second struct))]
                 :blockquote (struct-entities (second struct))
                 :alias (if-let [v (second (re-find #"\[.*\]\(\[\[(.*)\]\]\)" (second struct)))];kluge alert

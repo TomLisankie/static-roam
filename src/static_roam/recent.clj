@@ -65,7 +65,7 @@
        "from " (render/page-link (get block-map page-id))
        " "
        [:span (utils/render-time edit-time)]]
-      (for [block (take 3 group)] ;limit to 3 chunks
+      (for [block group] ;limit to 3 chunks (take 3 group)
         [:div.ragged (render/block-hiccup block block-map)])])])
 
 

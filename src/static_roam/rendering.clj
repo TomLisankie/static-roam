@@ -2,6 +2,7 @@
   (:require [static-roam.config :as config]
             [static-roam.parser :as parser]
             [static-roam.batadase :as bd]
+            [static-roam.graph :as graph]
             [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [clojure.string :as str]
@@ -155,6 +156,13 @@
     [(str/join seq)]
     seq))
 
+;;; If there are a lot of these, make it more data-driven, but for now it's a hack.
+(defn special-hashtag-handling
+  [bm ht]
+  (case ht
+    "dataviz1" (graph/render-dataviz bm (config/config :output-dir))
+    nil))
+
 (defn ele->hiccup
   [ast-ele block-map & [block]]
   (utils/debuggable
@@ -186,8 +194,9 @@
                            (sidenote block-map ref-block)
                            [:div.block-ref
                             (block-hiccup ref-block block-map)]))
-            :hashtag (page-link-by-name block-map 
-                                        (utils/format-hashtag ele-content))
+            :hashtag (let [ht (utils/parse-hashtag ele-content)]
+                       (or (special-hashtag-handling block-map ht)
+                           (page-link-by-name block-map ht)))
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
             :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]
             :italic `[:i ~@(maybe-conc-string (nrecurse (rest ast-ele)))]

@@ -1,7 +1,7 @@
 (ns static-roam.graph
   (:require [oz.core :as oz]
             [static-roam.batadase :as bd]
-            [static-roam.rendering :as render]
+;            [static-roam.rendering :as render]
             [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [org.parkerici.multitool.core :as u]
@@ -59,7 +59,7 @@
                        (map (fn [b]
                               ;; TODO why not use actual size???
                               ;;  :size (- 20 (or (:depth b) 0)) (not working)
-                              {:name (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
+                              {:name (:content b) ; (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
                                :link (:link b)
                                :index (:index b)
                                :group (cond (start? b)
@@ -221,7 +221,7 @@
     [:div
      [:div.graph {:id id :style (and height (format "height: %spx;" height))}]
      [:script
-      (format "const spec = %s;  vegaEmbed.embed('#%s', spec);" json id)
+      (format "vegaEmbed.embed('#%s', %s);" id json)
       ]]))
 
 (defn render-graph-embedded
@@ -271,19 +271,21 @@
 
 (def view1-spec
   {:mark {:type "point"
+          :filled true
+          :opacity 0.8
 ;          :tooltip true                 ;for debugging
           }
    :data {:url "graphs/pages.json"}
    :encoding
-   {:x {:field "end", :type "temporal"}
-    :y {:field "fan", :type "quantitative" :scale {:type "symlog"}},
-    :color {:field "group" :type "nominal"}
-    :size {:field "size" :type "quantitative"},
+   {:x {:field "end", :type "temporal" :axis {:title "Last edited"}}
+    :y {:field "fan", :type "quantitative" :scale {:type "log"} :axis {:title "Connections"}}
+    :color {:field "group" :type "nominal" :legend nil}
+    :size {:field "size" :type "quantitative" :scale {:rangeMin 20 :rangeMax 1000}}
     :tooltip {:field "title"}
     :href {:field "link"}
     }
-   :height 500,
-   :width 600})
+   :height 600,
+   :width 700})
 
 (defn render-dataviz
   [bm output-dir]

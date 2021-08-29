@@ -109,9 +109,9 @@
      [:div.container.main
       [:div.row
        "<!-- Sidebar Widgets Column -->"
-       [:div.col-md-4
+       [:div.col-md-3
         "<!-- Search Widget -->"
-        [:div.card.my-4
+        [:div.card.my-3
          [:h5.card-header [:span {:style ~(utils/css-style {:line-height "2"})} ;makes it line up, god knows why its necessary
                            "Search"]
           [:input.form-control {:id "searcht"
@@ -121,10 +121,10 @@
                                 :style ~(utils/css-style
                                          {:float "right"
                                           :display "flex"
-                                          :width "75%"})
+                                          :width "70%"})
                                 }]
           ]
-         [:div.card-body
+         [:div.card-body {:style ~(utils/css-style {:padding "0.25rem"})}
           ;; output goes here
           [:div#searcho {:style ~(utils/css-style
                                   {:margin-left "10px"
@@ -136,7 +136,7 @@
         ]
 
        "<!-- Post Content Column -->"
-       [:div.col-lg-8
+       [:div.col-lg-9
         "<!-- Title -->"
         [:div.ptitle
          [:h1 ~title-hiccup]
@@ -164,16 +164,6 @@
    bm
    :head-extra (graph/vega-head)))
 
-(defn dataviz-page
-  [bm output-dir]
-  ;;; TODO write data faile
-  (page-hiccup
-   (graph/render-dataviz bm output-dir)
-   "DataViz"
-   "DataViz"
-   bm
-   :head-extra (graph/vega-lite-head)))
-
 (defn render-date-range
   [[from to]]
   [:div.date (utils/render-time from) " - " (utils/render-time to)])
@@ -195,15 +185,21 @@
          [:hr {}]]
 
         map-widget
-        [:div.card.my-4
-         [:h5.card-header "Map"]
+        [:div.card.my-3
+         [:h5.card-header
+          [:span "Map"]
+          [:span {:style (utils/css-style
+                           {:float "right"
+                            :display "flex"
+                            })}
+           (render/page-link-by-name block-map "Map" :alias "Full" )]]
          [:div.card-body {:style "padding: 2px;"}
           ;; TODO possible config to do embedded vs external
           (graph/render-graph-embedded
            block-map
            output-dir
            {:name (utils/clean-page-title block-id)
-            :width 350
+            :width 290                  ;This depends on the column width css, currently my-3
             :height 350
             :controls? false
             :link-distance 65
@@ -216,14 +212,16 @@
         incoming-links-widget
         (let [linked-refs (bd/get-displayed-linked-references block-id block-map)]
           (when-not (empty? linked-refs)
-            [:div.card.my-4
+            [:div.card.my-3
              [:h5.card-header "Incoming links"]
              [:div.card-body
               [:div.incoming
                (linked-references-template linked-refs block-map)]]]))
-
         ]
-    (page-hiccup contents title-text title-hiccup block-map :head-extra (graph/vega-head) :widgets [map-widget incoming-links-widget])
+    ;; TODO why isn't search widget done this way?
+    (page-hiccup contents title-text title-hiccup block-map
+                 :head-extra (graph/vega-lite-head) ;lite to support new dataviz
+                 :widgets [map-widget incoming-links-widget])
     ))
 
 
