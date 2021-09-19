@@ -5,6 +5,7 @@
             [static-roam.markdown :as md]
             [static-roam.batadase :as bd]
             [static-roam.html-generation :as html-gen]
+            [static-roam.graph :as graph]
             [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]))
@@ -79,10 +80,12 @@
     (config/set-config-path (or config-or-path "default-config.edn")))
   (reset-output)
   (u/memoize-reset)
-  (-> (utils/latest-export)
-      block-map
-      tap
-      (html-gen/generate-static-roam (config/config :output-dir)))
+  (let [bm (-> (utils/latest-export)
+               block-map
+               tap)
+        output-dir  (config/config :output-dir)]
+    (graph/write-page-data bm output-dir)
+    (html-gen/generate-static-roam bm output-dir))
   ;; TODO options for writing all pages
   (when (config/config :markdown-output-dir)
     (md/write-displayed-pages @last-bm (config/config :markdown-output-dir)))

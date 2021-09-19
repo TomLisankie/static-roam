@@ -5,7 +5,6 @@
  :dev-mode #boolean #or [#env ROAM_DEV_MODE "false"]
  :daily-notes? #boolean #or [#env ROAM_DAILY_NOTES "false"]
  :output-dir #or [#env ROAM_OUTPUT_DIR "output"]
- :markdown-output-dir false
  :unexclude? #boolean #or [#env ROAM_UNEXCLUDE "false"]
  :site-css ["../assets/default.css"]
  :short-title "MyGarden"
@@ -14,6 +13,7 @@
  :google-analytics "G-whatever"         ;or nil to leave out
  :right-navbar ["About" "Index" "New"]  ;Map moved to widget
  :roam-base-url "https://roamresearch.com/#/app/mygraph/page/"
- :real-base-url "https://mysite.com/mygraph/pages/" ; Used for markdown version to point home
+ :markdown-output-dir false
+ :real-base-url "https://mysite.com/mygraph/pages/" ; Used for markdown version to point home. 
  :bullets? false                        ;TODO not implemented 
  }

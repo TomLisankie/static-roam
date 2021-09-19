@@ -1,10 +1,11 @@
-# Copy this file to setup.sh and fill in details for your environment 
+# Copy this file to setup.sh and change the parameters to match your environment 
 
-export ROAM_CONFIG=<your config .edn file>
-export ROAM_OUTPUT_DIR=<output directory>
+export ROAM_CONFIG=mysite.edn # your config .edn file
+export ROAM_OUTPUT_DIR=output # output directory
 
+# Credentials to fetch the Roam graph
 # This mechanism won't work if you log into Roam with a 3rd party authorization (Google etc).
-export ROAM_API_GRAPH=<graph name>
-export ROAM_API_EMAIL=<Roam login account name>
-export ROAM_API_PASSWORD=<Roam login account password>
+export ROAM_API_GRAPH=my-graph	   # Roam graph name
+export ROAM_API_EMAIL=me@gmail.com # Roam login account name
+export ROAM_API_PASSWORD=password  # Roam login account password
 

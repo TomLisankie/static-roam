@@ -289,7 +289,8 @@
 
 (defn render-dataviz
   [bm output-dir]
-  (write-page-data bm output-dir)       ;doing this side-effecty thing here feels janky
+  ;; Can no longer do this here because rendering gets done before full bm is there.
+  #_ (write-page-data bm output-dir)       ;doing this side-effecty thing here feels janky
   (render-vega-embedded
    view1-spec
    "dataviz"
