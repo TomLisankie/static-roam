@@ -1,7 +1,7 @@
 (ns static-roam.graph
   (:require [oz.core :as oz]
             [static-roam.batadase :as bd]
-;            [static-roam.rendering :as render]
+            [static-roam.config :as config]
             [static-roam.utils :as utils]
             [clojure.data.json :as json]
             [org.parkerici.multitool.core :as u]
@@ -295,3 +295,8 @@
    view1-spec
    "dataviz"
    nil))
+
+(bd/register-special-tag
+ "dataviz1"
+ (fn [bm _]
+   (render-dataviz bm (config/config :output-dir))))

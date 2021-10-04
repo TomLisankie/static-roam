@@ -2,13 +2,16 @@
 
 A static-site generator for [Roam Research](https://roamresearch.com/)
 
+[A tutorial for setting up your own site](http://www.hyperphor.com/ammdi/pages/static-roam-tutorial.html)
+
 # Status
 
 This is a fork from [the original](https://github.com/TomLisankie/static-roam) by Tom Lisankie. I'm using it for a personal project and it's very much in flux. 
 
 It's pretty diverged from the original by now, and includes a bunch of new features, notably:
 - uses definable Exit Points for privacy (see below)
-- generates index pages, recently changed, and graphic map pages
+- generates index pages, recently changed, and graphic maps
+
 
 # Theory
 

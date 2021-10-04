@@ -212,7 +212,7 @@
 
 (defn leaf?
   [block]
-  (empty? (:chidlren block)))
+  (empty? (:children block)))
 
 (defn all-refs [block]
   (set/union
@@ -220,3 +220,17 @@
    (set (:refs block))
    (set (:linked-by block))
    (set (and (:parent block) (list (:parent block))))))
+
+;;; Special tag handling. Here for no very good reason
+
+(def special-tags (atom {}))
+
+(defn register-special-tag
+  [tag handler]
+  (swap! special-tags assoc tag handler))
+
+(defn special-hashtag-handler
+  [bm ht block-id]
+  (when (contains? @special-tags ht) (prn :ht ht block-id))
+  (when-let [handler (get @special-tags ht)]
+    (handler bm block-id)))

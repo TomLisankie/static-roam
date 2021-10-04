@@ -156,11 +156,14 @@
     [(str/join seq)]
     seq))
 
+;;; This is a makeshift way to support special-case tags.
 ;;; If there are a lot of these, make it more data-driven, but for now it's a hack.
+#_
 (defn special-hashtag-handling
-  [bm ht]
+  [bm ht block-id]
   (case ht
-    "dataviz1" (graph/render-dataviz bm (config/config :output-dir))
+    "dataviz1" (graph/render-dataviz bm )
+    "incoming" 
     nil))
 
 (defn ele->hiccup
@@ -195,7 +198,7 @@
                            [:div.block-ref
                             (block-hiccup ref-block block-map)]))
             :hashtag (let [ht (utils/parse-hashtag ele-content)]
-                       (or (special-hashtag-handling block-map ht)
+                       (or (bd/special-hashtag-handler block-map ht block)
                            (page-link-by-name block-map ht)))
             :strikethrough [:s (recurse (utils/remove-double-delimiters ele-content))]
             :highlight [:mark (recurse (utils/remove-double-delimiters ele-content))]

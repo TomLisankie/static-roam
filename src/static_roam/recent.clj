@@ -29,7 +29,7 @@
    (reverse (trim-redundants-1 blocks))))
 
 
-;;; OK this is a hacky alorithm, but works more or less
+;;; OK this is a hacky algorithm, but works more or less
 (defn recents
   "Groups recently changed blocks by page, returns rev chron seq of seqs"
   [block-map]
