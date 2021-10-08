@@ -234,9 +234,12 @@
   [block block-map]
   (if (:parsed block)
     (let [basic (ele->hiccup (:parsed block) block-map block)]
-      (if (> (:heading block -1) 0)
-        [(keyword (str "h" (:heading block))) basic]
-        basic))
+      (cond (> (:heading block -1) 0)
+            [(keyword (str "h" (:heading block))) basic]
+            (fn? basic)                 ;#incoming uses this hack, maybe others
+            (basic block-map)
+            :else
+            basic))
     (do
       (prn "Missing content: " (:id block))
       nil)))

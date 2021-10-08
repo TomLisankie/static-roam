@@ -209,7 +209,7 @@
             :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
           ]]
 
-        incoming-links-widget
+        incoming-links-widget           ;TODO suppress if #incoming on page
         (let [linked-refs (bd/get-displayed-linked-references block-id block-map)]
           (when-not (empty? linked-refs)
             [:div.card.my-3
@@ -225,5 +225,14 @@
     ))
 
 
-
-
+;;; TODO this also should suppress the incoming links in lh column
+;;; Oh shit this can't work, rendering happens too early 
+;;; Needs to be a post-processing step, fuck me
+;;; OR maybe not if I use a delay...what a hack. No that can't really work I think...delays require an explict deref
+(bd/register-special-tag
+ "incoming"
+ (fn [bm block]
+   (fn [bm]                             ;return a fn to be rendered later with the full bm
+     (linked-references-template
+      (bd/get-displayed-linked-references (:id (bd/block-page bm block)) bm)
+      bm))))

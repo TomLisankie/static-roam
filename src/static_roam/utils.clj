@@ -43,6 +43,10 @@
                         (io/copy (.getInputStream zip entry) f))
                       database-file-name))))
 
+(defn read-json
+  [path]
+  (json/read-str (slurp path) :key-fn keyword))
+
 (defn read-roam-json-from-zip
   [path-to-zip]
   (let [json-path (unzip-roam-json
@@ -50,9 +54,8 @@
                    (->> path-to-zip
                         (#(s/split % #"/"))
                         drop-last
-                        (s/join "/") (#(str % "/"))))
-        roam-json (json/read-str (slurp json-path) :key-fn keyword)]
-    roam-json))
+                        (s/join "/") (#(str % "/"))))]
+    (read-json json-path)))
 
 (defn write-json [f data]
   (fs/mkdirs (fs/parent f))             ;ensure directory exists

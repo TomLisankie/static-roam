@@ -95,3 +95,4 @@
 
 
 
+(set! *print-length* 100)               ;prevent trace from blowing up trying to print bms. Should be elsewhere

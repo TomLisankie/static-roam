@@ -230,7 +230,7 @@
   (swap! special-tags assoc tag handler))
 
 (defn special-hashtag-handler
-  [bm ht block-id]
-  (when (contains? @special-tags ht) (prn :ht ht block-id))
+  [bm ht block]
+  #_ (when (contains? @special-tags ht) (prn :ht ht (:id block)))
   (when-let [handler (get @special-tags ht)]
-    (handler bm block-id)))
+    (handler bm block)))
