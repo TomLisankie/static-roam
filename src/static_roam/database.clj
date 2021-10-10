@@ -1,6 +1,7 @@
 (ns static-roam.database
   (:require [static-roam.parser :as parser]
             [static-roam.batadase :as bd]
+            [static-roam.edn :as edn]
             [static-roam.utils :as utils]
             [static-roam.config :as config]
             [org.parkerici.multitool.core :as u]
@@ -145,18 +146,27 @@
 ;;; Mostly blocks can be rendered indpendently, but if there are references (and now sidenotes) there are dependencies
 
 
-(defn roam-db
-  [roam-json]
-  (-> roam-json
-      create-block-map-no-links
+(defn- roam-db-1
+  [db]
+  (-> db
       parse
       generate-refs
       generate-inverse-refs
       compute-depths
       compute-includes
-      add-direct-children              ; makes it easier to use, harder to dump. This needs to be last
+      add-direct-children))              ; makes it easier to use, harder to dump. This needs to be last
+
+(defn roam-db
+  [roam-json]
+  (-> roam-json
+      create-block-map-no-links
+      roam-db-1
       ))
 
-
-
-
+(defn roam-db-edn
+  [roam-edn-file]
+  (-> roam-edn-file
+      edn/read-roam-edn
+      edn/edn->block-map
+      roam-db-1
+      ))

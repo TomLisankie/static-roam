@@ -234,7 +234,7 @@
   [block block-map]
   (if (:parsed block)
     (let [basic (ele->hiccup (:parsed block) block-map block)]
-      (cond (> (:heading block -1) 0)
+      (cond (and (:heading block) (> (:heading block) 0))
             [(keyword (str "h" (:heading block))) basic]
             (fn? basic)                 ;#incoming uses this hack, maybe others
             (basic block-map)

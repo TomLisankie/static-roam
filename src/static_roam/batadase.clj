@@ -93,7 +93,7 @@
   (set/union (forward-page-refs page)
              (backward-page-refs bm page)))
 
-(defn- pages
+(defn pages
   [block-map]
   (filter :page? (vals block-map)))
 
@@ -136,8 +136,6 @@
   [block-map block]
   (some #(tagged? block-map block %)
         (config/config :entry-tags)))
-
-(def fixed-entry-points #{"SR Metadata"})
 
 (defn entry-points
   [block-map]

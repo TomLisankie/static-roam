@@ -75,7 +75,7 @@
   (when (bd/displayed? block)
     (cons (str (n-chars (* depth 4) \space)
                "- "
-               (when (> (:heading block -1) 0)
+               (when (and (:heading block) (> (:heading block) 0))
                  (str (n-chars (:heading block) \#) " "))
                (markdown-content block))
           (filter identity (mapcat (partial block->md (+ 1 depth)) (:dchildren block))))))
