@@ -21,6 +21,18 @@
       (html-gen/generated-page "Map" html-gen/generate-global-map)
       ))
 
+
+(defn block-map-edn
+  [path]
+  (prn :reading-from path)
+  (-> path
+      utils/unzip-roam
+      database/roam-db-edn
+      (html-gen/generated-page "Index" html-gen/generate-index-pages)
+      (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO would make sense to put these under a config
+      (html-gen/generated-page "Map" html-gen/generate-global-map)
+      ))
+
 (defn pp-export
   [path-to-zip]
   (->> path-to-zip
@@ -81,9 +93,9 @@
   (reset-output)
   (u/memoize-reset)
   (let [bm (-> (utils/latest-export)
-               block-map
+               block-map-edn
                tap)
-        output-dir  (config/config :output-dir)]
+        output-dir (config/config :output-dir)]
     (graph/write-page-data bm output-dir)
     (html-gen/generate-static-roam bm output-dir))
   ;; TODO options for writing all pages

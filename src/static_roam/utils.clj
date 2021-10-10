@@ -30,18 +30,20 @@
     (java.util.Date. export-date)
     (ju/now)))
 
-(defn unzip-roam-json
+(defn unzip-roam
   "Takes the path to a zipfile `source` and unzips it to `target-dir`, returning the path of the target file"
-  [source target-dir]
-  (str target-dir (with-open [zip (ZipFile. (fs/file source))]
-                    (let [entries (enumeration-seq (.entries zip))
-                          target-file #(fs/file target-dir (str %))
-                          database-file-name (.getName (first entries))]
-                      (doseq [entry entries :when (not (.isDirectory ^java.util.zip.ZipEntry entry))
-                              :let [f (target-file entry)]]
-                        (fs/mkdirs (fs/parent f))
-                        (io/copy (.getInputStream zip entry) f))
-                      database-file-name))))
+  [source]
+  (let [target-dir (str (fs/parent source) "/")]
+    (str target-dir (with-open [zip (ZipFile. (fs/file source))]
+                      (let [entries (enumeration-seq (.entries zip))
+                            target-file #(fs/file target-dir (str %))
+                            database-file-name (.getName (first entries))]
+                        (doseq [entry entries :when (not (.isDirectory ^java.util.zip.ZipEntry entry))
+                                :let [f (target-file entry)]]
+                          (prn :writing f)
+                          (fs/mkdirs (fs/parent f))
+                          (io/copy (.getInputStream zip entry) f))
+                        database-file-name)))))
 
 (defn read-json
   [path]
@@ -49,12 +51,7 @@
 
 (defn read-roam-json-from-zip
   [path-to-zip]
-  (let [json-path (unzip-roam-json
-                   path-to-zip
-                   (->> path-to-zip
-                        (#(s/split % #"/"))
-                        drop-last
-                        (s/join "/") (#(str % "/"))))]
+  (let [json-path (unzip-roam-json path-to-zip)]
     (read-json json-path)))
 
 (defn write-json [f data]
@@ -130,3 +127,29 @@
   [smap]
   (s/join " " (map (fn [[prop val]] (format "%s: %s;" (name prop) val)) smap)))
   
+;;; → Multitool
+(defn add-parent
+  [db children-att parent-att]
+  (reduce-kv (fn [acc key item]
+               (reduce (fn [acc child]
+                         (assoc-in acc [child parent-att] key))
+                       acc
+                       (children-att item)))
+             db
+             db))
+
+;;; As above but multivalued
+(defn add-parents
+  [db children-att parent-att]
+  (reduce-kv (fn [acc key item]
+               (reduce (fn [acc child]
+                         (if (contains? acc child)
+                           (update-in acc [child parent-att] conj key)
+                           acc))
+                       acc
+                       (children-att item)))
+             db
+             db))
+
+
+

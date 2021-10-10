@@ -1,6 +1,7 @@
 (ns static-roam.edn
-  (:require [org.parkerici.multitool.core :as u]
-             [org.parkerici.multitool.cljcore :as ju]))
+  (:require [static-roam.utils :as utils]
+            [org.parkerici.multitool.core :as u]
+            [org.parkerici.multitool.cljcore :as ju]))
 
 ;;; Experiments in reading Roam EDN dump
 ;;; Why? The JSON format is lossy, it turns out. It is missing the UIDs for pages;
@@ -26,8 +27,6 @@
 (defn many-valued?
   [att]
   (= :db.cardinality/many (get-in @schema [att :db/cardinality])))
-
-
 
 (defn entify
   [datoms]
@@ -89,20 +88,21 @@
   [edn]
   (let [eblocks (remove #(and (nil? (:block/string %)) (nil? (:node/title %)))
                         (vals edn))]
-    (static-roam.database/add-parent
-     (zipmap (map :block/uid eblocks)
-             (map (fn [eblock]
-                    {:id (:block/uid eblock) ;TODO might need to use title for pages or can we avoid that
-                     :content (or (:block/string eblock) ;this is yechy but mimicks the json export
-                                  (:node/title eblock))
-                     :edit-time (when (:edit/time eblock) (java.util.Date. (:edit/time eblock)))
-                     :heading (:block/heading eblock)
-                     :children (eblock-children edn eblock)
-                     :page? (contains? eblock :node/title)
-                     }
+    (utils/add-parent
+     (u/index-by :id
+                 (map (fn [eblock]
+                        {:id (or (:node/title eblock) ;Yes this is an abomination of nature but that's how the json thing works
+                                 (:block/uid eblock))
+                         :content (or (:block/string eblock) ;this is yechy but mimicks the json export
+                                      (:node/title eblock))
+                         :edit-time (when (:edit/time eblock) (java.util.Date. (:edit/time eblock)))
+                         :heading (:block/heading eblock)
+                         :children (eblock-children edn eblock)
+                         :page? (contains? eblock :node/title)
+                         }
 
-                    )
-                  eblocks))
+                        )
+                      eblocks))
      :children :parent)))
   
 

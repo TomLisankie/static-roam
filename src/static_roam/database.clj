@@ -26,34 +26,10 @@
    :page? (contains? block-json :title)
    })
 
-;;; → Multitool
-(defn add-parent
-  [db children-att parent-att]
-  (reduce-kv (fn [acc key item]
-               (reduce (fn [acc child]
-                         (assoc-in acc [child parent-att] key))
-                       acc
-                       (children-att item)))
-             db
-             db))
-
-;;; As above but multivalued
-(defn add-parents
-  [db children-att parent-att]
-  (reduce-kv (fn [acc key item]
-               (reduce (fn [acc child]
-                         (if (contains? acc child)
-                           (update-in acc [child parent-att] conj key)
-                           acc))
-                       acc
-                       (children-att item)))
-             db
-             db))
-
 (defn- create-block-map-no-links
   "Convert json into basic blocks"
   [roam-json]
-  (add-parent
+  (utils/add-parent
    (u/index-by :id
                (u/walk-collect
                 (fn [thing]
@@ -123,7 +99,7 @@
 
 (defn generate-inverse-refs
   [db]
-  (add-parents db :refs :linked-by))    ;I don't like this name, but easier to leave it for now
+  (utils/add-parents db :refs :linked-by))    ;I don't like this name, but easier to leave it for now
 
 ;;; Trick for memoizing a local recursive fn, see https://quanttype.net/posts/2020-09-20-local-memoized-recursive-functions.html
 (defn fix [f] (fn g [& args] (apply f g args)))
