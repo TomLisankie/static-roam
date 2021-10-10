@@ -81,7 +81,7 @@
   [edn eblock]
   (->> eblock
        :block/children
-       (sort-by :block/order)
+       (sort-by #(get-in edn [% :block/order]))
        (map #(get-in edn [% :block/uid]))))
 
 (defn edn->block-map
@@ -140,3 +140,11 @@
 
 
 
+(defn edn-for-debugging
+  []
+  (->> (utils/latest-export)
+      utils/unzip-roam
+      read-roam-edn
+      vals
+      (u/index-by #(or (:node/title %)
+                       (:block/uid %)))))

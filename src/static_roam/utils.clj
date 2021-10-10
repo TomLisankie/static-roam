@@ -51,7 +51,7 @@
 
 (defn read-roam-json-from-zip
   [path-to-zip]
-  (let [json-path (unzip-roam-json path-to-zip)]
+  (let [json-path (unzip-roam path-to-zip)]
     (read-json json-path)))
 
 (defn write-json [f data]
