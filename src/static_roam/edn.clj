@@ -64,11 +64,10 @@
    (ffirst datoms)))
 
 ;;; TODO do the unzip if we really use this
-(defn read-roam-edn
+(defn process-roam-edn
   "Read a Roam EDN export. Produces an indexed map of block entities"
-  [f]
-  (->> f
-       read-roam-edn-raw
+  [datascript]
+  (->> datascript
        grab-schema
        :datoms
        (group-by first)
@@ -95,7 +94,8 @@
                                  (:block/uid eblock))
                          :content (or (:block/string eblock) ;this is yechy but mimicks the json export
                                       (:node/title eblock))
-                         :edit-time (when (:edit/time eblock) (java.util.Date. (:edit/time eblock)))
+                         :edit-time (cond (:edit/time eblock) (java.util.Date. (:edit/time eblock))
+                                          (:create/time eblock) (java.util.Date. (:create/time eblock)))
                          :heading (:block/heading eblock)
                          :children (eblock-children edn eblock)
                          :page? (contains? eblock :node/title)
@@ -144,7 +144,9 @@
   []
   (->> (utils/latest-export)
       utils/unzip-roam
-      read-roam-edn
+      read-roam-edn-raw
+      process-roam-edn
       vals
       (u/index-by #(or (:node/title %)
                        (:block/uid %)))))
+

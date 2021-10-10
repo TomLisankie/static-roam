@@ -100,14 +100,16 @@
 (def date-formatter
   (java.text.SimpleDateFormat. "dd MMM yyyy hh:mm"))
 
+;;; TODO fix time input
 (defn coerce-time [x]
-  (if (inst? x)
-    x
-    (java.util.Date. x)))
+  (cond (inst? x) x
+        (int? x) (java.util.Date. x)
+        (string? x) (java.util.Date. x)
+        :else x))
 
 (defn render-time
   [time]
-  (.format date-formatter (coerce-time time)))         ;crude for now
+  (and time (.format date-formatter (coerce-time time))))         ;crude for now
 
 ;;; → multitool
 (defmacro debuggable [tag captures & body]

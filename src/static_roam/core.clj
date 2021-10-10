@@ -10,15 +10,21 @@
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]))
 
+(defn- add-generated-pages
+  [bm]
+  (-> bm
+      (html-gen/generated-page "Index" html-gen/generate-index-pages)
+      (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO would make sense to put these under a config
+      (html-gen/generated-page "Map" html-gen/generate-global-map)
+      ))
+
 (defn block-map
   [path-to-zip]
   (prn :reading-from path-to-zip)       ;TODO I suppose real logger is called for
   (-> path-to-zip
       utils/read-roam-json-from-zip
       database/roam-db
-      (html-gen/generated-page "Index" html-gen/generate-index-pages)
-      (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO would make sense to put these under a config
-      (html-gen/generated-page "Map" html-gen/generate-global-map)
+      add-generated-pages
       ))
 
 
@@ -26,11 +32,17 @@
   [path]
   (prn :reading-from path)
   (-> path
-      utils/unzip-roam
       database/roam-db-edn
-      (html-gen/generated-page "Index" html-gen/generate-index-pages)
-      (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO would make sense to put these under a config
-      (html-gen/generated-page "Map" html-gen/generate-global-map)
+      add-generated-pages
+      ))
+
+
+(defn block-map-athens
+  [path]
+  (prn :reading-from path)
+  (-> path
+      database/roam-db-athens
+      add-generated-pages
       ))
 
 (defn pp-export

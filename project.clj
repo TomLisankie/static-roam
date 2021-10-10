@@ -16,6 +16,8 @@
                  [aero "1.1.6"]
                  [metasoarous/oz "1.6.0-alpha6"]
                  [mock-clj "0.2.1"]     ;TODO should be under :test profile
+                 [datascript "1.1.0"]
+                 [datascript-transit "0.3.0"]
                  ]
   :resource-paths ["resources"]
   :main static-roam.core)
