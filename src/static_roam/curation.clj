@@ -132,3 +132,58 @@
 (defn grep
   [bm string]
   (filter #(re-find (re-pattern string) (or (:content %) "")) (vals bm)))
+
+
+(defn download-images
+  [bm directory]
+  (clojure.java.shell/sh "curl")
+  )
+
+(defn collecting
+  "Exec is a fn of one argument, which is called and passed another fn it can use to collect values; the collection is returned."
+  [exec]
+  (let [acc (atom [])
+        collect #(swap! acc conj %)]
+    (exec collect)
+    @acc))
+
+(defn page-images
+  [bm]
+  (collecting
+   (fn [collect]
+     (u/map-values
+      (fn [block]
+        (when-let [match (and (string? (:content block))
+                              (re-matches #"^!\[\]\((.*)\)" (:content block)))]
+          (collect [(:id block) (:id (bd/block-page bm block)) (second match)])))
+      bm))))
+
+(defn image-copy-script
+  [bm dir]
+  (doseq [[id page url] (page-images bm)]
+    (let [file (format "%s/%s-%s.png" dir page id)]
+      (println (format "curl \"%s\" > \"%s\"" url file)))))
+
+;;; TODO Pici images
+
+;;; Reexport from logseq
+
+(def logseq (utils/read-json "/Users/mtravers/Downloads/System_Volumes_Data_misc_working_org-roam_roam_1633487329.json"))
+
+
+;;; Split
+
+
+
+Idea:
+- daily notes, plus anything heavily linked to (like #bikeride or other habits) gos in one bucket
+- published pages
+- everything else
+
+Maybe too fancy, how about just separate out daily notes and everything else?
+
+
+
+(def mypages (pages bm))
+(def dailynotes (filter (partial daily-notes? bm) mypages))
+

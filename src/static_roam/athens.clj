@@ -1,10 +1,9 @@
 (ns static-roam.athens
   (:require [clojure.java.io :as io]
-            [datascript.core :as dc]))
+            [datascript.core :as dc]
             [datascript.transit :as dt]))
 
-
-"/Users/mtravers/Documents/athens/index.transit"
+;;; "/Users/mtravers/Documents/athens/index.transit"
 (defn read-athens
   [file]
   (let [db (-> file

@@ -149,6 +149,16 @@
       roam-db-1
       ))
 
+;;; Dev only, generate a reasonable representation of the raw edn
+(defn roam-db-edn-lightly-processed
+  [roam-edn-file]
+  (-> roam-edn-file
+      edn/read-roam-edn-raw
+      edn/process-roam-edn
+      ))
+
+
+
 (defn roam-db-athens
   [athens-file]
   (-> athens-file

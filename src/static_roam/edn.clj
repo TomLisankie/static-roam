@@ -1,5 +1,6 @@
 (ns static-roam.edn
   (:require [static-roam.utils :as utils]
+            [static-roam.batadase :as bd]
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]))
 
@@ -90,8 +91,18 @@
     (utils/add-parent
      (u/index-by :id
                  (map (fn [eblock]
+
+                        ;; TODO? Grab other fields that may be useful
+                        ;; :create/time :edit/user :create/user (don't care but maybe should keep)
+                        ;; :block/open (added)
+                        ;; :block/refs (I think we basically recompute these?)
+                        ;; :block/parents (can be multiple, but what )
+
+                        ;; So many identities
                         {:id (or (:node/title eblock) ;Yes this is an abomination of nature but that's how the json thing works
                                  (:block/uid eblock))
+                         :uid (:block/uid eblock)
+                         :db/id (:db/id eblock)      ; for reconstruction
                          :content (or (:block/string eblock) ;this is yechy but mimicks the json export
                                       (:node/title eblock))
                          :edit-time (cond (:edit/time eblock) (java.util.Date. (:edit/time eblock))
@@ -99,6 +110,8 @@
                          :heading (:block/heading eblock)
                          :children (eblock-children edn eblock)
                          :page? (contains? eblock :node/title)
+                         :open? (:block/open eblock) ;don't actually use this, but want to preserve it nonetheless
+
                          }
 
                         )
@@ -139,14 +152,82 @@
  :version/id {:db/unique :db.unique/identity}}
 
 
-
 (defn edn-for-debugging
   []
   (->> (utils/latest-export)
-      utils/unzip-roam
-      read-roam-edn-raw
-      process-roam-edn
-      vals
-      (u/index-by #(or (:node/title %)
-                       (:block/uid %)))))
+       utils/unzip-roam
+       read-roam-edn-raw
+       process-roam-edn
+       vals
+       (u/index-by #(or (:node/title %)
+                        (:block/uid %)))))
 
+
+;;; Has to be either a loop or a double reduce, seems harder than it should be
+;;; → multitool? Needs a bit of generalization, but this would be useful for the general case of mapping sequential data onto a Datomic or similar model
+(defn compute-block-orders
+  [bm]
+  (loop [bm bm
+         blocks (vals bm)
+         order 0
+         children nil]
+    (cond (not (empty? children))
+          (recur (assoc-in bm [(first children) :order] order)
+                 blocks
+                 (inc order)
+                 (rest children))
+          (not (empty? blocks))
+          (recur bm
+                 (rest blocks)
+                 0
+                 (:children (first blocks)))
+          :else
+          bm)))
+
+;;; EDN GENERATION from blockmaps
+(defn bm->datoms
+  [bm include]
+  (let [bm (compute-block-orders bm)]
+    (mapcat
+     (fn [block]
+       (let [db-id (:db/id block)
+             v (fn [value-gen] (if (ifn? value-gen) (value-gen block) value-gen))
+             field (fn [field value-gen]
+                     (if (nil? (v value-gen))
+                       []
+                       [[db-id field (v value-gen)]]))
+             field* (fn [field value-gen]
+                      (mapv (fn [ve] [db-id field ve]) (v value-gen)))]
+         (when (= db-id 14282) (prn :argh block))
+         (concat
+          (field :block/string #(if (:page? block) nil (:content %)))
+                                        ;     (field :create/time #(when (:creation %) (.getTime (:creation %)) ))
+          (field :edit/time #(when (:edit-time %) (.getTime (:edit-time %))))
+          (field :block/uid :uid)
+          (field :block/open :open?)
+          (field* :block/children (fn [block] (map #(get-in bm [% :db/id]) (:children block))))
+          ;; um no
+                                        ;     (field :db/id db-id)
+          ;; pretty important
+          (field :block/order :order)
+          (field :node/title #(if (:page? %) (:content %) nil))
+
+          ;; This is redundant so I'm going to assume it doesn't have to be exported...we'll see
+          ;; :block/page
+
+          )))
+     (or include (vals bm)))))
+
+(defn write-datoms
+  [datoms f]
+  (binding [*print-length* nil]
+    (ju/schppit f {:schema @schema
+                   :datoms datoms} )))
+
+
+(def bm @static-roam.core/last-bm)
+(def dailynotes (filter (partial bd/daily-notes? bm) (bd/pages bm)))
+(def dailyblocks (mapcat bd/block-descendents dailynotes))
+(def daily-datoms (bm->datoms bm dailyblocks))
+(write-datoms daily-datoms "dailynotes.edn")
+;;; add #datascript/DB
