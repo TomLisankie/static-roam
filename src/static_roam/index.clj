@@ -10,6 +10,8 @@
 ;;; depth tree
 ;;; by size, # of refs (incoming/outgoing/both)
 
+;;; TODO may need changes since we have separate create-time
+
 (def indexes
   [{:name "Title"
     :sort-key (comp s/upper-case :content)

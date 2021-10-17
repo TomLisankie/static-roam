@@ -105,8 +105,9 @@
                          :db/id (:db/id eblock)      ; for reconstruction
                          :content (or (:block/string eblock) ;this is yechy but mimicks the json export
                                       (:node/title eblock))
-                         :edit-time (cond (:edit/time eblock) (java.util.Date. (:edit/time eblock))
-                                          (:create/time eblock) (java.util.Date. (:create/time eblock)))
+                         :edit-time (when (:edit/time eblock) (java.util.Date. (:edit/time eblock)))
+                         :create-time (when (:create/time eblock) (java.util.Date. (:create/time eblock)))
+                                    
                          :heading (:block/heading eblock)
                          :children (eblock-children edn eblock)
                          :page? (contains? eblock :node/title)
@@ -187,42 +188,55 @@
 ;;; EDN GENERATION from blockmaps
 (defn bm->datoms
   [bm include]
-  (let [bm (compute-block-orders bm)]
+  (let [bm (compute-block-orders bm)
+        include (set (map :db/id (or include (vals bm))))]
     (mapcat
      (fn [block]
        (let [db-id (:db/id block)
+             txn 536871009
              v (fn [value-gen] (if (ifn? value-gen) (value-gen block) value-gen))
              field (fn [field value-gen]
                      (if (nil? (v value-gen))
                        []
-                       [[db-id field (v value-gen)]]))
+                       [[db-id field (v value-gen) txn]]))
              field* (fn [field value-gen]
-                      (mapv (fn [ve] [db-id field ve]) (v value-gen)))]
-         (when (= db-id 14282) (prn :argh block))
+                      (mapv (fn [ve] [db-id field ve txn]) (v value-gen)))
+             page (get-in bm [(:id (bd/block-page bm block)) :db/id])
+             page? (= page db-id)]
+         (when (contains? include db-id)
          (concat
           (field :block/string #(if (:page? block) nil (:content %)))
                                         ;     (field :create/time #(when (:creation %) (.getTime (:creation %)) ))
           (field :edit/time #(when (:edit-time %) (.getTime (:edit-time %))))
+          (field :edit/user 1)
+          (field :create/time  #(when (:create-time %) (.getTime (:create-time %))))
+          (field :create/user 1)
           (field :block/uid :uid)
           (field :block/open :open?)
           (field* :block/children (fn [block] (map #(get-in bm [% :db/id]) (:children block))))
           ;; um no
-                                        ;     (field :db/id db-id)
-          ;; pretty important
-          (field :block/order :order)
+          ;;     (field :db/id db-id)
+          (field :block/order #(if page? nil (get % :order 0)))
           (field :node/title #(if (:page? %) (:content %) nil))
 
-          ;; This is redundant so I'm going to assume it doesn't have to be exported...we'll see
-          ;; :block/page
+          (field :block/page (when-not page? page))
+          (field* :block/parents (fn [block] (map #(get-in bm [(:id %) :db/id]) (bd/ancestors bm block))))
 
-          )))
-     (or include (vals bm)))))
+          (field* :block/refs (fn [block]
+                                (remove nil?
+                                        (map #(get-in bm [% :db/id]) (:refs block)))))))))
+
+     (vals bm))))
 
 (defn write-datoms
   [datoms f]
-  (binding [*print-length* nil]
-    (ju/schppit f {:schema @schema
-                   :datoms datoms} )))
+  (let [db  {:schema @schema
+             :datoms datoms}]
+    (binding [*print-length* nil]
+      (with-open [^java.io.Writer w (clojure.java.io/writer f)]
+        (.write w "#datascript/DB\n")
+        (.write w (str db))))))
+
 
 
 (def bm @static-roam.core/last-bm)
@@ -231,3 +245,88 @@
 (def daily-datoms (bm->datoms bm dailyblocks))
 (write-datoms daily-datoms "dailynotes.edn")
 ;;; add #datascript/DB
+
+(defn athens-export
+  [bm]
+  (-> bm
+      bm->datoms bm )
+  (write-datoms)
+  
+
+
+
+;;; Debugging argh
+(def roam-raw (read-roam-edn-raw "/Users/mtravers/Downloads/hyperphor.edn"))
+(def roam-raw-datoms (:datoms roam-raw))
+
+(def dailyblock-ids (set (map :db/id dailyblocks)))
+(def roam-raw-datoms-filtered
+  (set
+   (map #(subvec % 0 3)
+        (filter #(contains? dailyblock-ids (first %)) roam-raw-datoms))))
+
+(def my-datoms (set daily-datoms))
+
+(def d1 (clojure.set/difference roam-raw-datoms-filtered my-datoms))
+(def d2 (clojure.set/difference my-datoms roam-raw-datoms-filtered ))
+
+(count d1)
+(count d2)
+(frequencies (map second d1))
+
+;;;
+
+(defn trim-datom [d] (subvec d 0 3))
+
+(def orig (set (map trim-datom (:datoms (read-roam-edn-raw "/Users/mtravers/Downloads/static-test.edn")))))
+(def regen (set (map trim-datom bm1-datoms)))
+(def diff-missing (clojure.set/difference orig regen))
+(frequencies (map second diff-missing))
+{:create/user 655,
+ :version/nonce 7,
+ :edit/seen-by 8,
+ :create/email 4,
+ :block/heading 1,
+ :block/refs 4,
+ :edit/user 613,                        
+ :user/display-name 1,
+ :log/id 14,
+ :block/uid 1,                          ;! ([3 :block/uid "M1oCKd8-8"]) (hm just user info, shouldnt be needed?)
+ :user/uid 1,
+ :user/email 1,
+ :user/display-page 1,
+ :user/photo-url 1,
+ :version/id 7,
+ :version/upgraded-nonce 4,
+ :user/settings 1}
+
+
+
+(defn passthrough []
+  (-> "/Users/mtravers/Downloads/static-test.edn"
+      read-roam-edn-raw
+      grab-schema
+      :datoms
+      (write-datoms "static-test-regen.edn")))
+
+(defn trim-datoms [ds] (map trim-datom ds))
+
+(defn passthrough1 []
+  (-> "/Users/mtravers/Downloads/static-test.edn"
+      read-roam-edn-raw
+      grab-schema
+      :datoms
+      trim-datoms
+      (write-datoms "static-test-regen-trimmed.edn")))
+
+(defn add-txn [ds txn]
+  (map #(conj % txn) ds))
+
+(defn passthrough2 []
+  (-> "/Users/mtravers/Downloads/static-test.edn"
+      read-roam-edn-raw
+      grab-schema
+      :datoms
+      trim-datoms
+      (add-txn  536871009)
+      (write-datoms "static-test-regen-trimmed.edn")))

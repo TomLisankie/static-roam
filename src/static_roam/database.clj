@@ -22,8 +22,10 @@
    :children (map :uid (:children block-json))
    :content (or (:string block-json) (:title block-json))
    :heading (:heading block-json -1)
-   :edit-time (when-let [time (or (:edit-time block-json) (:create-time block-json))]
+   :edit-time (when-let [time (:edit-time block-json)]
                 (java.util.Date. time))
+   :create-time (when-let [time (:create-time block-json)]
+                  (java.util.Date. time))
    :page? (contains? block-json :title)
    })
 

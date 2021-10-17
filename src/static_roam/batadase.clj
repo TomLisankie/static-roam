@@ -57,6 +57,29 @@
   (and (:parent block)
        (get block-map (:parent block))))
 
+(defn sequencify
+  "Turn thing into a sequence if it already isn't one"
+  [thing]
+  (when thing
+    (if (sequential? thing)
+      thing
+      (list thing))))
+
+(defn ancestors
+  [block-map block]
+  ((u/transitive-closure (comp sequencify (partial block-parent block-map))) block))
+
+(defn ancestors0
+  [block-map block]
+  (cons block (if-let [parent (block-parent block-map block)]
+                (ancestors0 block-map parent)
+                nil)))
+
+(defn ancestors
+  [block-map block]
+  (rest (ancestors0 block-map block)))
+  
+
 (defn block-children
   [block-map block]
   (map block-map (:children block)))
@@ -161,16 +184,25 @@
 (def max* (partial u/max-by identity))
 
 ;;; Prob needs to deal with missing data
-;;; Also, to be proper, :create-time should be used as well
 ;;; I suppose the median time might be more informative – or an Ed Tufte minigraph
 
 ;;; Some bogus dates creep in somehow, this removes them (TODO figure this out better)
 (def earliest-date  #inst "2020-01-01T00:00")
 
+;;; → Multitool
+;;; Surely this must be built-in somewhere? Oh yeah, some-fn
+(defn orf [& fs]
+  "Given some fns, return a new fn that applies them successively until a non-nil value is genera"
+  (fn [& args]
+    (some (fn [f] (apply f args)) fs)))
+
+
 (defn date-range [page]
   (let [blocks (block-descendents page)
         visible-blocks (filter displayed? blocks)
-        visible-dates (filter (partial u/<* earliest-date) (map :edit-time visible-blocks))]
+        visible-dates (filter (partial u/<* earliest-date)
+                              ;; TODO should use both
+                              (map (orf :edit-time :create-time) visible-blocks))]
     [(min* visible-dates) (max* visible-dates)]))
 
 (defn stats [bm]
