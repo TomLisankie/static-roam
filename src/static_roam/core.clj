@@ -10,7 +10,7 @@
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]))
 
-(defn- add-generated-pages
+(defn add-generated-pages
   [bm]
   (-> bm
       (html-gen/generated-page "Index" html-gen/generate-index-pages)
@@ -18,7 +18,7 @@
       (html-gen/generated-page "Map" html-gen/generate-global-map)
       ))
 
-(defn block-map
+(defn block-map-json
   [path-to-zip]
   (prn :reading-from path-to-zip)       ;TODO I suppose real logger is called for
   (-> path-to-zip
@@ -97,17 +97,10 @@
   (reset-output)
   (html-gen/generate-static-roam @last-bm (config/config :output-dir)))
 
-(defn -main
-  [& [config-or-path]]
-  (if (map? config-or-path)
-    (config/set-config-map config-or-path)
-    (config/set-config-path (or config-or-path "default-config.edn")))
-  (reset-output)
-  (u/memoize-reset)
-  (let [bm (-> (utils/latest-export)
-               block-map-edn
-               tap)
-        output-dir (config/config :output-dir)]
+(defn output-bm
+  [bm]
+  (tap bm)
+  (let [output-dir (config/config :output-dir)]
     (graph/write-page-data bm output-dir)
     (html-gen/generate-static-roam bm output-dir))
   ;; TODO options for writing all pages
@@ -116,6 +109,25 @@
   (prn (bd/stats @last-bm))
   #_ (dump))
 
+
+(defn -main
+  [& [config-or-path]]
+  (if (map? config-or-path)
+    (config/set-config-map config-or-path)
+    (config/set-config-path (or config-or-path "default-config.edn")))
+  (reset-output)
+  (u/memoize-reset)
+  (let [bm (-> ; (utils/latest-export)
+             ; utils/unzip-roam
+;;               block-map-edn
+;;; For athens import
+;;            "/Users/mtravers/Documents/athens/index.transit"
+;;            block-map-athens
+            "/Users/mtravers/Downloads/hyperphor-logseq-export.json"
+            block-map-json
+            )]
+  
+    (output-bm bm)))
 
 
 

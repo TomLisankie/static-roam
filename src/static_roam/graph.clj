@@ -45,7 +45,7 @@
                   (map (fn [index block] (assoc block
                                                 :index index
                                                 :page-refs (bd/page-refs block-map block)
-                                                :link (utils/html-file-title (:content block))))
+                                                :link (utils/html-file-title (or (:title block) (:content block)))))
                        (range))
                   )
         indexed (u/index-by :id pages)
@@ -250,14 +250,15 @@
   "Generate a data table of pages (TODO or blocks) suitable for passing to Vega"
   [block-map]
   (for [page (graph-pages block-map)
-        :let [[start end] (bd/date-range page)]]
-    {:title (:content page)
+        :let [[start end] (bd/date-range page)
+              title (or (:content page) (:title page))]]
+    {:title title
      :fan (count (bd/page-refs block-map page))     ;TODO separate in and out 
      :size (bd/size page)
      :depth (:depth page)
      :start (str start)
      :end (str end)
-     :link (utils/html-file-title (:content page))
+     :link (utils/html-file-title title)
      ; TODO size in blocks would be interesting maybe
      :group (cond (bd/entry-point? block-map page) 2
                   (:include? page) 1

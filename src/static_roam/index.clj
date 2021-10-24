@@ -14,7 +14,7 @@
 
 (def indexes
   [{:name "Title"
-    :sort-key (comp s/upper-case :content)
+    :sort-key (comp s/upper-case :title)
     :render render/page-link
     :page-title "Index"                 ;kludge to match block-map and links
     :col-width "65%"
@@ -41,24 +41,24 @@
      merge
      (for [{:keys [name sort-key filter-key] :as index :or {filter-key identity}} indexes]
        (let [hiccup
-              [:table.table.table-sm.table-hover 
-               [:thead
-                ;; col headers
-                [:tr
-                 (for [col indexes]
-                   [:th {:scope "col" :style (when (:col-width col)
-                                               (format "width: %s;" (:col-width col)))}
-                    (if (= (:name col) name)
-                      (:name col)
-                      [:a {:href (page-loc col)} (:name col)])])]]
-               [:tbody 
-                (for [page (sort-by sort-key (filter filter-key pages))]
-                  [:tr
-                   (for [col indexes]
-                     [:td
-                      (u/ignore-errors
-                       ((:render col) page))])])
-                ]]
+             [:table.table.table-sm.table-hover 
+              [:thead
+               ;; col headers
+               [:tr
+                (for [col indexes]
+                  [:th {:scope "col" :style (when (:col-width col)
+                                              (format "width: %s;" (:col-width col)))}
+                   (if (= (:name col) name)
+                     (:name col)
+                     [:a {:href (page-loc col)} (:name col)])])]]
+              [:tbody 
+               (for [page (sort-by sort-key (filter filter-key pages))]
+                 [:tr
+                  (for [col indexes]
+                    [:td
+                     (u/ignore-errors
+                      ((:render col) page))])])
+               ]]
              title  (format "Index by %s" name)]
          {(str "/pages/" (page-loc index))    ;pkm
           (templating/page-hiccup hiccup title title bm)}

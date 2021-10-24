@@ -20,5 +20,6 @@
   (binding [*print-length* nil]
     (ju/schppit out (read-athens in) )))
 
+#_
 (dump-athens "/misc/hyperphor 23/index.transit"
              "broken.edn")

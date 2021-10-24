@@ -97,7 +97,7 @@
 
 (defn page->md
   [block]
-  (let [title (:content block)
+  (let [title (or (:title block) (:content block))
         footer-lines []                 ;TODO colophon is in hiccup 
         header-lines
         (list (real-page-pointer block)

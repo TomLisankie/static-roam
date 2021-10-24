@@ -8,8 +8,6 @@
 ;;; Why? The JSON format is lossy, it turns out. It is missing the UIDs for pages;
 ;;; needed to make links back to Roam.
 
-
-
 (defn read-roam-edn-raw
   [f]
   (with-open [infile (java.io.PushbackReader. (clojure.java.io/reader f))]
@@ -187,9 +185,8 @@
 
 ;;; EDN GENERATION from blockmaps
 (defn bm->datoms
-  [bm include]
-  (let [bm (compute-block-orders bm)
-        include (set (map :db/id (or include (vals bm))))]
+  [bm]                                  
+  (let [bm (compute-block-orders bm)]
     (mapcat
      (fn [block]
        (let [db-id (:db/id block)
@@ -203,7 +200,6 @@
                       (mapv (fn [ve] [db-id field ve txn]) (v value-gen)))
              page (get-in bm [(:id (bd/block-page bm block)) :db/id])
              page? (= page db-id)]
-         (when (contains? include db-id)
          (concat
           (field :block/string #(if (:page? block) nil (:content %)))
                                         ;     (field :create/time #(when (:creation %) (.getTime (:creation %)) ))
@@ -224,7 +220,7 @@
 
           (field* :block/refs (fn [block]
                                 (remove nil?
-                                        (map #(get-in bm [% :db/id]) (:refs block)))))))))
+                                        (map #(get-in bm [% :db/id]) (:refs block))))))))
 
      (vals bm))))
 
@@ -239,94 +235,21 @@
 
 
 
-(def bm @static-roam.core/last-bm)
-(def dailynotes (filter (partial bd/daily-notes? bm) (bd/pages bm)))
-(def dailyblocks (mapcat bd/block-descendents dailynotes))
-(def daily-datoms (bm->datoms bm dailyblocks))
-(write-datoms daily-datoms "dailynotes.edn")
-;;; add #datascript/DB
-
 (defn athens-export
-  [bm]
+  [bm outfile]
   (-> bm
-      bm->datoms bm )
-  (write-datoms)
-  
+      bm->datoms
+      (write-datoms outfile)))
 
+(defn subset-bm
+  [bm page-pred]
+  (let [pages (filter page-pred (bd/pages bm))
+        included (mapcat bd/block-descendents pages)]
+    (prn :foo (count pages) ( count included) (count bm))
+    (u/index-by :id included)))
 
-
-;;; Debugging argh
-(def roam-raw (read-roam-edn-raw "/Users/mtravers/Downloads/hyperphor.edn"))
-(def roam-raw-datoms (:datoms roam-raw))
-
-(def dailyblock-ids (set (map :db/id dailyblocks)))
-(def roam-raw-datoms-filtered
-  (set
-   (map #(subvec % 0 3)
-        (filter #(contains? dailyblock-ids (first %)) roam-raw-datoms))))
-
-(def my-datoms (set daily-datoms))
-
-(def d1 (clojure.set/difference roam-raw-datoms-filtered my-datoms))
-(def d2 (clojure.set/difference my-datoms roam-raw-datoms-filtered ))
-
-(count d1)
-(count d2)
-(frequencies (map second d1))
-
-;;;
-
-(defn trim-datom [d] (subvec d 0 3))
-
-(def orig (set (map trim-datom (:datoms (read-roam-edn-raw "/Users/mtravers/Downloads/static-test.edn")))))
-(def regen (set (map trim-datom bm1-datoms)))
-(def diff-missing (clojure.set/difference orig regen))
-(frequencies (map second diff-missing))
-{:create/user 655,
- :version/nonce 7,
- :edit/seen-by 8,
- :create/email 4,
- :block/heading 1,
- :block/refs 4,
- :edit/user 613,                        
- :user/display-name 1,
- :log/id 14,
- :block/uid 1,                          ;! ([3 :block/uid "M1oCKd8-8"]) (hm just user info, shouldnt be needed?)
- :user/uid 1,
- :user/email 1,
- :user/display-page 1,
- :user/photo-url 1,
- :version/id 7,
- :version/upgraded-nonce 4,
- :user/settings 1}
-
-
-
-(defn passthrough []
-  (-> "/Users/mtravers/Downloads/static-test.edn"
-      read-roam-edn-raw
-      grab-schema
-      :datoms
-      (write-datoms "static-test-regen.edn")))
-
-(defn trim-datoms [ds] (map trim-datom ds))
-
-(defn passthrough1 []
-  (-> "/Users/mtravers/Downloads/static-test.edn"
-      read-roam-edn-raw
-      grab-schema
-      :datoms
-      trim-datoms
-      (write-datoms "static-test-regen-trimmed.edn")))
-
-(defn add-txn [ds txn]
-  (map #(conj % txn) ds))
-
-(defn passthrough2 []
-  (-> "/Users/mtravers/Downloads/static-test.edn"
-      read-roam-edn-raw
-      grab-schema
-      :datoms
-      trim-datoms
-      (add-txn  536871009)
-      (write-datoms "static-test-regen-trimmed.edn")))
+(defn daily-notes-page?
+  [page]
+  (let [title (or (:title page) (:content page))]
+    (when title
+      (re-matches bd/daily-notes-regex title))))

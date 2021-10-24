@@ -6,6 +6,7 @@
             [static-roam.utils :as utils]
             [static-roam.config :as config]
             [org.parkerici.multitool.core :as u]
+            [clojure.walk :as walk]
             [taoensso.truss :as truss :refer (have have! have?)]
             ))
 
@@ -18,7 +19,7 @@
 
 (defn- block-properties
   [block-json]
-  {:id (get-block-id block-json)       ;TODO this lets everything else be simplified radcially, but haven't gotten aroound to it yet
+  {:id (get-block-id block-json)       ;TODO note: having this in the map can simplify some stuff
    :children (map :uid (:children block-json))
    :content (or (:string block-json) (:title block-json))
    :heading (:heading block-json -1)
@@ -29,17 +30,19 @@
    :page? (contains? block-json :title)
    })
 
-(defn- create-block-map-no-links
-  "Convert json into basic blocks"
+(defn- create-basic-blocks
   [roam-json]
+  (u/walk-collect
+   (fn [thing]
+     (when (and (get-block-id thing)
+                (> (count thing) 1)) ;try to exclude :refs
+       (block-properties thing)))
+   roam-json))
+
+(defn index-blocks
+  [basic-blocks]
   (utils/add-parent
-   (u/index-by :id
-               (u/walk-collect
-                (fn [thing]
-                  (when (and (get-block-id thing)
-                             (> (count thing) 1)) ;try to exclude :refs
-                    (block-properties thing)))
-                roam-json))
+   (u/index-by :id basic-blocks)
    :children :parent
    ))
 
@@ -125,7 +128,7 @@
 ;;; Mostly blocks can be rendered indpendently, but if there are references (and now sidenotes) there are dependencies
 
 
-(defn- roam-db-1
+(defn roam-db-1
   [db]
   (-> db
       parse
@@ -135,10 +138,19 @@
       compute-includes
       add-direct-children))              ; makes it easier to use, harder to dump. This needs to be last
 
+(defn add-uids
+  [json]
+  (walk/postwalk #(if (and (map? %) (not (contains? % :uid)))
+                    (assoc % :uid (name (gensym "bg" )))
+                    %)
+                 json))
+
 (defn roam-db
   [roam-json]
   (-> roam-json
-      create-block-map-no-links
+      add-uids                          ;for logseq export
+      create-basic-blocks
+      index-blocks
       roam-db-1
       ))
 
