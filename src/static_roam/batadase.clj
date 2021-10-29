@@ -120,6 +120,10 @@
   [block-map]
   (filter :page? (vals block-map)))
 
+(defn included-blocks
+  [block-map]
+  (filter included? (vals block-map)))
+
 (defn included-pages
   [block-map]
   (filter included? (pages block-map)))
@@ -164,7 +168,7 @@
   [block-map]
   (filter (partial entry-point? block-map) (pages block-map)))
 
-(def daily-notes-regex #"(?:January|February|March|April|May|June|July|August|September|October|November|December) \d+.., \d+")
+(def daily-notes-regex #"(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d+.., \d+")
 
 (defn daily-notes?
   [block-map block]
@@ -192,10 +196,9 @@
 ;;; → Multitool
 ;;; Surely this must be built-in somewhere? Oh yeah, some-fn
 (defn orf [& fs]
-  "Given some fns, return a new fn that applies them successively until a non-nil value is genera"
+  "Given some fns, return a new fn that applies them successively until a non-nil value is generated"
   (fn [& args]
     (some (fn [f] (apply f args)) fs)))
-
 
 (defn date-range [page]
   (let [blocks (block-descendents page)

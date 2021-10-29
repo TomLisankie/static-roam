@@ -15,7 +15,7 @@
      :url (utils/html-file-title (:id page))
      ;; TODO strips markup like __foo__, would be nice if it could be rendered in search results, but that looks tricky
      ;; TODO also might want to be a config option
-     :title (render/block-local-text page) ;
+     :title (:title page) ;TODO was block-local-text which is wrong
      :body (render/block-full-text bm page)}))
 
 (defn write-index

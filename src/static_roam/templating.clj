@@ -171,8 +171,8 @@
 (defn block-page-hiccup
   [block-id block-map output-dir]
   (let [block (get block-map block-id)
-        title-hiccup (render/block-content->hiccup (:content block))
-        title-text (render/block-local-text block)
+        title-hiccup (render/block-content->hiccup (:title block))
+        title-text (:title block) ; was render/block-local-text
         contents
         [:div
          [:div

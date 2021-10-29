@@ -55,6 +55,7 @@
       (:italic :bold) (second parse)    ;TODO no longer correct
       (:image :code-block :code-line :hr) (second parse)
       :metadata-tag (second parse)
+      :block-property nil               ;could include I suppose
       :bare-url (second parse)          ;github is ok with this, not sure about other markdown
       :todo "◘"                         ;I guess
       :done "⌧"                         ;I guess

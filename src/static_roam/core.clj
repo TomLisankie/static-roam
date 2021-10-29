@@ -97,6 +97,11 @@
   (reset-output)
   (html-gen/generate-static-roam @last-bm (config/config :output-dir)))
 
+(defn reset
+  []
+  (reset-output)
+  (u/memoize-reset))
+
 (defn output-bm
   [bm]
   (tap bm)
@@ -109,14 +114,12 @@
   (prn (bd/stats @last-bm))
   #_ (dump))
 
-
 (defn -main
   [& [config-or-path]]
   (if (map? config-or-path)
     (config/set-config-map config-or-path)
     (config/set-config-path (or config-or-path "default-config.edn")))
-  (reset-output)
-  (u/memoize-reset)
+  (reset)
   (let [bm (-> ; (utils/latest-export)
              ; utils/unzip-roam
 ;;               block-map-edn

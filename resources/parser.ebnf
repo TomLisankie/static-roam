@@ -3,7 +3,7 @@
 
 block = blockquote | (syntax-in-block / text)*
 
-<syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | metadata-tag | code-line | code-block | youtube | bold | italic | bare-url | page-alias | hr | latex ) (* add query later*)
+<syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | block-property | code-line | code-block | youtube | bold | italic | bare-url | page-alias | hr | latex ) (* add query later*)
 
 (* page links do not want their innards parsed *)
 page-link = #"\[\[.*?\]\]" 
@@ -11,7 +11,8 @@ alias = #"\[([^\[\]]+?)\]\(.+?\)"  (* Note this hairy but correct char class tha
 image = #"!\[(.*?)\]\(.*?\)"   (* image = "!" alias doesn't quite work *)
 hashtag = #"\#[\w-:]+" | #"#\[\[.*?\]\]"
 block-ref = #"\(\(([\w\s\d-]+)\)\)"
-metadata-tag = #"^.+?::"
+(* metadata-tag = #"^.+?::" *) (* Roam *)
+block-property = #"(?m)^.+?::.+?$"
 code-line = #"\`.*?\`"
 code-block = #"(?is)^```.*```"
 (* query = #"\{\{query: .*?:.*?\}\}" | #"\{\{[[query]]: .*?:.*?\}\}" *)

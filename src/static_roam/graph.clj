@@ -59,7 +59,7 @@
                        (map (fn [b]
                               ;; TODO why not use actual size???
                               ;;  :size (- 20 (or (:depth b) 0)) (not working)
-                              {:name (:content b) ; (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
+                              {:name (:title b) ; (render/block-local-text b)      ;; TODO strips markup like __foo__ (might want to be config)
                                :link (:link b)
                                :index (:index b)
                                :group (cond (start? b)

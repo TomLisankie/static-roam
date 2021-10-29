@@ -184,8 +184,11 @@
          (unspan
           (case (first ast-ele)
             nil nil
-            :metadata-tag [:b [:a {:href (utils/html-file-title ele-content)}
-                               (subs ele-content 0 (dec (count ele-content)))]]
+
+            ;; Might want this old behavior under a flag, but definitely not wanted in Logseq context.
+;;            :metadata-tag [:b [:a {:href (utils/html-file-title ele-content)}
+;;                               (subs ele-content 0 (dec (count ele-content)))]]
+            :block-property nil         ;These aren't included in output
             :page-link (page-link-by-name block-map (utils/remove-double-delimiters ele-content))
             :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
                                                          ele-content)]
