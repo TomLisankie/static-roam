@@ -231,12 +231,22 @@
   [block-content]
   (ele->hiccup (parser/parse-to-ast block-content) {}))
 
+;;; Total hack because I failed to figure this out in instaparse, and its a one-shot thing...
+(defn remove-logseq-title
+  [[_ h1 title h2 :as parsed]]
+  (if (and (= h1 [:hr "---"])
+           (= h2 [:hr "---"])
+           (re-matches #"(?m)^\ntitle\: (.*)\n$" title))
+    [:block]
+    parsed))
+
 ;;; In lieu of putting this in the blockmap
 (u/defn-memoized block-hiccup
   "Convert Roam markup to Hiccup"
   [block block-map]
   (if (:parsed block)
-    (let [basic (ele->hiccup (:parsed block) block-map block)]
+    (let [parsed (remove-logseq-title (:parsed block))
+          basic (ele->hiccup parsed block-map block)]
       (cond (and (:heading block) (> (:heading block) 0))
             [(keyword (str "h" (:heading block))) basic]
             (fn? basic)                 ;#incoming uses this hack, maybe others

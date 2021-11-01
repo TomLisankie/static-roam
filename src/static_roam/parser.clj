@@ -30,8 +30,9 @@
                               (combine-adjacent-strings raw-contents))
     :url-link-url-parts     (fn [& chars]
                               (clojure.string/join chars))
+    ;; TODO this shit is ugly but I couldn't figure out better way, guess I'm stupid
     :text                   (fn [s] s)
-    :textier                   (fn [s] s)
+    :textier                (fn [s] s)
     }
    tree))
 

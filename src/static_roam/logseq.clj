@@ -1,5 +1,6 @@
 (ns static-roam.logseq
   (:require [static-roam.utils :as utils]
+            [static-roam.batadase :as bd]
             [clojure.walk :as walk]
             [org.parkerici.multitool.core :as u])
   )
@@ -65,23 +66,34 @@
         (convert p))
       (vals @bm))))
 
-#_
-(clojure.set/difference
- (let [all-refs (mapcat bd/forward-page-refs (bd/displayed-pages bm))
-       filtered (map first (filter (fn [[ref count]] (> count 1))
-                                   (frequencies all-refs)))]
-   (set filtered))
- (set (keys bm)))
-
+(defn add-empty-pages
+  [bm]
+  (loop [bm bm
+         [page & rest] (clojure.set/difference
+                        (let [all-refs (mapcat bd/forward-page-refs (bd/displayed-pages bm))
+                              filtered (map first (filter (fn [[ref count]] (> count 1))
+                                                          (frequencies all-refs)))]
+                          (set filtered))
+                        (set (keys bm)))]
+    (if page
+      (recur (assoc bm page  {:id page
+                              :uid page
+                              :title page
+                              :page? true
+                              :include? true})
+             rest)
+      bm)))
 
 (defn gen-from-logseq
   []
   (static-roam.config/set-config-path "hyperphor-config.edn")
   (static-roam.core/reset)
-  (-> "/Users/mtravers/Downloads/ammdi-augmented_1635471051.edn"
+  (-> "/Users/mtravers/Downloads/ammdi-augmented_1635701534.edn"
       logseq-edn->blockmap
       static-roam.database/index-blocks    
       static-roam.database/roam-db-1
+      add-empty-pages
+      static-roam.database/generate-inverse-refs ;have to redo this after add-empty-pages
       static-roam.core/add-generated-pages
       static-roam.core/output-bm
       ))
