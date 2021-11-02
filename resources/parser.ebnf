@@ -1,7 +1,7 @@
 (* Parser for block content *)
 (* TODO should make more use of instaparse compositionality *)
 
-block = blockquote | (syntax-in-block / text)*
+block = heading | blockquote | (syntax-in-block / text)*
 
 <syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | block-property | code-line | code-block | youtube | bold | italic | bare-url | page-alias | hr | latex ) (* add query later*)
 
@@ -35,5 +35,5 @@ latex= #"\$\$(.*?)\$\$"
 text = #'[A-Za-z0-9\.\,\!\"\'\?]+|[\s\W_]+?'
 textier = #'[A-Za-z0-9\.\,\!\"\'\?]+|[\s\W]+?' 
 
-
+heading = #"#{1,3}" block
 

@@ -189,6 +189,11 @@
 ;;            :metadata-tag [:b [:a {:href (utils/html-file-title ele-content)}
 ;;                               (subs ele-content 0 (dec (count ele-content)))]]
             :block-property nil         ;These aren't included in output
+            :heading (let [base (ele->hiccup (nth ast-ele 2) block-map)]
+                       (case (count (second ast-ele))
+                         1 [:h1 base]
+                         2 [:h2 base]
+                         3 [:h3 base]))
             :page-link (page-link-by-name block-map (utils/remove-double-delimiters ele-content))
             :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
                                                          ele-content)]
