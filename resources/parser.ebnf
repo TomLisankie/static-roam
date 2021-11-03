@@ -12,7 +12,7 @@ image = #"!\[(.*?)\]\(.*?\)"   (* image = "!" alias doesn't quite work *)
 hashtag = #"\#[\w-:]+" | #"#\[\[.*?\]\]"
 block-ref = #"\(\(([\w\s\d-]+)\)\)"
 (* metadata-tag = #"^.+?::" *) (* Roam *)
-block-property = #"(?m)^.+?::.+?$"
+block-property = #"(?m)^(\n)?.+?::.+?$"
 code-line = #"\`.*?\`"
 code-block = #"(?is)^```.*```"
 (* query = #"\{\{query: .*?:.*?\}\}" | #"\{\{[[query]]: .*?:.*?\}\}" *)

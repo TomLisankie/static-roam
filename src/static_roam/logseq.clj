@@ -1,9 +1,10 @@
 (ns static-roam.logseq
   (:require [static-roam.utils :as utils]
             [static-roam.batadase :as bd]
+            [static-roam.config :as config]
             [clojure.walk :as walk]
-            [org.parkerici.multitool.core :as u])
-  )
+            [org.parkerici.multitool.core :as u]
+            [me.raynes.fs :as fs]))
 
 (defn walk-blocks
   [struct f]
@@ -84,11 +85,20 @@
              rest)
       bm)))
 
+;;; Image publishing
+(defn publish-images
+  [logseq-dir]
+  (doseq [file @static-roam.rendering/published-images]
+    ;; this tree-hopping is ugly
+    (fs/copy+ (str logseq-dir "/assets/" file)
+              (str (:output-dir (config/config)) "/pages/"file))))
+
+
 (defn gen-from-logseq
   []
   (static-roam.config/set-config-path "hyperphor-config.edn")
   (static-roam.core/reset)
-  (-> "/Users/mtravers/Downloads/ammdi-augmented_1635701534.edn"
+  (-> "/Users/mtravers/Downloads/ammdi-augmented_1635891071.edn"
       logseq-edn->blockmap
       static-roam.database/index-blocks    
       static-roam.database/roam-db-1
@@ -96,7 +106,9 @@
       static-roam.database/generate-inverse-refs ;have to redo this after add-empty-pages
       static-roam.core/add-generated-pages
       static-roam.core/output-bm
-      ))
+      )
+  (publish-images (:logseq-root (config/config)) ; "/misc/repos/ammdi-augmented"
+                  ))
 
 
 ;;; Trick to find a bad form in a long edn file 

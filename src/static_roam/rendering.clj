@@ -39,10 +39,24 @@
       [:a {:href alias-link} content]
       [:a.external {:href alias-link} content])))
 
+;;; Track local image files so they can be copied to output
+(def published-images (atom #{}))
+
+(defn local-path?
+  [path]
+  ;; TODO there must be better url regexs out there
+  (not (re-matches #"[\w-]+\:(.+)" path)))
+
+(defn maybe-publish-image
+  [src]
+  (when (local-path? src)
+    (swap! published-images conj src)))
+
 (defn- format-image
   [image-ref-content]
   (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))
         image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))]
+    (maybe-publish-image image-source)
     ;; Link to
     [:a.imga {:href image-source :target "_image"} ;cheap way to get expansion. TODO link highlighhting looking slightly crufty
      [:img {:src image-source :alt alt-text}]]))
