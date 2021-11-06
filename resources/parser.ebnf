@@ -1,9 +1,9 @@
 (* Parser for block content *)
 (* TODO should make more use of instaparse compositionality *)
 
-block = heading | blockquote | (syntax-in-block / text)*
+block = block-property* (heading | blockquote | (syntax-in-block / text)*) block-property*
 
-<syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | block-property | code-line | code-block | youtube | bold | italic | bare-url | page-alias | hr | latex ) (* add query later*)
+<syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | code-line | code-block | youtube | bold | italic | bare-url | page-alias | hr | latex ) (* add query later*)
 
 (* page links do not want their innards parsed *)
 page-link = #"\[\[.*?\]\]" 
@@ -12,7 +12,7 @@ image = #"!\[(.*?)\]\(.*?\)"   (* image = "!" alias doesn't quite work *)
 hashtag = #"\#[\w-:]+" | #"#\[\[.*?\]\]"
 block-ref = #"\(\(([\w\s\d-]+)\)\)"
 (* metadata-tag = #"^.+?::" *) (* Roam *)
-block-property = #"(?m)^(\n)?.+?::.+?$"
+block-property =  #"(\n)?.+?:: .+(\n)?"
 code-line = #"\`.*?\`"
 code-block = #"(?is)^```.*```"
 (* query = #"\{\{query: .*?:.*?\}\}" | #"\{\{[[query]]: .*?:.*?\}\}" *)

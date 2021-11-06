@@ -133,11 +133,26 @@
   [bm string]
   (filter #(re-find (re-pattern string) (or (:content %) "")) (vals bm)))
 
+;;; → multitool
+(defn download
+  [url to]
+  (clojure.java.shell/sh "curl" url "-o" to))
+
+(defn roam-image?
+  "Returns the extension if this is in fact a roam image, nil otherwise"
+  [url]
+  (second (re-matches #"https\:\/\/firebasestorage\.googleapis\.com/.*\.(\w+)\?.*" url)))
 
 (defn download-images
   [bm directory]
-  (clojure.java.shell/sh "curl")
-  )
+  (doseq [image-block (filter #(= :image (first (second (:parsed %)))) (vals bm))]
+    (let [markdown (second (second (:parsed image-block)))
+          ;; See rendering/format-image
+          image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" markdown))]
+      (when-let [ext (roam-image? image-source)]
+        (let [local-file (str directory (:title (bd/block-page bm image-block)) "-" (:id image-block) "." ext)]
+          (prn :download local-file image-source)
+          (download image-source local-file))))))
 
 (defn collecting
   "Exec is a fn of one argument, which is called and passed another fn it can use to collect values; the collection is returned."

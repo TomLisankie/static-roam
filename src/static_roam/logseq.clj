@@ -91,14 +91,20 @@
   (doseq [file @static-roam.rendering/published-images]
     ;; this tree-hopping is ugly
     (fs/copy+ (str logseq-dir "/assets/" file)
-              (str (:output-dir (config/config)) "/pages/"file))))
+              (str (:output-dir (config/config)) "/pages/" file))))
 
+
+(defn publish-assets
+  []
+  (doseq [file (fs/list-dir "resources/public")]
+    (fs/copy+ file
+              (str (:output-dir (config/config)) "/assets/" (fs/base-name file)))))
 
 (defn gen-from-logseq
   []
   (static-roam.config/set-config-path "hyperphor-config.edn")
   (static-roam.core/reset)
-  (-> "/Users/mtravers/Downloads/ammdi-augmented_1635891071.edn"
+  (-> (utils/latest #"ammdi-augmented")
       logseq-edn->blockmap
       static-roam.database/index-blocks    
       static-roam.database/roam-db-1

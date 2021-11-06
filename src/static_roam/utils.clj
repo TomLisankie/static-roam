@@ -10,15 +10,19 @@
             )
   (:import (java.util.zip ZipFile)))
 
-(defn latest-export
-  []
+(defn latest
+  [pattern]
   (->> (config/config :source)
        fs/expand-home
        fs/list-dir
-       (filter #(s/includes? (str %) "Roam-Export"))
+       (filter (comp (partial re-find pattern) str))
        (sort-by fs/mod-time)
        last
        str))
+
+(defn latest-export
+  []
+  (latest #"Roam-Export"))
 
 ;;; TODO timezone correction
 (u/def-lazy latest-export-time

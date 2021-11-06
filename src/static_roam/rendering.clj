@@ -180,6 +180,13 @@
     "incoming" 
     nil))
 
+;;; Smelly
+(defn new-head
+  [thing head]
+  (if (vector? thing)
+    (assoc thing 0 head)
+    [head thing]))
+  
 (defn ele->hiccup
   [ast-ele block-map & [block]]
   (utils/debuggable
@@ -236,9 +243,13 @@
                        (youtube-vid-embed youtube-id)
                        [:span "Non-youtube video" ele-content]) ;TODO temp, do something better
             :bare-url (make-content-from-url ele-content)
-            :blockquote [:blockquote (ele->hiccup ele-content block-map block)]
+            :blockquote (new-head (ele->hiccup ele-content block-map block) :blockquote)
                                         ;ast-ele
-            :block `[:span ~@(map #(ele->hiccup % block-map block) (rest ast-ele))]
+            :block (let [contents (filter identity (map #(ele->hiccup % block-map block) (rest ast-ele)))]
+                     (case (count contents)
+                       0 nil
+                       1 (first contents)
+                       `[:span ~@contents]))
             :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
             :hr [:hr]
             ;; See https://www.mathjax.org/ This produces an inline LaTex rendering.
