@@ -6,6 +6,7 @@
             [static-roam.batadase :as bd]
             [static-roam.html-generation :as html-gen]
             [static-roam.graph :as graph]
+            [static-roam.import.logseq :as logseq]
             [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]))
@@ -18,6 +19,7 @@
       (html-gen/generated-page "Map" html-gen/generate-global-map)
       ))
 
+#_
 (defn block-map-json
   [path-to-zip]
   (prn :reading-from path-to-zip)       ;TODO I suppose real logger is called for
@@ -27,21 +29,12 @@
       add-generated-pages
       ))
 
-
+#_
 (defn block-map-edn
   [path]
   (prn :reading-from path)
   (-> path
       database/roam-db-edn
-      add-generated-pages
-      ))
-
-
-(defn block-map-athens
-  [path]
-  (prn :reading-from path)
-  (-> path
-      database/roam-db-athens
       add-generated-pages
       ))
 
@@ -104,7 +97,6 @@
 
 (defn output-bm
   [bm]
-  (tap bm)
   (let [output-dir (config/config :output-dir)]
     (graph/write-page-data bm output-dir)
     (html-gen/generate-static-roam bm output-dir))
@@ -114,24 +106,20 @@
   (prn (bd/stats @last-bm))
   #_ (dump))
 
+(defmulti produce-bm2 (fn [{:keys [source]}] (prn :x source) (:type source)) )
+  
+;;; Sometimes I hate Clojure
+(defmethod produce-bm2 :logseq [_]
+  (logseq/produce-bm))
+
 (defn -main
   [& [config-or-path]]
   (if (map? config-or-path)
     (config/set-config-map config-or-path)
     (config/set-config-path (or config-or-path "default-config.edn")))
   (reset)
-  (let [bm (-> ; (utils/latest-export)
-             ; utils/unzip-roam
-;;               block-map-edn
-;;; For athens import
-;;            "/Users/mtravers/Documents/athens/index.transit"
-;;            block-map-athens
-            "/Users/mtravers/Downloads/hyperphor-logseq-export.json"
-            block-map-json
-            )]
-  
+  (let [bm (add-generated-pages (produce-bm2 (config/config)))]
+    (tap bm)
     (output-bm bm)))
-
-
 
 (set! *print-length* 100)               ;prevent trace from blowing up trying to print bms. Should be elsewhere

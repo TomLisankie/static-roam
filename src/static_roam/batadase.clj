@@ -267,3 +267,21 @@
   #_ (when (contains? @special-tags ht) (prn :ht ht (:id block)))
   (when-let [handler (get @special-tags ht)]
     (handler bm block)))
+
+(defn add-empty-pages
+  [bm]
+  (loop [bm bm
+         [page & rest] (set/difference
+                        (let [all-refs (mapcat forward-page-refs (displayed-pages bm))
+                              filtered (map first (filter (fn [[ref count]] (> count 1))
+                                                          (frequencies all-refs)))]
+                          (set filtered))
+                        (set (keys bm)))]
+    (if page
+      (recur (assoc bm page  {:id page
+                              :uid page
+                              :title page
+                              :page? true
+                              :include? true})
+             rest)
+      bm)))

@@ -46,8 +46,7 @@ And its fallen Emanation, the Spectre and its cruel Shadow.") {}))))
   (testing "blockquote with embedded markup"
     (is
      (= [:blockquote
-         [:span
-          "A: Well, " [:b "meditation is dealing with purpose itself"] ". It is not that meditation is for something, but it is dealing with the aim."]]
+          "A: Well, " [:b "meditation is dealing with purpose itself"] ". It is not that meditation is for something, but it is dealing with the aim."]
         (block-hiccup (fake-block "> A: Well, **meditation is dealing with purpose itself**. It is not that meditation is for something, but it is dealing with the aim.") {})))))
 
 (deftest code-block-test

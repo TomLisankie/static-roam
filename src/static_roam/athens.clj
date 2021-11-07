@@ -5,6 +5,9 @@
             [org.parkerici.multitool.cljcore :as ju]
             ))
 
+;;; TODO move to import.athens or somesuch
+
+
 ;;; "/Users/mtravers/Documents/athens/index.transit"
 (defn read-athens
   [file]

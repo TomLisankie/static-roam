@@ -1,5 +1,5 @@
 ;;; TODO document these
-{:source "~/Downloads"
+{ ; :source "~/Downloads"
  :entry-tags ["EntryPoint"]
  :exit-tags #or [#split [#env ROAM_EXIT_TAGS] ["ExitPoint" "Private"]]
  :dev-mode #boolean #or [#env ROAM_DEV_MODE "false"]

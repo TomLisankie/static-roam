@@ -2,7 +2,6 @@
   (:require [static-roam.parser :as parser]
             [static-roam.batadase :as bd]
             [static-roam.edn :as edn]
-            [static-roam.athens :as athens]
             [static-roam.utils :as utils]
             [static-roam.config :as config]
             [org.parkerici.multitool.core :as u]
@@ -173,11 +172,5 @@
 
 
 
-(defn roam-db-athens
-  [athens-file]
-  (-> athens-file
-      athens/read-athens
-      edn/process-roam-edn
-      edn/edn->block-map
-      roam-db-1))
+
       

@@ -233,14 +233,6 @@
         (.write w "#datascript/DB\n")
         (.write w (str db))))))
 
-
-
-(defn athens-export
-  [bm outfile]
-  (-> bm
-      bm->datoms
-      (write-datoms outfile)))
-
 (defn subset-bm
   [bm page-pred]
   (let [pages (filter page-pred (bd/pages bm))

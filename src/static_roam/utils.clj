@@ -6,32 +6,35 @@
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]
             [clojure.data.json :as json]
+            [clojure.edn :as edn]
             [static-roam.config :as config]
             )
   (:import (java.util.zip ZipFile)))
 
+(def last-import (atom nil))
+
 (defn latest
-  [pattern]
-  (->> (config/config :source)
+  [dir pattern]
+  (->> dir
        fs/expand-home
        fs/list-dir
-       (filter (comp (partial re-find pattern) str))
+       (filter (comp (partial re-find (re-pattern pattern)) str))
        (sort-by fs/mod-time)
        last
+       (reset! last-import)
        str))
 
+#_
 (defn latest-export
   []
   (latest #"Roam-Export"))
 
 ;;; TODO timezone correction
-(u/def-lazy latest-export-time
-  (if-let [export-date (->> (latest-export)
-                            fs/base-name
-                            (re-find #"-(\d*)\.")
-                            second
-                            u/coerce-numeric)]
-    (java.util.Date. export-date)
+;;; Previously got from filename, but this is more general
+(defn latest-export-time
+  []
+  (if @last-import
+    (fs/mod-time @last-import)
     (ju/now)))
 
 (defn unzip-roam
@@ -48,6 +51,10 @@
                           (fs/mkdirs (fs/parent f))
                           (io/copy (.getInputStream zip entry) f))
                         database-file-name)))))
+
+(defn read-edn
+  [f]
+  (edn/read-string (slurp f)))
 
 (defn read-json
   [path]

@@ -6,6 +6,8 @@
             [org.parkerici.multitool.core :as u]
             ))
 
+;;; TODO these are broken by logseq changes
+
 (def test1-block-map
   '{"rXJ2WYFqL"
     {:include? false,

@@ -149,7 +149,7 @@
       [:div.container
        ~(when (config/config :colophon)
           `[:p.m-0.text-center.text-white ~@(config/config :colophon)])
-       [:p.m-0.text-center.text-white.small "Exported " ~(utils/render-time @utils/latest-export-time)]]
+       [:p.m-0.text-center.text-white.small "Exported " ~(utils/render-time (utils/latest-export-time))]]
       ]
      ]])
 
@@ -206,7 +206,7 @@
             :node-charge -60
             :node-radius 25
             :radius-from block-id
-            :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
+            :radius 1}) ;Sadly 1 is too small and 2 is too big. Need 1.1
           ]]
 
         incoming-links-widget           ;TODO suppress if #incoming on page

@@ -14,7 +14,7 @@
   (let [page 
         (db/parse-block
         '{:include? true,
-          :content "__On Purpose__",
+          :title "__On Purpose__",
           :refs #{},
           :edit-time #inst "2021-05-31T03:47:57.271-00:00"
           :page? true,
