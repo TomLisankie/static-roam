@@ -6,6 +6,7 @@
               [static-roam.core :as core]
               [clojure.set :as set]
               [org.parkerici.multitool.core :as u]
+              [org.parkerici.multitool.cljcore :as ju]
               [me.raynes.fs :as fs]
               [clojure.string :as str]
               [clj-http.client :as client]
@@ -183,6 +184,7 @@
 
 ;;; Reexport from logseq
 
+#_
 (def logseq (utils/read-json "/Users/mtravers/Downloads/System_Volumes_Data_misc_working_org-roam_roam_1633487329.json"))
 
 
@@ -190,15 +192,36 @@
 
 
 
-Idea:
-- daily notes, plus anything heavily linked to (like #bikeride or other habits) gos in one bucket
-- published pages
-- everything else
+;; Idea:
+;;- daily notes, plus anything heavily linked to (like #bikeride or other habits) gos in one bucket
+;; - published pages
+;; - everything else
 
-Maybe too fancy, how about just separate out daily notes and everything else?
+;;Maybe too fancy, how about just separate out daily notes and everything else?
 
+(defn subst-images
+  [substs prefix s]
+  (let [[m u] (re-find #"\((https://firebasestorage.*)\)" s)]
+    (if m
+      (if (contains? substs u)
+        (str/replace s u (str prefix (get substs u)))
+        (do
+          ;; TODO this is bad, it ends up in output file because Clojure can be dumb
+          (prn :not-found u s)          ;shouldn't happen
+          s))
+      s)))
 
+(defn file-subst
+  [f substs prefix]
+  (->> f
+       ju/file-lines
+       doall
+       (map (partial subst-images substs prefix))
+       (ju/file-lines-out f)))
 
-(def mypages (pages bm))
-(def dailynotes (filter (partial daily-notes? bm) mypages))
+#_
+(file-subst "/misc/repos/ammdi-augmented/pages/Whole Earth Catalog.md" substs "../assets/")
 
+(doseq [f (fs/list-dir "/misc/repos/ammdi-augmented/pages/")]
+  (prn f)
+  (file-subst f substs "../assets/"))

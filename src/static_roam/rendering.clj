@@ -145,7 +145,7 @@
         (empty? bm)                     ;this can happen when a page title contains a link.
         [:span page-name]
         :else
-        [:span.missing "Missing link: " page-name] ;; Turns out Roam can have links to nonexistant pages, eg from Import
+        [:span.missing page-name]       ;In Logseq world, this happens if you have a single link to a non-existant (empty) page
         ))
 
 (declare block-hiccup)
@@ -274,7 +274,7 @@
 (u/defn-memoized block-hiccup
   "Convert Roam markup to Hiccup"
   [block block-map]
-  (if (:parsed block)
+  (when (:parsed block)
     (let [parsed (remove-logseq-title (:parsed block))
           basic (ele->hiccup parsed block-map block)]
       (cond (and (:heading block) (> (:heading block) 0))
@@ -283,9 +283,7 @@
             (basic block-map)
             :else
             basic))
-    (do
-      (prn "Missing content: " (:id block))
-      nil)))
+    ))
 
 ;;; TODO this doesn't work, should be using block-id rather than page titles
 ;;; Static-roam fucks this up...sigh, should have rolled my own from the start

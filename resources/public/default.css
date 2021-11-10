@@ -80,7 +80,7 @@ li {
 .main ul li::before {
     /* content: "\2022";  bullet */
     /* content: "\2aa2";  my fave ⪢ */
-    /* content: "\30fb";  bite the no bullet  */
+    /* content: "\30fb";  */
     color: var(--link);
   /* color: #4E176E; 		 */
     display: inline-block; 
@@ -156,9 +156,9 @@ blockquote {
 }
 
 
+/* Semantically, a link to a page that doesn't exist yet. We could just render as text, but this seems better */
 .missing {
-    border: 5px solid red;
-    padding: 5px;
+    color: gray;
 }
 
 .block-ref {
@@ -251,8 +251,8 @@ iframe {
     clear: right;
     position: absolute;
     display: inline-flex;	/* gets the vertical alignment right */
-    left: 960px;
-    width: 380px;
+    left: 980px;
+    width: 360px;
     padding-right: 100px;
     /* padding-top: 10px;  puts some whitespace on top, but fucks with alignment of asterisks */    
     padding-bottom: 10px;

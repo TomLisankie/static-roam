@@ -110,6 +110,8 @@
       [:div.row
        "<!-- Sidebar Widgets Column -->"
        [:div.col-md-3
+
+        ;; TODO Is there a reason this isn't under widget mechanism?
         "<!-- Search Widget -->"
         [:div.card.my-3
          [:h5.card-header [:span {:style ~(utils/css-style {:line-height "2"})} ;makes it line up, god knows why its necessary
@@ -184,7 +186,9 @@
          (render/page-hiccup block-id block-map)
          [:hr {}]]
 
-        map-widget
+        ;; Experimenting with leaving this out, or offering as a popup thing (it's way too in-your-face right now)
+        #_ map-widget
+        #_
         [:div.card.my-3
          [:h5.card-header
           [:span "Map"]
@@ -221,7 +225,7 @@
     ;; TODO why isn't search widget done this way?
     (page-hiccup contents title-text title-hiccup block-map
                  :head-extra (graph/vega-lite-head) ;lite to support new dataviz
-                 :widgets [map-widget incoming-links-widget])
+                 :widgets [incoming-links-widget])
     ))
 
 
@@ -229,6 +233,8 @@
 ;;; Oh shit this can't work, rendering happens too early 
 ;;; Needs to be a post-processing step, fuck me
 ;;; OR maybe not if I use a delay...what a hack. No that can't really work I think...delays require an explict deref
+;;; Not really working yet so disabled
+#_
 (bd/register-special-tag
  "incoming"
  (fn [bm block]

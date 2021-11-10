@@ -19,7 +19,6 @@
       (html-gen/generated-page "Map" html-gen/generate-global-map)
       ))
 
-#_
 (defn block-map-json
   [path-to-zip]
   (prn :reading-from path-to-zip)       ;TODO I suppose real logger is called for
@@ -106,11 +105,16 @@
   (prn (bd/stats @last-bm))
   #_ (dump))
 
-(defmulti produce-bm2 (fn [{:keys [source]}] (prn :x source) (:type source)) )
+(defmulti produce-bm2 (fn [{:keys [source]}] (:type source)) )
   
 ;;; Sometimes I hate Clojure
 (defmethod produce-bm2 :logseq [_]
   (logseq/produce-bm))
+
+(defmulti post-generation (fn [{:keys [source]} _] (:type source)))
+
+(defmethod post-generation :logseq [_ _]
+  (logseq/post-generation))
 
 (defn -main
   [& [config-or-path]]
@@ -120,6 +124,17 @@
   (reset)
   (let [bm (add-generated-pages (produce-bm2 (config/config)))]
     (tap bm)
-    (output-bm bm)))
+    (output-bm bm)
+    (post-generation (config/config) bm)
+    ))
+
+#_
+(defn scarf-images
+  [roam-export dir]
+  (let [bm (block-map-json roam-export)]
+    (static-roam.curation/image-copy-script bm dir)))
+  
+
+
 
 (set! *print-length* 100)               ;prevent trace from blowing up trying to print bms. Should be elsewhere
