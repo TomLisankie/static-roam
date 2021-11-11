@@ -70,8 +70,8 @@
      [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
      [:title ~(str (config/config :short-title) ": " title-text)]
      [:link {:rel "stylesheet"
-             :href "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-             :integrity "sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+             :href "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+             :integrity "sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
              :crossorigin "anonymous"}]
      [:link {:rel "stylesheet" :href "../assets/default.css"}]
      ~@(for [css (config/config :site-css)]
@@ -90,22 +90,11 @@
      [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
       [:div.container
        ~(render/page-link-by-name block-map (config/config :main-page) :class "navbar-brand")
-       #_
-       [:button.navbar-toggler
-        {:type "button",
-         :data-toggle "collapse",
-         :data-target "#navbarResponsive",
-         :aria-controls "navbarResponsive",
-         :aria-expanded "false",
-         :aria-label "Toggle navigation"}
-        [:span.navbar-toggler-icon]]
-       [:div.collapse.navbar-collapse
-        {:id "navbarResponsive"}
-        ;; TODO make active page machinery mork
-        [:ul.navbar-nav.ml-auto
-         ~@(for [page (config/config :right-navbar)]
-             [:li.nav-item (render/page-link-by-name block-map page :class "nav-link")])
-         ]]]]
+       ;; TODO make active page machinery mork
+       [:ul.navbar-nav.ml-auto
+        ~@(for [page (config/config :right-navbar)]
+            [:li.nav-item (render/page-link-by-name block-map page :class "nav-link")])
+        ]]]
      [:div.container.main
       [:div.row
        "<!-- Sidebar Widgets Column -->"
@@ -153,6 +142,12 @@
           `[:p.m-0.text-center.text-white ~@(config/config :colophon)])
        [:p.m-0.text-center.text-white.small "Exported " ~(utils/render-time (utils/latest-export-time))]]
       ]
+
+
+     [:script {:src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+               :type "text/javascript"
+               :integrity "sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+               :crossorigin "anonymous"}]
      ]])
 
 (defn map-page
@@ -187,31 +182,36 @@
          [:hr {}]]
 
         ;; Experimenting with leaving this out, or offering as a popup thing (it's way too in-your-face right now)
-        #_ map-widget
-        #_
+        map-widget
         [:div.card.my-3
          [:h5.card-header
-          [:span "Map"]
+          [:a {:data-bs-toggle "collapse"
+               :data-bs-target "#mapgraph"
+;               :type "button"
+               :aria-expanded "false"
+               :aria-controls "mapgraph"}
+           "Map"]
           [:span {:style (utils/css-style
-                           {:float "right"
-                            :display "flex"
-                            })}
+                          {:float "right"
+                           :display "flex"
+                           })}
            (render/page-link-by-name block-map "Map" :alias "Full" )]]
-         [:div.card-body {:style "padding: 2px;"}
-          ;; TODO possible config to do embedded vs external
-          (graph/render-graph-embedded
-           block-map
-           output-dir
-           {:name (utils/clean-page-title block-id)
-            :width 290                  ;This depends on the column width css, currently my-3
-            :height 350
-            :controls? false
-            :link-distance 65
-            :node-charge -60
-            :node-radius 25
-            :radius-from block-id
-            :radius 1}) ;Sadly 1 is too small and 2 is too big. Need 1.1
-          ]]
+         [:div#mapgraph.collapse
+          [:div.card-body {:style (utils/css-style {:padding "2px"})}
+           ;; TODO possible config to do embedded vs external
+           (graph/render-graph-embedded
+            block-map
+            output-dir
+            {:name (utils/clean-page-title block-id)
+             :width 290                  ;This depends on the column width css, currently my-3
+             :height 350
+             :controls? false
+             :link-distance 65
+             :node-charge -60
+             :node-radius 25
+             :radius-from block-id
+             :radius 1}) ;Sadly 1 is too small and 2 is too big. Need 1.1
+           ]]]
 
         incoming-links-widget           ;TODO suppress if #incoming on page
         (let [linked-refs (bd/get-displayed-linked-references block-id block-map)]
@@ -225,7 +225,7 @@
     ;; TODO why isn't search widget done this way?
     (page-hiccup contents title-text title-hiccup block-map
                  :head-extra (graph/vega-lite-head) ;lite to support new dataviz
-                 :widgets [incoming-links-widget])
+                 :widgets [map-widget incoming-links-widget])
     ))
 
 
