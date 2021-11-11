@@ -125,6 +125,7 @@
   (let [bm (add-generated-pages (produce-bm2 (config/config)))]
     (tap bm)
     (output-bm bm)
+    (html-gen/generate-index-redir (config/config  :output-dir))
     (post-generation (config/config) bm)
     ))
 

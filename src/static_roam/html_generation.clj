@@ -41,6 +41,14 @@
                  (str "/pages/" (utils/html-file-title (:id block)))
                  output-dir)))
 
+(defn generate-index-redir
+  [output-dir]
+  (export-page
+   [:meta {:http-equiv "refresh"
+           :content (format "0; url=%s" (str "/pages/"  (utils/html-file-title (config/config :main-page))))}]
+   "/index.html"
+   output-dir))
+
 (defn generate-content-pages
   [block-map output-dir]
   (doseq [page (bd/displayed-pages block-map)]

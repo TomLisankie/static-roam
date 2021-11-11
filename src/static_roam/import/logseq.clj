@@ -22,10 +22,13 @@
         ]
     (letfn [(convert [block]
               (let [b
-                    {:id (str (or (:block/page-name block)
-                                  (:block/id block)))
+                    {
                      :title (or (get-in block [:block/properties :title])
-                                (:block/page-name block)) ; There is a block/title but it seems like garbage
+                                (:block/page-name block)) ; This is often wrong, eg lowercased, so ony use when we have tof
+                     :id (if (:block/page-name block)
+                           (or (get-in block [:block/properties :title])
+                               (:block/page-name block))
+                           (str (:block/id block)))
                      :uid (str (:block/id block))
                      :content (:block/content block) ;TODO strip out properties
                      :edit-time (utils/coerce-time (get-in block [:block/properties :updated-at]))
