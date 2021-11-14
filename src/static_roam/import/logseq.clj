@@ -12,6 +12,10 @@
 
 ;;; Mainly uses EDN export – but should compute that myself.
 
+;;; Note: there's not a lot to be gained by using that (and it requires a manual export
+;;; Might be better to just build from .md files like Logseq does. Might even steal their code!
+
+
 (defn logseq-edn->blockmap
   [f]
   (prn :reading f)
@@ -58,15 +62,15 @@
   (doseq [file @rendering/published-images]
     (u/ignore-report
     ;; this tree-hopping is ugly
-     (fs/copy+ (str logseq-dir "/assets/" file)
-               (str (:output-dir (config/config)) "/pages/" file)))))
+     (fs/copy+ (fs/expand-home (str logseq-dir "/assets/" file))
+               (fs/expand-home (str (:output-dir (config/config)) "/pages/" file))))))
 
 ;;; TODO Not Logseq specific
 (defn publish-assets
   []
   (doseq [file (fs/list-dir "resources/public")]
     (fs/copy+ file
-              (str (:output-dir (config/config)) "/assets/" (fs/base-name file)))))
+              (str (fs/expand-home (:output-dir (config/config))) "/assets/" (fs/base-name file)))))
 
 (defn post-generation
   []

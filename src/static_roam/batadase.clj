@@ -65,6 +65,7 @@
       thing
       (list thing))))
 
+;;; TODO name collides with clojure.core
 (defn ancestors
   [block-map block]
   ((u/transitive-closure (comp sequencify (partial block-parent block-map))) block))

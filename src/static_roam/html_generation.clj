@@ -45,7 +45,7 @@
   [output-dir]
   (export-page
    [:meta {:http-equiv "refresh"
-           :content (format "0; url=%s" (str "/pages/"  (utils/html-file-title (config/config :main-page))))}]
+           :content (format "0; url=%s" (str "pages/"  (utils/html-file-title (config/config :main-page))))}]
    "/index.html"
    output-dir))
 
