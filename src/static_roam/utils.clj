@@ -1,6 +1,6 @@
 (ns static-roam.utils
   (:require [me.raynes.fs :as fs]
-            [taoensso.truss :as truss :refer (have have! have?)]
+            [taoensso.truss :as truss :refer (have?)]
             [clojure.java.io :as io]
             [clojure.string :as s]
             [org.parkerici.multitool.core :as u]

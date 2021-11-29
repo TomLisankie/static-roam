@@ -17,13 +17,6 @@
   [metadata]
   (into (hash-map) (filter #(= 2 (count %)) (map #(s/split % #":: ") metadata))))
 
-(defn- site-metadata
-  [block-map]
-  (let [property-block-ids (:children (get block-map "SR Metadata"))
-        property-block-content (map #(:content (get block-map %)) property-block-ids)
-        prop-val-dict (metadata-properties property-block-content)]
-    prop-val-dict))
-
 ;;; Annoying amount of id/block switcheroo
 (defn linked-reference-template
   [block-map r]

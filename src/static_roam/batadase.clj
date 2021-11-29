@@ -162,8 +162,10 @@
 (defn entry-point?
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
   [block-map block]
-  (some #(tagged? block-map block %)
-        (config/config :entry-tags)))
+  (or (:public? block)                  ;the logseq block property
+      (some #(tagged? block-map block %)
+            (config/config :entry-tags))))
+      
 
 (defn entry-points
   [block-map]

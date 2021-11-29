@@ -39,6 +39,8 @@
                      :create-time (utils/coerce-time (get-in block [:block/properties :created-at]))
                      :children (doall (map (comp :id convert) (:block/children block)))
                      :page? (boolean (:block/page-name block))
+                     ;; Support Logseq publish tag
+                     :public? (get-in block [:block/properties :public])
                      }]
                 (swap! bm assoc (:id b) b)
                 b))]
