@@ -6,6 +6,10 @@
             [org.parkerici.multitool.core :as u]
             ))
 
+;;; Broken with Logseq because we don't really have block-level change times
+;;; For now, this is disabled and the recent page list will have to do.
+
+
 ;;; TODO should really link to block within page.
 ;;; TODO filter out empty blocks
 

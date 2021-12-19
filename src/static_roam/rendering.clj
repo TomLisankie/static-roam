@@ -119,10 +119,11 @@
     ;; There are packages that will do language-specific highlighting, don't care at the moment.
     [:code.codeblock content]))
 
+;;;  page can be page or page-id (requires bm)
 (defn page-link
-  [page & {:keys [alias class]}]
-  {:pre [(have? bd/block? page)]}
-  (let [page-id (:id page)]
+  [page & {:keys [alias class bm]}]     
+  (let [page (if (string? page) (get bm page) page)
+        page-id (:id page)]
     (if (bd/displayed? page)
       [:a (u/clean-map
            {:href (utils/html-file-title page-id)
@@ -142,7 +143,7 @@
   [bm page-name & rest]
   (cond (contains? bm page-name)
         (apply page-link (get bm page-name) rest)
-        (empty? bm)                     ;this can happen when a page title contains a link.
+        (empty? bm)                     ;this can happen when a page title contains a link. (???)
         [:span page-name]
         :else
         [:span.missing page-name]       ;In Logseq world, this happens if you have a single link to a non-existant (empty) page

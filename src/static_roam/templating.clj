@@ -86,8 +86,11 @@
        ;; TODO make active page machinery mork
        [:ul.navbar-nav.ml-auto
         ~@(for [page (config/config :right-navbar)]
-            [:li.nav-item (render/page-link-by-name block-map page :class "nav-link")])
-        ]]]
+            [:li.nav-item
+             (if (vector? page)
+               [:a {:href (second page) :class "nav-link"} (first page)]
+               (render/page-link page :class "nav-link" :bm block-map))]
+            )]]]
      [:div.container.main
       [:div.row
        "<!-- Sidebar Widgets Column -->"

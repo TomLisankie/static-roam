@@ -15,7 +15,7 @@
   [bm]
   (-> bm
       (html-gen/generated-page "Index" html-gen/generate-index-pages)
-      (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO would make sense to put these under a config
+      (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO not used in current Logseq, so shouldn't bother to generate
       (html-gen/generated-page "Map" html-gen/generate-global-map)
       ))
 
@@ -43,6 +43,7 @@
       utils/read-roam-json-from-zip
       (ju/schppit "block-dump.edn")))
 
+;;; BTW I want this available in all namespaces and it should be easy to do that.
 (defonce last-bm (atom nil))
 
 (defn pages
@@ -134,8 +135,6 @@
   [roam-export dir]
   (let [bm (block-map-json roam-export)]
     (static-roam.curation/image-copy-script bm dir)))
-  
-
 
 
 (set! *print-length* 100)               ;prevent trace from blowing up trying to print bms. Should be elsewhere

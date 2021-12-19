@@ -58,6 +58,7 @@
 
 ;;; Yeah this sucks, each special page has like 3 parts where 1 would do (here, templating, and core).
 
+;;; Out of service for Logseq
 (defn generate-recent-page
   [block-map output-dir]
   (export-page

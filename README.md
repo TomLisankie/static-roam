@@ -4,6 +4,14 @@ A static-site generator for [Roam Research](https://roamresearch.com/)
 
 [A tutorial for setting up your own site](http://www.hyperphor.com/ammdi/pages/static-roam-tutorial.html)
 
+# Logseq
+
+I've moved from Roam to Logseq, in a rather sloppy fashion, so the code that adapts to Logseq is not very well organized. 
+
+Currently Logseq site generation is driven from a Logseq EDN export. This may change; it's logistically easier to parse the markdown which is logseq's source of truth directly.
+
+Because Logseq stores images locally rather than on the cloud, we now have to publish them along with the html. To suppor this, the config has a pointer into the repo, and there is logic to figure out which images are published and need to be copied to the output.
+
 # Status
 
 This is a fork from [the original](https://github.com/TomLisankie/static-roam) by Tom Lisankie. I'm using it for a personal project and it's very much in flux. 
