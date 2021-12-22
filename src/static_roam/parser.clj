@@ -33,6 +33,8 @@
     ;; TODO this shit is ugly but I couldn't figure out better way, guess I'm stupid
     :text                   (fn [s] s)
     :textier                (fn [s] s)
+    ;; This makes up for the fact that there are now two alternative italic syntaxes
+    :italic                 (fn [s] `[:italic ~@(rest s)]) 
     }
    tree))
 
