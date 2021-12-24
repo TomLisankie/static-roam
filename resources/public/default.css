@@ -297,3 +297,8 @@ iframe {
     color: var(--link);
     float: left;
 }
+
+.error {
+    background: pink;
+    border: 1px solid red;
+}

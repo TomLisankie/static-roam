@@ -34,24 +34,24 @@
   (bd/displayed-regular-pages block-map))
 
 (defn graph-data
-  "radius-from: name of central page"
-  [block-map {:keys [radius-from radius max-degree] :or {radius 2 max-degree 8}}]
-  (let [pages (->> block-map
-                  graph-pages
-                  (filter (if radius-from
-                            (let [neighborhood (set (map :content (page-neighbors block-map (get block-map radius-from) radius max-degree)))]
-                              #(contains? neighborhood (:content %)))
-                            identity))
-                  (map (fn [index block] (assoc block
-                                                :index index
-                                                :page-refs (bd/page-refs block-map block)
-                                                :link (utils/html-file-title (or (:title block) (:content block)))))
-                       (range))
-                  )
+  "center: name of central page"
+  [block-map {:keys [center radius max-degree] :or {radius 2 max-degree 8}}]
+  (let [pages
+        (if center
+          (page-neighbors block-map (get block-map center) radius max-degree)
+          (->> block-map
+               graph-pages))
+        pages
+        (map (fn [index block] (assoc block
+                                      :index index
+                                      :page-refs (bd/page-refs block-map block)
+                                      :link (utils/html-file-title (or (:title block) (:content block)))))
+             (range)
+             pages)
         indexed (u/index-by :id pages)
         ;; Starting nodes, either radius-frame or an entry point if doing the whole graph
-        start? (fn [b] (if radius-from  
-                         (= (:id b) radius-from)
+        start? (fn [b] (if center  
+                         (= (:id b) center)
                          (bd/entry-point? block-map b)))
         ]
     [{:name "node-data"
@@ -205,12 +205,12 @@
 (defn render-graph
   "Writes out the graph json and returns the hiccup to embed it"
   [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]
-  (utils/write-json (str output-dir "/pages/graphs/" name ".json") (spec bm options))
+  (utils/write-json (str output-dir "/assets/graphs/" name ".json") (spec bm options))
   (let [id (str "view_" name)]
     [:div
      [:div.graph {:id id :style (format "height: %spx;" (+ height (if controls? 300 0)))}]
      [:script
-      (format "vegaEmbed('#%s', 'graphs/%s.json');" id name)
+      (format "vegaEmbed('#%s', '../assets/graphs/%s.json');" id name)
       ]]))
 
 (defn render-vega-embedded
@@ -225,7 +225,7 @@
       ]]))
 
 (defn render-graph-embedded
-  "the hiccup to embed graph, including the json"
+  "returns the hiccup to embed graph, including the spec and data in json"
   [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]
   (render-vega-embedded (spec bm options) name (+ height (if controls? 300 0))))
 

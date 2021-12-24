@@ -121,10 +121,10 @@
 
 ;;;  page can be page or page-id (requires bm)
 (defn page-link
-  [page & {:keys [alias class bm]}]     
-  (let [page (if (string? page) (get bm page) page)
+  [opage & {:keys [alias class bm]}]     
+  (let [page (if (string? opage) (get bm opage) opage)
         page-id (:id page)]
-    (if (bd/displayed? page)
+    (if (and page (bd/displayed? page))
       [:a (u/clean-map
            {:href (utils/html-file-title page-id)
             ;; TODO behavior with empties should be configurable, I keep
@@ -136,7 +136,7 @@
        (block-content->hiccup (or alias page-id))]
       (do
         ;; This is normal but a sign that target might want to be exposed.
-        (prn (str "ref to excluded page: " page-id))
+        (prn (str "ref to excluded page: " (or page-id opage)))
         (block-content->hiccup (or alias page-id))))))
 
 (defn page-link-by-name
@@ -190,7 +190,7 @@
   
 (defn ele->hiccup
   [ast-ele block-map & [block]]
-  (utils/debuggable
+  (utils/debuggable                     ;TODO for dev, but for production it should just render an error box rather than crapping out. 
    :ele->hiccup [ast-ele]
    ;; TODO this approach is broken, it hides page-refs within italics. 
    (letfn [(recurse [s]                 ;TODO probably needs a few more uses
@@ -222,11 +222,15 @@
                           (page-link-by-name block-map page :alias alias))
             :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
                          ;; ARGh can't work because of fucking namespace rules. POS!
-                         (if (and block (= (bd/block-page block-map ref-block)
-                                           (bd/block-page block-map block)))
-                           (sidenote block-map ref-block)
-                           [:div.block-ref
-                            (block-hiccup ref-block block-map)]))
+                         (try 
+                           (if (and block (= (bd/block-page block-map ref-block)
+                                             (bd/block-page block-map block)))
+                             (sidenote block-map ref-block)
+                             [:div.block-ref
+                              (block-hiccup ref-block block-map)])
+                           ;; Specifically, bad block refs will cause this.
+                           (catch Throwable e
+                             [:div.error "Couldn't render: " (str ast-ele)])))
             :hashtag (let [ht (utils/parse-hashtag ele-content)]
                        (or (bd/special-hashtag-handler block-map ht block)
                            (page-link-by-name block-map ht)))
@@ -300,6 +304,7 @@
         block (get block-map block-id)]
     (when (bd/displayed? block)
       [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
+       "\n"
        [:li.block
         (when (config/config :dev-mode)
           [:a.edit {:href (roam-url block-id)

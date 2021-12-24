@@ -52,10 +52,19 @@
 (def descendents
   (u/transitive-closure :dchildren))
 
+;;; TODO DWIMish. Maybe turn into a macro and use everywhere. Or put the map in a global, I don't care if that's bad Clojure
+(defn coerce-block
+  [b block-map]
+  (if (block? b)
+    b
+    (or (get block-map b)
+        (throw (ex-info "Not a block" {:thing b})))))
+
 (defn block-parent
   [block-map block]
-  (and (:parent block)
-       (get block-map (:parent block))))
+  (let [block (coerce-block block block-map)]
+    (and (:parent block)
+         (get block-map (:parent block)))))
 
 (defn sequencify
   "Turn thing into a sequence if it already isn't one"
@@ -78,7 +87,8 @@
 
 (defn ancestors
   [block-map block]
-  (rest (ancestors0 block-map block)))
+  (let [block (coerce-block block block-map)]
+    (rest (ancestors0 block-map block))))
   
 
 (defn block-children
@@ -101,13 +111,14 @@
 
 (defn block-page
   [block-map block]
-  (if-let [parent (block-parent block-map block)]
-    (block-page block-map parent)
-    block))
+  (let [block (coerce-block block block-map)]
+    (if-let [parent (block-parent block-map block)]
+      (block-page block-map parent)
+      block)))
 
 (defn backward-page-refs
   [bm page]
-  (map :content
+  (map :id
        (filter displayed?
                (map (comp (partial block-page bm) bm)
                     (:linked-by page)))))

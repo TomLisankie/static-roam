@@ -11,7 +11,12 @@
             )
   )
 
-;;; TODO → multitool
+;;; I mock the Clojure style gods! And introduce a convention.
+;;; The + hints that this is often a temporary stopgap and the state should
+;;; be managed in some better fashion in a more production-y environment.
+(def +for-import+ false)                
+
+;;; TODO → multitool 
 (u/defn-memoized n-chars
   [n char]
   (str/join (repeat n char)))
@@ -73,12 +78,18 @@
 ;;; Returns list of lines
 (defn block->md
   [depth block]
-  (when (bd/displayed? block)
-    (cons (str (n-chars (* depth 4) \space)
+  (when (or +for-import+
+            (bd/displayed? block))
+    (cons (str (if +for-import+
+                 (n-chars depth \tab)
+                 (n-chars (* depth 4) \space))
                "- "
+               ;; Might not want to do this in +for-import+ mode, but doesn't matter
                (when (and (:heading block) (> (:heading block) 0))
                  (str (n-chars (:heading block) \#) " "))
-               (markdown-content block))
+               (if +for-import+
+                 (:content block)
+                 (markdown-content block)))
           (filter identity (mapcat (partial block->md (+ 1 depth)) (:dchildren block))))))
 
 (defn render-date-range

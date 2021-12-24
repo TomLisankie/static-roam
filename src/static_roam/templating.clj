@@ -136,6 +136,9 @@
       [:div.container
        ~(when (config/config :colophon)
           `[:p.m-0.text-center.text-white ~@(config/config :colophon)])
+       ;; Out of service because it adds a gratuitoous change to all files, not good with git.
+       ;; TODO maybe a server-side include or frame or something.
+       #_
        [:p.m-0.text-center.text-white.small "Exported " ~(utils/render-time (utils/latest-export-time))]]
       ]
      [:script {:src "https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
@@ -192,7 +195,7 @@
          [:div#mapgraph.collapse
           [:div.card-body {:style (utils/css-style {:padding "2px"})}
            ;; TODO possible config to do embedded vs external
-           (graph/render-graph-embedded
+           (graph/render-graph ;; render-graph-embedded
             block-map
             output-dir
             {:name (utils/clean-page-title block-id)
@@ -202,8 +205,8 @@
              :link-distance 65
              :node-charge -60
              :node-radius 25
-             :radius-from block-id
-             :radius 1}) ;Sadly 1 is too small and 2 is too big. Need 1.1
+             :center block-id
+             :radius 2}) ;Sadly 1 is too small and 2 is too big. Need 1.1
            ]]]
 
         incoming-links-widget           ;TODO suppress if #incoming on page

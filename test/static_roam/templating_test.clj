@@ -21,5 +21,5 @@
           :id "__On Purpose__" ,
           :depth 4,
           :heading -1})
-        hiccup (block-page-hiccup "__On Purpose__"  {"__On Purpose__" page} "/output") ]
+        hiccup (block-page-hiccup "__On Purpose__"  {"__On Purpose__" page} "output") ]
     (is (structure-contains? [:h1 [:i "On Purpose"]] hiccup))))
