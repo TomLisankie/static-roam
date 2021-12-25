@@ -134,11 +134,6 @@
   [bm string]
   (filter #(re-find (re-pattern string) (or (:content %) "")) (vals bm)))
 
-;;; → multitool
-(defn download
-  [url to]
-  (clojure.java.shell/sh "curl" url "-o" to))
-
 (defn roam-image?
   "Returns the extension if this is in fact a roam image, nil otherwise"
   [url]
@@ -153,8 +148,9 @@
       (when-let [ext (roam-image? image-source)]
         (let [local-file (str directory (:title (bd/block-page bm image-block)) "-" (:id image-block) "." ext)]
           (prn :download local-file image-source)
-          (download image-source local-file))))))
+          (ju/download image-source local-file))))))
 
+;;; For multitool, except it's kind of stupid and unnecesary.
 (defn collecting
   "Exec is a fn of one argument, which is called and passed another fn it can use to collect values; the collection is returned."
   [exec]
@@ -162,6 +158,7 @@
         collect #(swap! acc conj %)]
     (exec collect)
     @acc))
+
 
 (defn page-images
   [bm]
@@ -222,6 +219,7 @@
 #_
 (file-subst "/misc/repos/ammdi-augmented/pages/Whole Earth Catalog.md" substs "../assets/")
 
+#_
 (doseq [f (fs/list-dir "/misc/repos/ammdi-augmented/pages/")]
   (prn f)
   (file-subst f substs "../assets/"))

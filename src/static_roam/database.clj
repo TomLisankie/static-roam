@@ -1,7 +1,6 @@
 (ns static-roam.database
   (:require [static-roam.parser :as parser]
             [static-roam.batadase :as bd]
-            [static-roam.edn :as edn]
             [static-roam.utils :as utils]
             [static-roam.config :as config]
             [org.parkerici.multitool.core :as u]
@@ -153,22 +152,7 @@
       roam-db-1
       ))
 
-(defn roam-db-edn
-  [roam-edn-file]
-  (-> roam-edn-file
-      edn/read-roam-edn-raw
-      edn/process-roam-edn
-      edn/edn->block-map
-      roam-db-1
-      ))
 
-;;; Dev only, generate a reasonable representation of the raw edn
-(defn roam-db-edn-lightly-processed
-  [roam-edn-file]
-  (-> roam-edn-file
-      edn/read-roam-edn-raw
-      edn/process-roam-edn
-      ))
 
 
 

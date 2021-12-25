@@ -137,7 +137,7 @@
        ~(when (config/config :colophon)
           `[:p.m-0.text-center.text-white ~@(config/config :colophon)])
        ;; Out of service because it adds a gratuitoous change to all files, not good with git.
-       ;; TODO maybe a server-side include or frame or something.
+       ;; TODO maybe a server-side include or frame or something. Or a config option
        #_
        [:p.m-0.text-center.text-white.small "Exported " ~(utils/render-time (utils/latest-export-time))]]
       ]
@@ -177,7 +177,6 @@
          (render/page-hiccup block-id block-map)
          [:hr {}]]
 
-        ;; Experimenting with leaving this out, or offering as a popup thing (it's way too in-your-face right now)
         map-widget
         [:div.card.my-3
          [:h5.card-header

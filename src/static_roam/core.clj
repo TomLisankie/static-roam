@@ -2,7 +2,6 @@
   (:require [static-roam.config :as config]
             [static-roam.utils :as utils]
             [static-roam.database :as database]
-            [static-roam.markdown :as md]
             [static-roam.batadase :as bd]
             [static-roam.html-generation :as html-gen]
             [static-roam.graph :as graph]
@@ -93,7 +92,7 @@
 (defn reset
   []
   (reset-output)
-  (u/memoize-reset))
+  (u/memoize-reset!))
 
 (defn output-bm
   [bm]
@@ -101,6 +100,9 @@
     (graph/write-page-data bm output-dir)
     (html-gen/generate-static-roam bm output-dir))
   ;; TODO options for writing all pages
+  ;;; Turning this off for now, Logseqe output is more important
+  ;;; Should be rationalized; html and md output should be modules
+  #_
   (when (config/config :markdown-output-dir)
     (md/write-displayed-pages @last-bm (config/config :markdown-output-dir)))
   (prn (bd/stats @last-bm))

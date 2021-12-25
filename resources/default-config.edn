@@ -1,5 +1,9 @@
 ;;; TODO document these
-{ ; :source "~/Downloads"
+{:source {:type :logseq
+          :repo "~/repos/logseq-repo"
+          :directory "~/Downloads"
+          :file-pattern ".edn"          ;You probably want something more specific
+          } 
  :entry-tags ["EntryPoint"]
  :exit-tags #or [#split [#env ROAM_EXIT_TAGS] ["ExitPoint" "Private"]]
  :dev-mode #boolean #or [#env ROAM_DEV_MODE "false"]
@@ -10,12 +14,12 @@
  :short-title "MyGarden"
  :main-page "My Beautiful Garden"
  :colophon ["Copyright © " [:a {:href "http://mysite.com" :style "color: white;"} "MySite"] " 2020-2021"]
-;;; :google-analytics "G-whatever"         ;or nil to leave out
+ :google-analytics nil                  ; GA Token, "G-xxxxx" 
 
  ;; elements can be either a page name or a [text url] pair.
  :right-navbar ["About" "Index" "New"]  
 ;;; :roam-base-url "https://roamresearch.com/#/app/mygraph/page/"
- :markdown-output-dir false
- :real-base-url "https://mysite.com/mygraph/pages/" ; Used for markdown version to point home. 
- :bullets? false                        ;TODO not implemented 
+;;; :markdown-output-dir false
+;;; :real-base-url "https://mysite.com/mygraph/pages/" ; Used for markdown version to point home. 
+ :bullets? false                        ;TODO not implemented; change this in CSS
  }

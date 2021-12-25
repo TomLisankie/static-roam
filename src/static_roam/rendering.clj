@@ -171,16 +171,6 @@
     [(str/join seq)]
     seq))
 
-;;; This is a makeshift way to support special-case tags.
-;;; If there are a lot of these, make it more data-driven, but for now it's a hack.
-#_
-(defn special-hashtag-handling
-  [bm ht block-id]
-  (case ht
-    "dataviz1" (graph/render-dataviz bm )
-    "incoming" 
-    nil))
-
 ;;; Smelly
 (defn new-head
   [thing head]

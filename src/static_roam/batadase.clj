@@ -66,30 +66,16 @@
     (and (:parent block)
          (get block-map (:parent block)))))
 
-(defn sequencify
-  "Turn thing into a sequence if it already isn't one"
-  [thing]
-  (when thing
-    (if (sequential? thing)
-      thing
-      (list thing))))
-
-;;; TODO name collides with clojure.core
-(defn ancestors
-  [block-map block]
-  ((u/transitive-closure (comp sequencify (partial block-parent block-map))) block))
-
 (defn ancestors0
   [block-map block]
   (cons block (if-let [parent (block-parent block-map block)]
                 (ancestors0 block-map parent)
                 nil)))
 
-(defn ancestors
+(defn block-ancestors
   [block-map block]
   (let [block (coerce-block block block-map)]
     (rest (ancestors0 block-map block))))
-  
 
 (defn block-children
   [block-map block]
@@ -173,6 +159,7 @@
 (defn entry-point?
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
   [block-map block]
+  ;; TODO this should be done in logseq import, like convert this to a pseudo-tag
   (or (:public? block)                  ;the logseq block property
       (some #(tagged? block-map block %)
             (config/config :entry-tags))))
@@ -207,19 +194,12 @@
 ;;; Some bogus dates creep in somehow, this removes them (TODO figure this out better)
 (def earliest-date  #inst "2020-01-01T00:00")
 
-;;; → Multitool
-;;; Surely this must be built-in somewhere? Oh yeah, some-fn
-(defn orf [& fs]
-  "Given some fns, return a new fn that applies them successively until a non-nil value is generated"
-  (fn [& args]
-    (some (fn [f] (apply f args)) fs)))
-
 (defn date-range [page]
   (let [blocks (block-descendents page)
         visible-blocks (filter displayed? blocks)
         visible-dates (filter (partial u/<* earliest-date)
                               ;; TODO should use both
-                              (map (orf :edit-time :create-time) visible-blocks))]
+                              (map (some-fn :edit-time :create-time) visible-blocks))]
     [(min* visible-dates) (max* visible-dates)]))
 
 (defn stats [bm]

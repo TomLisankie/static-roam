@@ -5,7 +5,10 @@
             [org.parkerici.multitool.cljcore :as ju]
             ))
 
-;;; TODO move to import.athens or somesuch
+;;; Old and undeveloped, not used.
+;;; Requires adding to project.clj:
+;                 [datascript "1.1.0"]
+;                [datascript-transit "0.3.0"]
 
 
 ;;; "/Users/mtravers/Documents/athens/index.transit"

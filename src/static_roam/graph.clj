@@ -202,6 +202,9 @@
 
 ;;; Static render
 
+;;; TODO OK this scheme is clunky and I think unnecessary; there must be some way to have a single global
+;;; graph for vega's data, and just selectively display nodes. 
+
 (defn render-graph
   "Writes out the graph json and returns the hiccup to embed it"
   [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]

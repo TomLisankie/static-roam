@@ -1,8 +1,9 @@
-(ns static-roam.edn
+(ns static-roam.import.edn
   (:require [static-roam.utils :as utils]
             [static-roam.batadase :as bd]
-            [org.parkerici.multitool.core :as u]
-            [org.parkerici.multitool.cljcore :as ju]))
+            [org.parkerici.multitool.core :as u]))
+
+;;; Currently unused I believe
 
 ;;; Experiments in reading Roam EDN dump
 ;;; Why? The JSON format is lossy, it turns out. It is missing the UIDs for pages;
@@ -217,7 +218,7 @@
           (field :node/title #(if (:page? %) (:content %) nil))
 
           (field :block/page (when-not page? page))
-          (field* :block/parents (fn [block] (map #(get-in bm [(:id %) :db/id]) (bd/ancestors bm block))))
+          (field* :block/parents (fn [block] (map #(get-in bm [(:id %) :db/id]) (bd/block-ancestors bm block))))
 
           (field* :block/refs (fn [block]
                                 (remove nil?
@@ -246,3 +247,20 @@
   (let [title (or (:title page) (:content page))]
     (when title
       (re-matches bd/daily-notes-regex title))))
+
+(defn roam-db-edn
+  [roam-edn-file]
+  (-> roam-edn-file
+      read-roam-edn-raw
+      process-roam-edn
+      edn->block-map
+      roam-db-1
+      ))
+
+;;; Dev only, generate a reasonable representation of the raw edn
+(defn roam-db-edn-lightly-processed
+  [roam-edn-file]
+  (-> roam-edn-file
+      read-roam-edn-raw
+      process-roam-edn
+      ))
