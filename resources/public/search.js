@@ -1,5 +1,4 @@
 // Hacky code to support search widget
-// Partly stolen from Librium
 // TODO should have a visible "no results" indicater
 // TODO might want to trim results to n or use threshold
 
@@ -79,3 +78,20 @@ function displayResults(results) {
     }
 }
     
+// Not search, just here for convenience: persist collaps state of map
+
+function maybeOpenMap() {
+    var open = sessionStorage.getItem('map') == 'true';
+    // var open = true;
+    if (open) {
+	document.getElementById('mapgraph').classList.add("show");
+    }
+}
+
+document.addEventListener("DOMContentLoaded", maybeOpenMap);
+
+function toggleMap() {
+    var open = sessionStorage.getItem('map') == 'true';
+    console.log('map is', open);
+    sessionStorage.setItem('map', !open);
+}

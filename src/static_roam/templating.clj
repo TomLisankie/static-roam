@@ -184,7 +184,9 @@
                :data-bs-target "#mapgraph"
 ;               :type "button"
                :aria-expanded "false"
-               :aria-controls "mapgraph"}
+               :aria-controls "mapgraph"
+               :onclick "toggleMap();"  ;hack to persist state, see search.js
+               }
            "Map"]
           [:span {:style (utils/css-style
                           {:float "right"
