@@ -343,10 +343,13 @@
                   ()))]
     (str/join "" (text (block-hiccup block {})))))
 
+;;; Used for search index
 (defn block-full-text
   [block-map block]
-  (str/join " " (cons (block-local-text block)
-                      (map #(block-full-text block-map (get block-map %))
-                           (:children block)))))
+  (if (bd/displayed? block)
+    (str/join " " (cons (block-local-text block)
+                        (map #(block-full-text block-map (get block-map %))
+                             (:children block))))
+    ""))
 
 
