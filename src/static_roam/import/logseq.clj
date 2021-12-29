@@ -45,6 +45,7 @@
                      :page? (boolean (:block/page-name block))
                      ;; Support Logseq publish tag
                      :public? (get-in block [:block/properties :public])
+                     :alias (get-in block [:block/properties :alias])
                      }]
                 (swap! bm assoc (:id b) b)
                 b))]

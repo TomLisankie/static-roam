@@ -122,7 +122,8 @@
 ;;;  page can be page or page-id (requires bm)
 (defn page-link
   [opage & {:keys [alias class bm]}]     
-  (let [page (if (string? opage) (get bm opage) opage)
+  (let [page (if (string? opage) (get (bd/alias-map bm) opage) opage)
+        alias (or alias (and (string? opage) opage)) ;argh
         page-id (:id page)]
     (if (and page (bd/displayed? page))
       [:a (u/clean-map
@@ -141,13 +142,14 @@
 
 (defn page-link-by-name
   [bm page-name & rest]
-  (cond (contains? bm page-name)
-        (apply page-link (get bm page-name) rest)
+  (let [bm (bd/alias-map bm)]
+    (cond (contains? bm page-name)
+        (apply page-link page-name :bm bm rest)
         (empty? bm)                     ;this can happen when a page title contains a link. (???)
         [:span page-name]
         :else
         [:span.missing page-name]       ;In Logseq world, this happens if you have a single link to a non-existant (empty) page
-        ))
+        )))
 
 (declare block-hiccup)
 
@@ -207,6 +209,7 @@
                          2 [:h2 base]
                          3 [:h3 base]))
             :page-link (page-link-by-name block-map (utils/remove-double-delimiters ele-content))
+            ;; Roam only feature, TODO should convert these to Logseq alliases and remove from parser
             :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
                                                          ele-content)]
                           (page-link-by-name block-map page :alias alias))
