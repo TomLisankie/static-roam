@@ -133,7 +133,7 @@ blockquote {
     padding-bottom: 10px;
     margin-bottom: 0px;
     border-left: 3px solid var(--blockquote-border);
-    border-radius: 10px;
+    /* border-radius: 10px; decided I don't like this */
     width: 90%;
 }
 

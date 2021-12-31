@@ -36,7 +36,7 @@ done = "{{[[DONE]]}}"
 block-embed = #"\{\{embed: .*?\}\}" | #"\{\{\[\[embed\]\]: .*?\}\}"
 bare-url = #"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
 blockquote = <"> "> block
-hr = "---"
+hr = #"^\s*---"   (* spaces are for logseq which insists on adding them spuriously  *)
 latex= #"\$\$(.*?)\$\$"
 
 (* should match all punc that is not otherwise used for syntax, not sure I have everything  *)
