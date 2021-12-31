@@ -181,6 +181,7 @@
     (assoc thing 0 head)
     [head thing]))
   
+;;; Does most of the real work of rendering.
 (defn ele->hiccup
   [ast-ele block-map & [block]]
   (utils/debuggable                     ;TODO for dev, but for production it should just render an error box rather than crapping out. 
@@ -245,11 +246,18 @@
             :bare-url (make-content-from-url ele-content)
             :blockquote (new-head (ele->hiccup ele-content block-map block) :blockquote)
                                         ;ast-ele
-            :block (let [contents (filter identity (map #(ele->hiccup % block-map block) (rest ast-ele)))]
-                     (case (count contents)
-                       0 nil
-                       1 (first contents)
-                       `[:span ~@contents]))
+            :block (let [contents (filter identity (map #(ele->hiccup % block-map block) (rest ast-ele)))
+                         ;; bring this property up to a useful level
+                         ;; TODO should perhaps be done elsewhere and/or in a more general way
+                         class (some :class (:dchildren block))]
+                     (cond (empty? contents)
+                           nil
+                           class
+                           `[:span {:class ~class} ~@contents]
+                           (> (count contents) 1) 
+                           `[:span ~@contents]
+                           :else
+                           (first contents)))
             :block-embed `[:pre "Unsupported: " (str ast-ele)] ;TODO temp duh
             :hr [:hr]
             ;; See https://www.mathjax.org/ This produces an inline LaTex rendering.

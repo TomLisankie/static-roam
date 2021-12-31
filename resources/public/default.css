@@ -31,6 +31,7 @@ body {
 
 .main {
     margin-top: 80px;
+    margin-left: 10px;
 }
 
 .block {
@@ -184,6 +185,11 @@ img {
     margin-right: auto;
 }
 
+.image-border {
+    border: 1px solid lightgray;
+    padding: 5px;
+}
+
 /* center videos (TODO not working, I think because they are within a <span>?a) */
 iframe {
     margin-left: auto;
@@ -251,7 +257,7 @@ iframe {
     clear: right;
     position: absolute;
     display: inline-flex;	/* gets the vertical alignment right */
-    left: 1200px;
+    left: 1120px;
     width: 360px;
     padding-right: 100px;
     /* padding-top: 10px;  puts some whitespace on top, but fucks with alignment of asterisks */    

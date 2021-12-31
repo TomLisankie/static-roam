@@ -6,7 +6,6 @@
             [static-roam.config :as config]
             [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
-            [org.parkerici.multitool.cljcore :as ju]
             [clojure.string :as str]
             )
   )
@@ -44,8 +43,10 @@
                      :children (doall (map (comp :id convert) (:block/children block)))
                      :page? (boolean (:block/page-name block))
                      ;; Support Logseq publish tag
+                     ;; TODO make this more general
                      :public? (get-in block [:block/properties :public])
                      :alias (get-in block [:block/properties :alias])
+                     :class (get-in block [:block/properties :class])
                      }]
                 (swap! bm assoc (:id b) b)
                 b))]
