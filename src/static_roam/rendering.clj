@@ -104,6 +104,7 @@
         :else
         (make-link-from-url url)))
 
+;;; Extremely smelly. 
 (defn unspan
   "Remove :span elts that are basically no-ops. Would be cleaner to not generate"
   [hiccup]

@@ -10,7 +10,8 @@
 ;                 [org.clojars.simon_brooke/html-to-md "0.3.0"] 
 ;; Not suitable, it only renders html
 ;;                 [markdown-clj "1.10.7"]
-                 [org.commonmark/commonmark "0.18.0"]
+;; Used by logseq-from-md, not there yet
+;;                 [org.commonmark/commonmark "0.18.0"]
                  [html-to-md/html-to-md "0.3.0"]
                  [org.parkerici/multitool "0.0.17"] ;TODO publish this version
                  [com.taoensso/truss "1.6.0"]
