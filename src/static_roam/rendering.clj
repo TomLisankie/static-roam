@@ -204,6 +204,7 @@
 ;;            :metadata-tag [:b [:a {:href (utils/html-file-title ele-content)}
 ;;                               (subs ele-content 0 (dec (count ele-content)))]]
             :block-property nil         ;These aren't included in output
+            :prop-block nil
             :heading (let [base (ele->hiccup (nth ast-ele 2) block-map)]
                        (case (count (second ast-ele))
                          1 [:h1 base]
