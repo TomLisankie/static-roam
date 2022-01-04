@@ -148,7 +148,7 @@
       (when-let [ext (roam-image? image-source)]
         (let [local-file (str directory (:title (bd/block-page bm image-block)) "-" (:id image-block) "." ext)]
           (prn :download local-file image-source)
-          (ju/download image-source local-file))))))
+          (ju/local-file image-source local-file))))))
 
 ;;; For multitool, except it's kind of stupid and unnecesary.
 (defn collecting
@@ -223,3 +223,59 @@
 (doseq [f (fs/list-dir "/misc/repos/ammdi-augmented/pages/")]
   (prn f)
   (file-subst f substs "../assets/"))
+
+
+;;; Some general tooling for doing transforms. Note this might want to get packaged up into an import utility if I ever finish that.
+
+(defn all-content-pages
+  []
+   (concat (fs/list-dir "/opt/mt/repos/ammdi/journals/")
+                      (fs/list-dir "/opt/mt/repos/ammdi/pages")))
+
+
+(defn convert-twitter-links
+  [l]
+  (let [link (re-find #"http.*twitter.com/\S*" l)]
+    (when (and link
+               (not (re-find #"\{\{tweet" l)))
+      (str/replace l  #"http.*twitter.com/\S*" (format "{{tweet %s}}" link)))))
+
+;;; → multitool
+(defn transform-file
+  [f file]
+  (let [out (fs/temp-name (str f))]
+    (f file out)
+    (fs/rename out file)))
+
+;;; → multitool (update existing)
+(defn process-file-lines
+  ([f in out]
+   (ju/file-lines-out out (map f (ju/file-lines in))))
+  ([f file]
+   (transform-file
+    (fn [in out] (ju/file-lines-out out (map f (ju/file-lines in))))
+    file)))
+
+(defn process-file
+  [file f]
+  (process-file-lines
+   (fn [l] (or (f l) l))
+   file))
+
+(defn process-files
+  [line-function]
+  (doseq [f (all-content-pages)]
+    (process-file f line-function)))
+
+;;; Run once.
+#_
+(process-files convert-twitter-links)
+  
+  
+
+;;; Note to me: M-x magit-log-buffer-file to see git history for a file
+(defn find-disappeared-pages
+  []
+  (doseq [f (all-content-pages)]
+    (when (< (fs/size f) 5)
+      (prn (str f) (fs/size f) (java.util.Date. (fs/mod-time f))))))
