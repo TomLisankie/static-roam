@@ -58,7 +58,8 @@
                 :blockquote (struct-entities (second struct))
                 :alias (if-let [v (second (re-find #"\[.*\]\(\[\[(.*)\]\]\)" (second struct)))];kluge alert
                          [v] [])
-                [])))]
+                ;; default
+                (mapcat struct-entities (rest struct)))))]
     (set (struct-entities (:parsed block)))))
 
 ;;; New version computes degree as well as acctually the map

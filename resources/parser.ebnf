@@ -2,7 +2,7 @@
 (* TODO should make more use of instaparse compositionality *)
 (* TODO I suppose there should be separate versions of this for Roam and Logseq. *)
 
-block = block-property* (heading | blockquote | prop-block | (syntax-in-block / text)*) block-property*
+block = block-property* (tweet | heading | blockquote | prop-block | (syntax-in-block / text)*) block-property*
 
 <syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | code-line | code-block | youtube | bold | italic | bare-url | page-alias | hr | latex ) (* add query later*)
 
@@ -34,7 +34,8 @@ todo = "{{[[TODO]]}}"
 done = "{{[[DONE]]}}"
 
 block-embed = #"\{\{embed: .*?\}\}" | #"\{\{\[\[embed\]\]: .*?\}\}"
-bare-url = #"(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
+bare-url =  #"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+
 blockquote = <"> "> block
 hr = #"^\s*---"   (* spaces are for logseq which insists on adding them spuriously  *)
 latex= #"\$\$(.*?)\$\$"
@@ -46,3 +47,5 @@ textier = #'[A-Za-z0-9\.\,\!\"\'\?]+|[\s\W]+?'
 heading = #"#{1,3}" block
 
 prop-block = #"---\n(.|\n)*---\n\n"
+
+tweet = <"{{tweet ">, bare-url, <"}}">

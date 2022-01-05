@@ -82,6 +82,7 @@
   [:a.external {:href string} string])
 
 ;;; Tried to build this into instaparse parser, but couldn't make it take precedence over :bare-url
+;;; Note: this only is relevant to Roam; Logseq uses {{tweet ...}} syntax
 (defn- twitter-url?
   [url]
   (re-matches #"https:\/\/twitter.com\/\S*" url))
@@ -262,6 +263,7 @@
             :hr [:hr]
             ;; See https://www.mathjax.org/ This produces an inline LaTex rendering.
             :latex [:span.math.display (str "\\(" (utils/remove-double-delimiters ele-content) "\\)")]
+            :tweet (embed-twitter (second (second ast-ele)))
             )))))))
 
 ;;; Used for converting things like italics in blocknames

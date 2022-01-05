@@ -270,7 +270,8 @@
         to-add (map first (filter (fn [[ref count]] (> count 1)) missing))]
     ;; Missing means referred but not present
     ;; Add these pages iff they have >1 reference (otherwise, really no point)
-    (prn :missing (count missing) :adding (count to-add))
+    (prn :missing (count missing) :adding (count to-add)
+         missing to-add)
     (loop [bm bm
            [page & rest] to-add]
       (if page
