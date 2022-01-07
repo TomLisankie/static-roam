@@ -146,6 +146,7 @@
           ;; See rendering/format-image
           image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" markdown))]
       (when-let [ext (roam-image? image-source)]
+        ;; TODO has failure modes if page name contains / ! and maybe other chars. 
         (let [local-file (str directory (:title (bd/block-page bm image-block)) "-" (:id image-block) "." ext)]
           (prn :download local-file image-source)
           (ju/local-file image-source local-file))))))

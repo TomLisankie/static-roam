@@ -29,6 +29,10 @@ body {
     max-width: 1300px;
 }
 
+.navbar-x {
+    margin-left: 10px;
+}
+
 .main {
     margin-top: 80px;
     margin-left: 10px;

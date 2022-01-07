@@ -81,7 +81,7 @@
      ]
     [:body
      [:nav.navbar.navbar-expand-lg.navbar-dark.bg-dork.fixed-top
-      [:div.container
+      [:div.container.navbar-x
        ~(render/page-link-by-name block-map (config/config :main-page) :class "navbar-brand")
        ;; TODO make active page machinery mork
        [:ul.navbar-nav.ml-auto

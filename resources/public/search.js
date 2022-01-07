@@ -56,7 +56,7 @@ function insertLink(container, url, title) {
     div.setAttribute('class','searchentry');
     var link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('target', '_blank');
+    // link.setAttribute('target', '_blank'); 
     insertText(link, title);
     div.appendChild(link);
     container.appendChild(div);
