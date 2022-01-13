@@ -39,7 +39,7 @@
 
 (defn index-blocks
   [basic-blocks]
-  (utils/add-parent
+  (u/add-inverse
    (u/index-by :id basic-blocks)
    :children :parent
    ))
@@ -85,26 +85,22 @@
   [block-map]
   (u/map-values #(assoc % :include? (not (nil? (:depth %)))) block-map))
 
-;;; → multitool
-(defn pmap-values [f hashmap]
-  (zipmap (keys hashmap) (pmap f (vals hashmap))))
-
 (defn parse-block
   [block]
   (assoc block :parsed (parser/parse-to-ast (:content block)))  )
 
 (defn parse
   [db]
-  (pmap-values parse-block db))
+  (u/pmap-values parse-block db))
 
 (defn generate-refs
   [db]
-  (pmap-values #(assoc % :refs (block-refs %))
+  (u/pmap-values #(assoc % :refs (block-refs %))
                db))
 
 (defn generate-inverse-refs
   [db]
-  (utils/add-parents db :refs :linked-by))    ;I don't like this name, but easier to leave it for now
+  (u/add-inverse db :refs :linked-by))    ;I don't like this name, but easier to leave it for now
 
 ;;; Trick for memoizing a local recursive fn, see https://quanttype.net/posts/2020-09-20-local-memoized-recursive-functions.html
 (defn fix [f] (fn g [& args] (apply f g args)))
@@ -122,7 +118,7 @@
                             ))
                       (:children block))))
         direct-children-memoized (fix (u/memoize-named :direct-children direct-children))]
-    (pmap-values direct-children-memoized block-map)))
+    (u/pmap-values direct-children-memoized block-map)))
 
 ;;; Mostly blocks can be rendered indpendently, but if there are references (and now sidenotes) there are dependencies
 

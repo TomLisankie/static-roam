@@ -30,27 +30,6 @@
        (mapcat (u/safely tokens))
        nlp/remove-ruthlessly))
 
-;;; → multitool/nlp
-(defn norvig-file
-  [file]
-  (str "http://norvig.com/ngrams/" file))
-
-(defn url-lines
-  [url]
-  (-> url
-      io/reader
-      line-seq))
-
-(defn read-norvig-freqs [file]
-  (reduce (fn [map line]
-            (let [[word count] (s/split line #"\t")
-                 count (Long. count)]
-              (assoc map word count)))
-          {} (url-lines (norvig-file file))))
-
-(u/defn-memoized freq-table [name]
-  (read-norvig-freqs name))
-
 (defn overexpressed
   [bm]
   (nlp/overexpressed (frequencies (all-tokens bm))

@@ -283,20 +283,10 @@
                rest)
         bm))))
 
-;;; → multitool
-(defn index-by-multiple
-  [f coll]
-  "Like index-by, but f produces a seq of values rather than a single one"
-  [f coll]  
-  (reduce
-   (fn [ret x]
-     (reduce (fn [ret y]
-               (assoc ret y x))
-             ret (f x)))
-   {} coll))
+
 
 (u/defn-memoized alias-map
   "Extend a bm so aliases get mapped to pages as well as regular titles."
   [bm]
-  (merge (index-by-multiple :alias (vals bm))
+  (merge (u/index-by-multiple :alias (vals bm))
          bm))

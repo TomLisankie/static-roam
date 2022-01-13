@@ -151,19 +151,10 @@
           (prn :download local-file image-source)
           (ju/local-file image-source local-file))))))
 
-;;; For multitool, except it's kind of stupid and unnecesary.
-(defn collecting
-  "Exec is a fn of one argument, which is called and passed another fn it can use to collect values; the collection is returned."
-  [exec]
-  (let [acc (atom [])
-        collect #(swap! acc conj %)]
-    (exec collect)
-    @acc))
-
 
 (defn page-images
   [bm]
-  (collecting
+  (u/collecting
    (fn [collect]
      (u/map-values
       (fn [block]
@@ -248,6 +239,7 @@
     (f file out)
     (fs/rename out file)))
 
+;;; TODO this can alter EOF newlines, causing spurious git modifications. Argh
 ;;; → multitool (update existing)
 (defn process-file-lines
   ([f in out]
@@ -273,6 +265,20 @@
 (process-files convert-twitter-links)
   
   
+;;; Roam seems to add a lot of NON-BREAKING SPACE chars, this converts them to vanilla spaces
+#_
+(process-files (fn [l] (str/replace l #" " " ")))
+
+
+;;; TODO doesn't work for vimeo links, should check (Logseq has vimeo embed but seems broken)
+#_
+(process-files (fn [l] (str/replace l #"\{\{video" "{{youtube")))
+
+
+;;; Convert Roam: {{alias [[AI risk ≡ capitalism]]capitalism}}.
+;;; To logseq [capitalism]([[AI risk ≡ capitalism]])
+;;; Have only a few, do doing by hand, but here for the record
+
 
 ;;; Note to me: M-x magit-log-buffer-file to see git history for a file
 (defn find-disappeared-pages
@@ -280,3 +286,14 @@
   (doseq [f (all-content-pages)]
     (when (< (fs/size f) 5)
       (prn (str f) (fs/size f) (java.util.Date. (fs/mod-time f))))))
+
+(process-files
+ (fn [l]
+   
+
+ (defn convert-twitter-links
+  [l]
+  (let [link (re-find #"http.*twitter.com/\S*" l)]
+    (when (and link
+               (not (re-find #"\{\{tweet" l)))
+      (str/replace l  #"http.*twitter.com/\S*" (format "{{tweet %s}}" link)))))

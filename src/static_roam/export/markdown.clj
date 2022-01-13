@@ -16,11 +16,6 @@
 
 (def +for-export+ true)                ;TODO stopgap
 
-;;; TODO → multitool 
-(u/defn-memoized n-chars
-  [n char]
-  (str/join (repeat n char)))
-
 (defn md-file-name
   [page-name]
   (str (utils/clean-page-title page-name) ".md"))

@@ -13,7 +13,7 @@
 ;; Used by logseq-from-md, not there yet
 ;;                 [org.commonmark/commonmark "0.18.0"]
                  [html-to-md/html-to-md "0.3.0"]
-                 [org.parkerici/multitool "0.0.17"] ;TODO publish this version
+                 [org.parkerici/multitool "0.0.18"] ;TODO publish this version
                  [com.taoensso/truss "1.6.0"]
                  [hiccup "1.0.5"]
                  [instaparse "1.4.10"]

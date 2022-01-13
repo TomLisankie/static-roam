@@ -140,36 +140,7 @@
   [smap]
   (s/join " " (map (fn [[prop val]] (format "%s: %s;" (name prop) val)) smap)))
   
-;;; → Multitool
-(defn add-parent
-  "Given a db (map of maps), and a multi-valued attribute children-at, compute the single-valued inverse relationship as parent-att"
-  [db children-att parent-att]
-  (reduce-kv (fn [acc key item]
-               (reduce (fn [acc child]
-                         (assoc-in acc [child parent-att] key))
-                       acc
-                       (children-att item)))
-             db
-             db))
 
-;;; → multitool, surely this must exist?
-(defn sconj
-  [coll elt]
-  (conj (set coll) elt))
-
-;;; As above but multivalued
-(defn add-parents
-  "Given a db (map of maps), and a multi-valued attribute children-at, compute the multi-valued inverse relationship as parent-att"
-  [db children-att parent-att]
-  (reduce-kv (fn [acc key item]
-               (reduce (fn [acc child]
-                         (if (contains? acc child)
-                           (update-in acc [child parent-att] sconj key)
-                           acc))
-                       acc
-                       (children-att item)))
-             db
-             db))
 
 
 
