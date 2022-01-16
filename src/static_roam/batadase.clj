@@ -262,26 +262,22 @@
   (when-let [handler (get @special-tags ht)]
     (handler bm block)))
 
+;;; Redone now that we create parents
+;;; TODO This would be a good place to add flags that cause the incoming links to render as main body
 (defn add-empty-pages
   [bm]
-  (let [ref-frequencies
-        (frequencies (mapcat forward-page-refs (displayed-pages bm)))
-        missing (apply dissoc ref-frequencies (keys bm))
-        to-add (map first (filter (fn [[ref count]] (> count 1)) missing))]
-    ;; Missing means referred but not present
-    ;; Add these pages iff they have >1 reference (otherwise, really no point)
-    (prn :missing (count missing) :adding (count to-add)
-         missing to-add)
-    (loop [bm bm
-           [page & rest] to-add]
-      (if page
-        (recur (assoc bm page  {:id page
-                                :uid page
-                                :title page
-                                :page? true
-                                :include? true})
-               rest)
-        bm))))
+  (u/map-values
+   (fn [block]
+     (if (and (:include? block)
+              (not (:parent block))
+              (not (:page? block))
+              ;; If there arent multiple incoming links, really no point in having a page
+              (> (count (:linked-by block)) 1))
+       (do
+         (prn :add-empty-page (:id block))
+         (assoc block :page? true :title (:id block)))
+       block))
+   bm))
 
 
 

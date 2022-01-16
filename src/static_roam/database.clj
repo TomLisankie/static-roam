@@ -39,10 +39,13 @@
 
 (defn index-blocks
   [basic-blocks]
-  (u/add-inverse
-   (u/index-by :id basic-blocks)
-   :children :parent
-   ))
+  ;; Awkward but works
+  (u/self-label                         ;Add ids for newly created blocks
+   :id
+   (u/add-inverse
+    (u/index-by :id basic-blocks)
+    :children :parent
+    )))
 
 (defn block-refs
   [block]
@@ -100,7 +103,8 @@
 
 (defn generate-inverse-refs
   [db]
-  (u/add-inverse db :refs :linked-by))    ;I don't like this name, but easier to leave it for now
+  (u/self-label :id
+                (u/add-inverse-multiple db :refs :linked-by)))    ;I don't like this name, but easier to leave it for now
 
 ;;; Trick for memoizing a local recursive fn, see https://quanttype.net/posts/2020-09-20-local-memoized-recursive-functions.html
 (defn fix [f] (fn g [& args] (apply f g args)))
