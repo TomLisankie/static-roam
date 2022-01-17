@@ -1,9 +1,9 @@
-(ns static-roam.curation
-    (:require [static-roam.config :as config]
-              [static-roam.utils :as utils]
-              [static-roam.database :as database]
-              [static-roam.batadase :as bd]
-              [static-roam.core :as core]
+(ns goddinpotty.curation
+    (:require [goddinpotty.config :as config]
+              [goddinpotty.utils :as utils]
+              [goddinpotty.database :as database]
+              [goddinpotty.batadase :as bd]
+              [goddinpotty.core :as core]
               [clojure.set :as set]
               [org.parkerici.multitool.core :as u]
               [org.parkerici.multitool.cljcore :as ju]
@@ -129,7 +129,7 @@
 
 ;;; Find blocks containing a given string.
 ;;; To be usefufl, probably wants to return pages
-; (static-roam.batadase/block-page @last-bm (get @last-bm dblock))
+; (goddinpotty.batadase/block-page @last-bm (get @last-bm dblock))
 (defn grep
   [bm string]
   (filter #(re-find (re-pattern string) (or (:content %) "")) (vals bm)))

@@ -1,8 +1,8 @@
-(ns static-roam.graph
+(ns goddinpotty.graph
   (:require [oz.core :as oz]
-            [static-roam.batadase :as bd]
-            [static-roam.config :as config]
-            [static-roam.utils :as utils]
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.config :as config]
+            [goddinpotty.utils :as utils]
             [clojure.data.json :as json]
             [org.parkerici.multitool.core :as u]
             ))

@@ -1,9 +1,9 @@
-(ns static-roam.import.logseq-from-md
-  (:require [static-roam.utils :as utils]
-            [static-roam.database :as db]
-            [static-roam.rendering :as rendering]
-            [static-roam.batadase :as bd]
-            [static-roam.config :as config]
+(ns goddinpotty.import.logseq-from-md
+  (:require [goddinpotty.utils :as utils]
+            [goddinpotty.database :as db]
+            [goddinpotty.rendering :as rendering]
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.config :as config]
             [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]

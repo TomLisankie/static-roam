@@ -1,6 +1,6 @@
-(ns static-roam.templating-test
-  (:require [static-roam.templating :refer :all]
-            [static-roam.database :as db]
+(ns goddinpotty.templating-test
+  (:require [goddinpotty.templating :refer :all]
+            [goddinpotty.database :as db]
             [org.parkerici.multitool.core :as u]
             [clojure.test :refer :all]))
 

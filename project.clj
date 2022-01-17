@@ -1,6 +1,6 @@
-(defproject static-roam "2.0.1"
+(defproject goddinpotty "2.0.1"
   :description "A static-site generator for Roam Research"
-  :url "https://github.com/mtravers/static-roam"
+  :url "https://github.com/mtravers/goddinpotty"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.3"]
@@ -22,4 +22,4 @@
                  [mock-clj "0.2.1"]     ;TODO should be under :test profile
                  ]
   :resource-paths ["resources"]
-  :main static-roam.core)
+  :main goddinpotty.core)

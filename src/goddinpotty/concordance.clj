@@ -1,14 +1,14 @@
-(ns static-roam.concordance
+(ns goddinpotty.concordance
   (:require [clojure.string :as s]
             [clojure.java.io :as io]
             [clojure.set :as set]
-            [static-roam.database :as db]
+            [goddinpotty.database :as db]
             [org.parkerici.multitool.nlp :as nlp]
             [org.parkerici.multitool.core :as u])
   )
 
 ;;; Find overexpressed words in a graph; use to generate something like https://omniorthogonal.blogspot.com/2015/01/whats-on-my-mind.html
-;;; Status: not wired into main program; not clear this is a good idea in the static-roam context
+;;; Status: not wired into main program; not clear this is a good idea in the goddinpotty context
 
 (defn capitalized?
   [s]

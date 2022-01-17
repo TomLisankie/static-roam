@@ -1,6 +1,7 @@
-(ns static-roam.config
+(ns goddinpotty.config
   (:require [aero.core :as aero]
             [clojure.string :as s]
+            [me.raynes.fs :as fs]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             ))
@@ -18,9 +19,11 @@
 (defn set-config-path
   [path]
   (set-config-map 
-   (aero/read-config
-    (io/resource path)))
-  (pprint/pprint @the-config))
+   (if-let [resource (io/resource path)]
+     (do
+       (aero/read-config resource)
+       (pprint/pprint @the-config))
+     (throw (ex-info "Config found" {:resource path})))))
 
 (defn config
   [& [att]]

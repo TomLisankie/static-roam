@@ -1,7 +1,7 @@
-(ns static-roam.parser
+(ns goddinpotty.parser
   (:require [instaparse.core :as insta :refer [defparser]]
             [clojure.string :as str]
-            [static-roam.config :as config]
+            [goddinpotty.config :as config]
             [clojure.java.io :as io]))
 
 ;;; Turns Roam block content into an intermediate form (AST)

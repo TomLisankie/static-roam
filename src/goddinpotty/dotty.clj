@@ -1,5 +1,5 @@
-(ns static-roam.dotty
-  (:require [static-roam.database :as db]
+(ns goddinpotty.dotty
+  (:require [goddinpotty.database :as db]
             [clojure.string :as s]
             [clojure.java.shell :as shell]
             [clojure.java.io :as io]

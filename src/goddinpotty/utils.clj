@@ -1,4 +1,4 @@
-(ns static-roam.utils
+(ns goddinpotty.utils
   (:require [me.raynes.fs :as fs]
             [taoensso.truss :as truss :refer (have?)]
             [clojure.java.io :as io]
@@ -7,7 +7,7 @@
             [org.parkerici.multitool.cljcore :as ju]
             [clojure.data.json :as json]
             [clojure.edn :as edn]
-            [static-roam.config :as config]
+            [goddinpotty.config :as config]
             )
   (:import (java.util.zip ZipFile)))
 

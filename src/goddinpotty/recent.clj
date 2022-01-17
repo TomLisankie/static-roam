@@ -1,8 +1,8 @@
-(ns static-roam.recent
-  (:require [static-roam.utils :as utils]
-            [static-roam.batadase :as bd]
-            [static-roam.rendering :as render]
-            [static-roam.templating :as templating]
+(ns goddinpotty.recent
+  (:require [goddinpotty.utils :as utils]
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.rendering :as render]
+            [goddinpotty.templating :as templating]
             [org.parkerici.multitool.core :as u]
             ))
 

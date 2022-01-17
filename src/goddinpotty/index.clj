@@ -1,9 +1,9 @@
-(ns static-roam.index
-  (:require [static-roam.utils :as utils]
-            [static-roam.batadase :as bd]
-            [static-roam.templating :as templating]
-            [static-roam.rendering :as render]
-            [static-roam.config :as config]
+(ns goddinpotty.index
+  (:require [goddinpotty.utils :as utils]
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.templating :as templating]
+            [goddinpotty.rendering :as render]
+            [goddinpotty.config :as config]
             [org.parkerici.multitool.core :as u]
             [clojure.string :as s]))
 

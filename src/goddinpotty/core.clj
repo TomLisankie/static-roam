@@ -1,11 +1,11 @@
-(ns static-roam.core
-  (:require [static-roam.config :as config]
-            [static-roam.utils :as utils]
-            [static-roam.database :as database]
-            [static-roam.batadase :as bd]
-            [static-roam.html-generation :as html-gen]
-            [static-roam.graph :as graph]
-            [static-roam.import.logseq :as logseq]
+(ns goddinpotty.core
+  (:require [goddinpotty.config :as config]
+            [goddinpotty.utils :as utils]
+            [goddinpotty.database :as database]
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.html-generation :as html-gen]
+            [goddinpotty.graph :as graph]
+            [goddinpotty.import.logseq :as logseq]
             [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]))
@@ -87,7 +87,7 @@
 (defn gen-pages
   []
   (reset-output)
-  (html-gen/generate-static-roam @last-bm (config/config :output-dir)))
+  (html-gen/generate-goddinpotty @last-bm (config/config :output-dir)))
 
 (defn reset
   []
@@ -98,7 +98,7 @@
   [bm]
   (let [output-dir (config/config :output-dir)]
     (graph/write-page-data bm output-dir)
-    (html-gen/generate-static-roam bm output-dir))
+    (html-gen/generate-goddinpotty bm output-dir))
   ;; TODO options for writing all pages
   ;;; Turning this off for now, Logseqe output is more important
   ;;; Should be rationalized; html and md output should be modules
@@ -136,7 +136,7 @@
 (defn scarf-images
   [roam-export dir]
   (let [bm (block-map-json roam-export)]
-    (static-roam.curation/image-copy-script bm dir)))
+    (goddinpotty.curation/image-copy-script bm dir)))
 
 
 (set! *print-length* 100)               ;prevent trace from blowing up trying to print bms. Should be elsewhere

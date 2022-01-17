@@ -1,6 +1,6 @@
-(ns static-roam.batadase
-  (:require [static-roam.utils :as utils]
-            [static-roam.config :as config]
+(ns goddinpotty.batadase
+  (:require [goddinpotty.utils :as utils]
+            [goddinpotty.config :as config]
             [org.parkerici.multitool.core :as u]
             [clojure.set :as set]
             [clojure.string :as str]

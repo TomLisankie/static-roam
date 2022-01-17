@@ -1,29 +1,30 @@
-# Static-Roam
+# Goddinpotty
 
-A static-site generator for [Roam Research](https://roamresearch.com/)
+A  generator for Digital Gardens based on graph-based Personal Knowledge Management tools like [Logseq](https://logseq.com) and [Roam](https://roamresearch.com/). 
 
-[A tutorial for setting up your own site](http://www.hyperphor.com/ammdi/pages/static-roam-tutorial.html)
+This is a fork from [static-roam](https://github.com/TomLisankie/static-roam) by Tom Lisankie. It's pretty diverged from the original by now, maybe 20% of the code is inherited.
+
+[The name explained](http://www.hyperphor.com/ammdi/pages/goddinpotty.html).
+
+# Status
+
+I use this to generate my own site, [AMMDI](http://www.hyperphor.com/ammdi/). Nobody else to my knowledge is using it, although I'm happy to help anyone interested.
+
+# Features and why you would need this
+
+Roam only allows you to publish entire graphs. Goddinpotty has a flexible scheme for declaring parts of a graph public or private.
+
+- user-definable Entrance and Exit Points for privacy (see below)
+- generates index pages, and graphic maps, client-side search
+- sidenotes 
 
 # Logseq
 
-I've moved from Roam to Logseq, in a rather sloppy fashion, so the code that adapts to Logseq is not very well organized. 
+I've moved from Roam to Logseq, in a rather sloppy fashion, so the code that adapts to Logseq is not very well organized. It probably no longer works with Roam any more, because I don't care, but it could easily be made to work again.
 
 Currently Logseq site generation is driven from a Logseq EDN export. This may change; it's logistically easier to parse the markdown which is logseq's source of truth directly.
 
 Because Logseq stores images locally rather than on the cloud, we now have to publish them along with the html. To suppor this, the config has a pointer into the repo, and there is logic to figure out which images are published and need to be copied to the output.
-
-# Status
-
-This is a fork from [the original](https://github.com/TomLisankie/static-roam) by Tom Lisankie. I'm using it for a personal project and it's very much in flux. 
-
-It's pretty diverged from the original by now, and includes a bunch of new features, notably:
-- uses definable Exit Points for privacy (see below)
-- generates index pages, recently changed, and graphic maps
-
-
-# Theory
-
-static-roam is somewhat more page-oriented that Roam itself. Navigation is by page, the identity of blocks doesn't really appear (Except for generating excerpts for the backlink and recent changes views).
 
 
 # Usage
@@ -36,13 +37,13 @@ By default, the program will look for the latest Roam Export file in `~/Download
 
 # What gets published
 
-With Roam, there are no limits on how you can connect notes. This is one of Roam's greatest strengths. However, it's its greatest weakness when it comes to sharing notes publicly. Since any note can be connected to any other block, things you'd be alright with being publicly known get connected with ideas that you'd like to keep private. Personally, I think there are great benefits that can be seen from sharing notes publicly that are structured in the ways Roam allows. Static-Roam is an early attempt at solving this.
+With Roam, there are no limits on how you can connect notes. This is one of Roam's greatest strengths. However, it's its greatest weakness when it comes to sharing notes publicly. Since any note can be connected to any other block, things you'd be alright with being publicly known get connected with ideas that you'd like to keep private. Roam's graph publishing is an all-or-nothing proposition, but I wanted finer control, so it would be easy to move things from private to public and the inverse, while preserving the flexibility of connection. Goddinpotty started as an effort to adress this need.
 
 The basic goal is to allow a user to share notes they are fine with being seen publicly while minimizing private information exposure. It works by having the user specify **entry points** and **exit points**. 
 
-Entry points are simply where you want Static-Roam to *start* including pages/blocks from your Roam database. Entry points are defined using a Roam tag, by default `#EntryPoint` although you can change or extend the tags used by means of the config file.
+Entry points are simply where you want Goddinpotty to *start* including pages/blocks from your Roam database. Entry points are defined using a Roam tag, by default `#EntryPoint` although you can change or extend the tags used by means of the config file.
 
-Static-roam will walk the graph and include every page it finds, until it hits an exit point. Exit points are also defined by tag, by default `#ExitPoint` or `#Private`.  If this tag is in the first block of a page, the whole page is excluded. If it's in an inner block, the containing block and all of its children are excluded. 
+Goddinpotty will walk the graph and include every page it finds, until it hits an exit point. Exit points are also defined by tag, by default `#ExitPoint` or `#Private`.  If this tag is in the first block of a page, the whole page is excluded. If it's in an inner block, the containing block and all of its children are excluded. 
 
 This convention is a bit unintuitive, so an example:
 
@@ -65,8 +66,7 @@ There is currently no way to specify "export everything", but that wouldn't be h
 
 # Sidenotes
 
-Sidenotes are awkward due to Roam and CSS limitiations. Static-roam leverages block references ... (actually write this stuff in Roam and incorporate it into AMMDI)
-
+Sidenotes are awkward due to Roam and CSS limitiations. Goddinpotty leverages block references ... (actually write this stuff in Roam and incorporate it into AMMDI)
 
 
 # Config

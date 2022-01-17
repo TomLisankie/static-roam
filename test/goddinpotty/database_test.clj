@@ -1,6 +1,6 @@
-(ns static-roam.database-test
-  (:require [static-roam.database :refer :all]
-            [static-roam.parser :as parser]
+(ns goddinpotty.database-test
+  (:require [goddinpotty.database :refer :all]
+            [goddinpotty.parser :as parser]
             [clojure.test :refer :all]))
 
 (deftest content-refs-test

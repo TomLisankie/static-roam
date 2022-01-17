@@ -1,11 +1,11 @@
-(ns static-roam.templating
+(ns goddinpotty.templating
   (:require [clojure.string :as s]
-            [static-roam.rendering :as render]
-            [static-roam.config :as config]
-            [static-roam.utils :as utils]
-            [static-roam.graph :as graph]
-            [static-roam.search :as search]
-            [static-roam.batadase :as bd]
+            [goddinpotty.rendering :as render]
+            [goddinpotty.config :as config]
+            [goddinpotty.utils :as utils]
+            [goddinpotty.graph :as graph]
+            [goddinpotty.search :as search]
+            [goddinpotty.batadase :as bd]
             [org.parkerici.multitool.core :as u]
             ))
 

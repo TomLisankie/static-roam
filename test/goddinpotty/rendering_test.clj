@@ -1,7 +1,7 @@
-(ns static-roam.rendering-test
-  (:require [static-roam.rendering :refer :all]
-            [static-roam.parser :as parser]
-            [static-roam.utils :as utils]
+(ns goddinpotty.rendering-test
+  (:require [goddinpotty.rendering :refer :all]
+            [goddinpotty.parser :as parser]
+            [goddinpotty.utils :as utils]
             [mock-clj.core :as mc]
             [clojure.test :refer :all]))
 

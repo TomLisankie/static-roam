@@ -1,9 +1,9 @@
-(ns static-roam.rendering
-  (:require [static-roam.config :as config]
-            [static-roam.parser :as parser]
-            [static-roam.batadase :as bd]
-            [static-roam.graph :as graph]
-            [static-roam.utils :as utils]
+(ns goddinpotty.rendering
+  (:require [goddinpotty.config :as config]
+            [goddinpotty.parser :as parser]
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.graph :as graph]
+            [goddinpotty.utils :as utils]
             [clojure.data.json :as json]
             [clojure.string :as str]
             [org.parkerici.multitool.core :as u]
@@ -296,7 +296,7 @@
     ))
 
 ;;; TODO this doesn't work, should be using block-id rather than page titles
-;;; Static-roam fucks this up...sigh, should have rolled my own from the start
+;;; goddinpotty fucks this up...sigh, should have rolled my own from the start
 (defn roam-url
   [block-id]
   (str (config/config :roam-base-url) block-id))

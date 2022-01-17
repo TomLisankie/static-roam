@@ -1,13 +1,13 @@
-(ns static-roam.html-generation
+(ns goddinpotty.html-generation
   (:require [org.parkerici.multitool.core :as u]
-            [static-roam.utils :as utils]
+            [goddinpotty.utils :as utils]
             [hiccup.core :as hiccup]
-            [static-roam.templating :as templating]
-            [static-roam.batadase :as bd]
-            [static-roam.recent :as recent]
-            [static-roam.index :as index]
-            [static-roam.search :as search]
-            [static-roam.config :as config]))
+            [goddinpotty.templating :as templating]
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.recent :as recent]
+            [goddinpotty.index :as index]
+            [goddinpotty.search :as search]
+            [goddinpotty.config :as config]))
 
 ;;; Translate Hiccup into actual pages.
 ;;; NOTE: I wish Hiccup had an option to prettyprint HTML, but it doesn't
@@ -83,7 +83,7 @@
    "/pages/Map.html"
    output-dir))
 
-(defn generate-static-roam
+(defn generate-goddinpotty
   [block-map output-dir]
   (generate-content-pages block-map output-dir)
   (search/write-index block-map output-dir)

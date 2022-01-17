@@ -1,6 +1,6 @@
-(ns static-roam.import.edn
-  (:require [static-roam.utils :as utils]
-            [static-roam.batadase :as bd]
+(ns goddinpotty.import.edn
+  (:require [goddinpotty.utils :as utils]
+            [goddinpotty.batadase :as bd]
             [org.parkerici.multitool.core :as u]))
 
 ;;; Currently unused I believe

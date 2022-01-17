@@ -1,8 +1,8 @@
-(ns static-roam.core-test
+(ns goddinpotty.core-test
   (:require [clojure.test :refer :all]
-            [static-roam.core :refer :all]
-            [static-roam.database :as database]
-            [static-roam.utils :as utils]
+            [goddinpotty.core :refer :all]
+            [goddinpotty.database :as database]
+            [goddinpotty.utils :as utils]
             [org.parkerici.multitool.core :as u]
             ))
 

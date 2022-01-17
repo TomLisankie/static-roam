@@ -1,4 +1,4 @@
-(ns static-roam.athens
+(ns goddinpotty.athens
   (:require [clojure.java.io :as io]
             [datascript.core :as dc]
             [datascript.transit :as dt]

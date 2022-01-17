@@ -1,6 +1,6 @@
-(ns static-roam.parser-test
-  (:require [static-roam.parser :refer :all]
-            [static-roam.utils :as utils]
+(ns goddinpotty.parser-test
+  (:require [goddinpotty.parser :refer :all]
+            [goddinpotty.utils :as utils]
             [mock-clj.core :as mc]
             [clojure.test :refer :all]))
 
@@ -23,8 +23,8 @@
 
 
 (deftest hashtag-parse-test
-  (is (= [:block [:page-link "[[Physics]]"] " " [:hashtag "#Static-Roam"]]
-         (parse-to-ast "[[Physics]] #Static-Roam"))))
+  (is (= [:block [:page-link "[[Physics]]"] " " [:hashtag "#Goddinpotty"]]
+         (parse-to-ast "[[Physics]] #Goddinpotty"))))
 
 (deftest alias-parse-test
   (is (= [:block "foo " [:page-link "[[bar]]"] " baz " [:alias "[ugh](yuck)"]]

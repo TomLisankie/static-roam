@@ -1,8 +1,8 @@
-(ns static-roam.search
+(ns goddinpotty.search
   (:require [org.parkerici.multitool.core :as u]
-            [static-roam.batadase :as bd]
-            [static-roam.rendering :as render]
-            [static-roam.utils :as utils])
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.rendering :as render]
+            [goddinpotty.utils :as utils])
   )
 
 ;;; http://elasticlunr.com/elasticlunr.min.js

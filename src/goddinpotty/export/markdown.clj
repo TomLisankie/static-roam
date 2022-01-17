@@ -1,9 +1,9 @@
-(ns static-roam.markdown
+(ns goddinpotty.markdown
   "Rendering to Markdown"
-  (:require [static-roam.config :as config]
-            [static-roam.batadase :as bd]
-            [static-roam.rendering :as render]
-            [static-roam.utils :as utils]
+  (:require [goddinpotty.config :as config]
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.rendering :as render]
+            [goddinpotty.utils :as utils]
             [clojure.string :as str]
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]

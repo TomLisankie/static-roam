@@ -1,8 +1,8 @@
-(ns static-roam.database
-  (:require [static-roam.parser :as parser]
-            [static-roam.batadase :as bd]
-            [static-roam.utils :as utils]
-            [static-roam.config :as config]
+(ns goddinpotty.database
+  (:require [goddinpotty.parser :as parser]
+            [goddinpotty.batadase :as bd]
+            [goddinpotty.utils :as utils]
+            [goddinpotty.config :as config]
             [org.parkerici.multitool.core :as u]
             [clojure.walk :as walk]
             [taoensso.truss :as truss :refer (have have! have?)]
