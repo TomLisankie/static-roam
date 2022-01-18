@@ -12,18 +12,16 @@
 
 (def the-config (atom {}))
 
-(defn set-config-map
+(defn set-config-map!
   [m]
-  (reset! the-config m))
+  (reset! the-config m)
+  (pprint/pprint @the-config))
 
-(defn set-config-path
+(defn set-config-path!
   [path]
-  (set-config-map 
    (if-let [resource (io/resource path)]
-     (do
-       (aero/read-config resource)
-       (pprint/pprint @the-config))
-     (throw (ex-info "Config found" {:resource path})))))
+     (set-config-map! (aero/read-config resource))
+     (throw (ex-info "Config not found" {:resource path}))))
 
 (defn config
   [& [att]]

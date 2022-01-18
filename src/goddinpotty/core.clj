@@ -122,8 +122,8 @@
 (defn -main
   [& [config-or-path]]
   (if (map? config-or-path)
-    (config/set-config-map config-or-path)
-    (config/set-config-path (or config-or-path "default-config.edn")))
+    (config/set-config-map! config-or-path)
+    (config/set-config-path! (or config-or-path "default-config.edn")))
   (reset)
   (let [bm (add-generated-pages (produce-bm2 (config/config)))]
     (tap bm)
