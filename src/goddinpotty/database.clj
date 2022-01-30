@@ -4,6 +4,7 @@
             [goddinpotty.utils :as utils]
             [goddinpotty.config :as config]
             [org.parkerici.multitool.core :as u]
+            [org.parkerici.multitool.cljcore :as ju]
             [clojure.walk :as walk]
             [taoensso.truss :as truss :refer (have have! have?)]
             ))
@@ -94,12 +95,12 @@
 
 (defn parse
   [db]
-  (u/pmap-values parse-block db))
+  (ju/pmap-values parse-block db))
 
 (defn generate-refs
   [db]
-  (u/pmap-values #(assoc % :refs (block-refs %))
-               db))
+  (ju/pmap-values #(assoc % :refs (block-refs %))
+                  db))
 
 (defn generate-inverse-refs
   [db]
@@ -122,7 +123,7 @@
                             ))
                       (:children block))))
         direct-children-memoized (fix (u/memoize-named :direct-children direct-children))]
-    (u/pmap-values direct-children-memoized block-map)))
+    (ju/pmap-values direct-children-memoized block-map)))
 
 ;;; Mostly blocks can be rendered indpendently, but if there are references (and now sidenotes) there are dependencies
 

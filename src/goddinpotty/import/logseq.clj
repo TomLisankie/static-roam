@@ -98,8 +98,8 @@
                 bm))
 
 (defn produce-bm
-  []
-  (let [{:keys [directory file-pattern]} (:source (config/config))]
+  [config]
+  (let [{:keys [directory file-pattern]} (:source config)]
   (-> (utils/latest directory file-pattern)
       logseq-edn->blockmap
       db/index-blocks    

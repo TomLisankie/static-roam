@@ -54,8 +54,8 @@
   []
   (ju/schppit
    (str (config/config :output-dir) "pages.edn")
-   (u/map-filter (fn [b] (and (:page? b) b))
-                 (vals @last-bm))))
+   (u/clean-seq (map (fn [b] (and (:page? b) b))
+                     (vals @last-bm)))))
 
 
 (defn block-dump
@@ -108,11 +108,11 @@
   (prn (bd/stats @last-bm))
   #_ (dump))
 
-(defmulti produce-bm2 (fn [{:keys [source]}] (:type source)) )
+(defmulti produce-bm (fn [{:keys [source]}] (:type source)) )
   
 ;;; Sometimes I hate Clojure
-(defmethod produce-bm2 :logseq [_]
-  (logseq/produce-bm))
+(defmethod produce-bm :logseq [_]
+  (logseq/produce-bm (config/config)))
 
 (defmulti post-generation (fn [{:keys [source]} _] (:type source)))
 
@@ -125,7 +125,7 @@
     (config/set-config-map! config-or-path)
     (config/set-config-path! (or config-or-path "default-config.edn")))
   (reset)
-  (let [bm (add-generated-pages (produce-bm2 (config/config)))]
+  (let [bm (add-generated-pages (produce-bm (config/config)))]
     (tap bm)
     (output-bm bm)
     (html-gen/generate-index-redir (config/config  :output-dir))
