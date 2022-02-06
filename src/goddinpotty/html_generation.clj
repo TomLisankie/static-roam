@@ -1,7 +1,8 @@
 (ns goddinpotty.html-generation
   (:require [org.parkerici.multitool.core :as u]
-            [goddinpotty.utils :as utils]
             [hiccup.core :as hiccup]
+            [me.raynes.fs :as fs]
+            [goddinpotty.utils :as utils]
             [goddinpotty.templating :as templating]
             [goddinpotty.batadase :as bd]
             [goddinpotty.recent :as recent]
@@ -20,9 +21,16 @@
     (templating/block-page-hiccup block-id block-map output-dir)
     ))
 
+;;; Unaccountably not in fs
+(defn ensure-directories
+  [path]
+  (let [dir (subs path 0 (- (count path) (count (fs/base-name path))))]
+    (fs/mkdirs dir)))
+
 (defn export-page
   "Write out a single page. Content is hiccup. " 
   [content fname output-dir]
+  (ensure-directories (str output-dir fname))
   (spit (str output-dir fname)
         (hiccup/html content)))
 

@@ -129,7 +129,7 @@
         page-id (:id page)]
     (if (and page (bd/displayed? page))
       [:a (u/clean-map
-           {:href (utils/html-file-title page-id)
+           {:href (str "/pages/" (utils/html-file-title page-id))
             ;; TODO behavior with empties should be configurable, I keep
             ;; changing my own mind about it.
             :class (str/join " "

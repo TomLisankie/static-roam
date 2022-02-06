@@ -85,6 +85,7 @@
   [string]
   (remove-n-surrounding-delimiters 3 string))
 
+;;; Note: multitool has diff arg order for some reason
 (defn strip-chars
   "Removes every character of a given set from a string"
   [s removed]
@@ -99,11 +100,18 @@
 (defn clean-page-title
   [string]
   (-> string
-      (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \/ \\ \, \< \> \~ \` \{ \}})
+      (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \\ \, \< \> \~ \` \{ \}}) ; experimentally removed  /
       (s/replace #"\s" "-")))
 
+(defn cleaner-page-title
+  [string]
+  (-> string
+      clean-page-title
+      (s/replace #"\/" "-")))
+
+;;; TODO handle slashes more intelligently
 (defn html-file-title
-  "Formats a Roam page title as a name for its corresponding HTML page (including '.html' extension)"
+  "Formats a page title as a name for its corresponding HTML page (including '.html' extension)"
   [string]
   {:pre [(have? string? string)]}
   (str (clean-page-title string) ".html"))

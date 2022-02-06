@@ -208,13 +208,14 @@
 (defn render-graph
   "Writes out the graph json and returns the hiccup to embed it"
   [bm output-dir {:keys [name width height controls?] :as options :or {height 1000}}]
-  (utils/write-json (str output-dir "/assets/graphs/" name ".json") (spec bm options))
-  (let [id (str "view_" name)]
-    [:div
-     [:div.graph {:id id :style (format "height: %spx;" (+ height (if controls? 300 0)))}]
-     [:script
-      (format "vegaEmbed('#%s', '../assets/graphs/%s.json');" id name)
-      ]]))
+  (let [base-name (str "/assets/graphs/" name ".json")]
+    (utils/write-json (str output-dir base-name) (spec bm options))
+    (let [id (str "view_" name)]
+      [:div
+       [:div.graph {:id id :style (format "height: %spx;" (+ height (if controls? 300 0)))}]
+       [:script
+        (format "vegaEmbed('#%s', '%s');" id base-name)
+        ]])))
 
 (defn render-vega-embedded
   "Render an arbitrary Vega specs"
@@ -261,7 +262,7 @@
      :depth (:depth page)
      :start (str start)
      :end (str end)
-     :link (utils/html-file-title title)
+     :link (str "/pages/" (utils/html-file-title title)) ;TODO this should be abstracted
      ; TODO size in blocks would be interesting maybe
      :group (cond (bd/entry-point? block-map page) 2
                   (:include? page) 1
