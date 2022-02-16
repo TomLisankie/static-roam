@@ -7,6 +7,8 @@
             [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
             [clojure.string :as str]
+            [clojure.java.shell :as sh]
+            [goddinpotty.endure :as e]
             )
   )
 
@@ -77,37 +79,79 @@
     (java.util.Date. (fs/mod-time f))
     (prn :file-not-found f)))           ;temp
 
-(u/defn-memoized get-edit-time-from-repo
+;;; Alternative to this shell nonsense https://www.eclipse.org/jgit/
+(def git-date-formatter
+  (java.text.SimpleDateFormat. "yyyy-MM-dd hh:mm:ss ZZZZZ"))
+
+(defn parse-git-date
+  [s]
+  (.parse git-date-formatter s))
+
+;;; TODO These are way too slow for practical use; need to cache the data across runs somehow, which is a pain.
+;;; Hm, I want def-memoized but persistant...
+
+;;; This saves a full 5 minutes in hyperphor build (as of 2/15/2022).
+(e/defn-memoized git-first-mod-time
+  [f]
+  (let [string 
+        (-> (sh/sh "git"  "log" "--reverse" "--date=iso"  "--format=\"%ad\"" "--" f "|" "head" "-1"
+                   :dir (get-in (config/config) [:source :repo]))
+            :out
+            (utils/strip-chars  #{\" \newline})
+            parse-git-date
+            )]
+    string))
+
+(defn git-last-mod-time
+  [f]
+  (let [string 
+        (-> (sh/sh "git"  "log" "-1" "--date=iso"  "--format=\"%ad\"" "--" f
+                   :dir (get-in (config/config) [:source :repo]))
+            :out
+            (utils/strip-chars  #{\" \newline})
+            ((u/saferly parse-git-date)))]
+    string))
+
+(defn safe-times
+  [f]
+  (u/ignore-report
+   (if (fs/exists? f)                    ;TODO this is not adequate check due to retarded case folding
+     {:edit-time (git-last-mod-time f)
+      :create-time (git-first-mod-time f)}
+     (prn :file-not-found f)
+     )))
+
+;;; Slow...maybe too slow to use
+(u/defn-memoized get-edit-times-from-repo
   [page]
   (-> page
       :title
       source-file
-      safe-mod-time
+      safe-times
 ))
 
 ;;; Set last edit time of all blocks to file write date. Best we can do
-;;; TODO without mining git logs, which seems...excessive
 (defn get-edit-times
   [bm]
   (u/map-values (fn [b]
                   (if (and (:include? b))
-                    (assoc b
-                           :edit-time
-                           (get-edit-time-from-repo (bd/block-page bm b)))
+                    (merge b
+                           (get-edit-times-from-repo (bd/block-page bm b))
+                           )
                     b))
                 bm))
 
 (defn produce-bm
   [config]
   (let [{:keys [directory file-pattern]} (:source config)]
-  (-> (utils/latest directory file-pattern)
-      logseq-edn->blockmap
-      db/index-blocks    
-      db/roam-db-1
-      get-edit-times
-      bd/add-empty-pages
-      db/generate-inverse-refs ;have to redo this after add-empty-pages
-      )))
+    (-> (utils/latest directory file-pattern)
+        logseq-edn->blockmap
+        db/index-blocks    
+        db/roam-db-1
+        get-edit-times                  
+        bd/add-empty-pages
+        db/generate-inverse-refs ;have to redo this after add-empty-pages
+        )))
 
 (defn publish-images
   [logseq-dir]

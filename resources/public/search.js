@@ -55,7 +55,7 @@ function insertLink(container, url, title) {
     var div = document.createElement('div');    
     div.setAttribute('class','searchentry');
     var link = document.createElement('a');
-    link.setAttribute('href', url);
+    link.setAttribute('href', '/pages/' + url); // kludge alert
     // link.setAttribute('target', '_blank'); 
     insertText(link, title);
     div.appendChild(link);

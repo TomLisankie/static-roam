@@ -15,6 +15,7 @@
                  [html-to-md/html-to-md "0.3.0"]
                  [org.parkerici/multitool "0.0.18"] ;TODO publish this version
                  [com.taoensso/truss "1.6.0"]
+                 [alandipert/enduro "1.2.0"] ;persistence for expensive calculations
                  [hiccup "1.0.5"]
                  [instaparse "1.4.10"]
                  [aero "1.1.6"]

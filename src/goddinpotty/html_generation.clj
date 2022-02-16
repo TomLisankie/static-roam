@@ -102,6 +102,7 @@
   [block-map name generator]
   (assoc block-map name
          {:id name
+          :title name
           :special? true                ;I miss OOP
           :generator generator
           :include? true
