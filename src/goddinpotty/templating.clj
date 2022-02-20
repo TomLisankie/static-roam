@@ -161,6 +161,22 @@
   [[from to]]
   [:div.date (utils/render-time from) " - " (utils/render-time to)])
 
+;;; TODO avoid self-link
+(defn render-page-hierarchy
+  [page-name bm]
+  (let [[_ top] (or (re-find #"^(.*?)/(.*)$" page-name) [nil page-name])
+  ;; Sort to avoid random order, but it's not really right...pages could annotate their order I suppose?
+        page-struct (sort (get (bd/compute-page-hierarchies bm) top))]
+    [:div
+     (render/page-link top :bm bm)
+     ;; TODO multilevel, also tweak css so long things look rightish
+     ;; whitespace: nowrap (but needs to truncate or something)
+     [:ul
+      (for [child page-struct]
+        [:li (render/page-link (str top "/" child) :bm bm :alias child)])
+      ] 
+     ]))
+
 (defn block-page-hiccup
   [block-id block-map output-dir]
   (let [block (get block-map block-id)
@@ -218,11 +234,20 @@
              [:div.card-body
               [:div.incoming
                (linked-references-template linked-refs block-map)]]]))
+
+        page-hierarchy-widget
+        ;; TODO oops, omits the top page!
+        (when (bd/page-in-hierarchy? block block-map)
+          [:div.card.my-3
+           [:h5.card-header "Page Outline"]
+           [:div.card-body
+            (render-page-hierarchy (:title block) block-map)]])
         ]
+
     ;; TODO why isn't search widget done this way?
     (page-hiccup contents title-text title-hiccup block-map
                  :head-extra (graph/vega-lite-head) ;lite to support new dataviz
-                 :widgets [map-widget incoming-links-widget])
+                 :widgets [map-widget page-hierarchy-widget incoming-links-widget])
     ))
 
 

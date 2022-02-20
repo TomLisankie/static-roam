@@ -270,19 +270,69 @@
    (fn [block]
      (if (and (:include? block)
               (not (:parent block))
-              (not (:page? block))
+              (not (:page? block)))
               ;; If there arent multiple incoming links, really no point in having a page
-              (> (count (:linked-by block)) 1))
-       (do
-         (prn :add-empty-page (:id block))
-         (assoc block :page? true :title (:id block)))
+       (if (> (count (:linked-by block)) 1)
+         (do
+           (prn :add-empty-page (:id block))
+           (assoc block :page? true :title (:id block)))
+         (assoc block :include? false))
        block))
    bm))
-
-
 
 (u/defn-memoized alias-map
   "Extend a bm so aliases get mapped to pages as well as regular titles."
   [bm]
   (merge (u/index-by-multiple :alias (vals bm))
          bm))
+
+;;; Hierarchy
+
+(defn compute-page-hierarchies
+  [bm]
+  (filter identity
+          (for [page (pages bm)]
+            (let [[_ parent local]
+                  (and (:title page)           ;temp
+                       (re-find #"^(.*)/(.*?)$" (:title page)))]
+              (when parent
+                [parent local])))))
+
+;;;  in multiool 0.19
+(defn merge-recursive
+  "Merge two arbitrariy nested map structures. Terminal seqs are concatentated, terminal sets are merged."
+  [m1 m2]
+  (cond (and (map? m1) (map? m2))
+        (merge-with merge-recursive m1 m2)
+        (and (set? m1) (set? m2))
+        (set/union m1 m2)
+        (and (sequential? m1) (sequential? m2))
+        (concat m1 m2)
+        (nil? m2) m1
+        :else m2))
+
+;;; → multitool
+(defn collecting-merge
+  "Exec is a fn of one argument, which is called and passed another fn it can use to collect values which are merged with merge-recursive; the result is returned. See tests for example TODO" 
+  [exec]
+  (let [acc (atom {})
+        collect #(swap! acc merge-recursive %)]
+    (exec collect)
+    @acc))
+
+(u/defn-memoized compute-page-hierarchies ;only need to compute this once
+  [bm]
+  (collecting-merge
+   (fn [collect]
+     (doseq [page (pages bm)]
+       (let [[_ parent local]
+             (and (:title page)           ;temp
+                  (re-find #"^(.*)/(.*?)$" (:title page)))]
+         (when parent
+           (collect {parent [local]})))))))
+
+(defn page-in-hierarchy?
+  [page bm]
+  (or (and (:title page)
+           (re-find #"^(.*)/(.*?)$" (:title page)))
+      (get (compute-page-hierarchies bm) (:title page)))) ;top page

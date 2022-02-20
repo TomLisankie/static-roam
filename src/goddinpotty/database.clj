@@ -48,6 +48,18 @@
     :children :parent
     )))
 
+;;; Deal with Logseq page hierarchy feature.
+;;; This gives pages with titles like [[Religion/Discordianism]] a link to
+;;; their parent [[Religion]], for inclusion purposes. The result is that if
+;;; any page of such a hierarchy is published, they all will be, unless explicitly
+;;; marked #Private
+(defn page-hierarchy-ref
+  [page]
+  (let [[_ parent _local]
+        (and (:title page)           ;temp
+             (re-find #"^(.*)/(.*?)$" (:title page)))]
+    parent))
+
 (defn block-refs
   [block]
   (letfn [(struct-entities [struct]
@@ -64,7 +76,10 @@
                          [v] [])
                 ;; default
                 (mapcat struct-entities (rest struct)))))]
-    (set (struct-entities (:parsed block)))))
+    (let [base (set (struct-entities (:parsed block)))]
+      (if-let [page-hierarch-ref (page-hierarchy-ref block)]
+        (conj base page-hierarch-ref)
+        base))))
 
 ;;; New version computes degree as well as acctually the map
 ;;; Seems to compute the same set as other method
