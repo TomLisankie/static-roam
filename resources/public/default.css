@@ -115,9 +115,15 @@ a:hover {
 }
 
 .empty {
-    /* People hate this */
-    /* text-decoration: line-through; */
+    /* People hate this but whatev */
+    text-decoration: line-through; 
+    pointer-events: none;
     color: gray;
+}
+
+.self {
+    color: var(--navbar-foreground);
+    pointer-events: none;
 }
 
 

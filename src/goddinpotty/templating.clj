@@ -87,8 +87,9 @@
        [:ul.navbar-nav.ml-auto
         ~@(for [page (config/config :right-navbar)]
             [:li.nav-item
-             (if (vector? page)
-               [:a {:href (second page) :class "nav-link"} (first page)]
+             (if (vector? page)         ;TODO wtf?
+               ;[:a {:href (second page) :class "nav-link"} (first page)]
+               (render/page-link (second page) :class "nav-link" :bm block-map :alias (second page))
                (render/page-link page :class "nav-link" :bm block-map))]
             )]]]
      [:div.container.main
@@ -161,7 +162,6 @@
   [[from to]]
   [:div.date (utils/render-time from) " - " (utils/render-time to)])
 
-;;; TODO avoid self-link
 (defn render-page-hierarchy
   [page-name bm]
   (let [[_ top] (or (re-find #"^(.*?)/(.*)$" page-name) [nil page-name])
@@ -173,7 +173,7 @@
      ;; whitespace: nowrap (but needs to truncate or something)
      [:ul
       (for [child page-struct]
-        [:li (render/page-link (str top "/" child) :bm bm :alias child)])
+        [:li (render/page-link (str top "/" child) :bm bm :alias child :current page-name)])
       ] 
      ]))
 

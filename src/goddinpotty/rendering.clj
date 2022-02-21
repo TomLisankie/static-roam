@@ -52,10 +52,21 @@
   (when (local-path? src)
     (swap! published-images conj src)))
 
+;;; Logseq stores links to images as "../assets/..." , which breaks
+;;; when we have page hierarchy. This is an ugly fix for that problem
+(defn root-image-url
+  [u]
+  (let [[match? base] (re-find #"^\.\.(.*)$" u)]
+    (if match?
+      base
+      u)))
+
 (defn- format-image
   [image-ref-content]
   (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))
-        image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))]
+        image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))
+        image-source (root-image-url image-source)
+        ]
     (maybe-publish-image image-source)
     ;; Link to
     [:a.imga {:href image-source :target "_image"} ;cheap way to get expansion. TODO link highlighhting looking slightly crufty
@@ -123,10 +134,11 @@
 
 ;;;  page can be page or page-id (requires bm)
 (defn page-link
-  [opage & {:keys [alias class bm]}]     
+  [opage & {:keys [alias class bm current]}]     
   (let [page (if (string? opage) (get (bd/alias-map bm) opage) opage)
         alias (or alias (and (string? opage) opage)) ;argh
         page-id (:id page)]
+    (prn :page-link page-id current alias )
     (if (and page (bd/displayed? page))
       [:a (u/clean-map
            {:href (str "/pages/" (utils/html-file-title page-id))
@@ -135,6 +147,7 @@
             :class (str/join " "
                              (filter identity
                                      (list (when (bd/page-empty? page) "empty")
+                                           (when (= current page-id) "self")
                                            class)))})
        (block-content->hiccup (or alias page-id))]
       (do
