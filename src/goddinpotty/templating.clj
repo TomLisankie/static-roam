@@ -242,7 +242,21 @@
            [:h5.card-header "Page Outline"]
            [:div.card-body
             (render-page-hierarchy (:title block) block-map)]])
-        ]
+
+        ;; See http://webseitz.fluxent.com/wiki/TwinPages , but this doesn't work for a number of reasons:
+        ;; - Needs page names like /AlanKay, not /Alan-Kay.html
+        ;; - Needs to be added to a list?
+        #_
+        twin-pages-widget
+        #_
+        [:div.card.my-3
+         [:h5.card-header "Twin Pages"]
+         [:div.card-body
+          [:div#twin_pages
+           {:style {}} ;"border:1px; vertical-align:top; horizontal-align:center"
+           [:script {:src "http://www.wikigraph.net/twinpages.js"
+                     :referrerpolicy "unsafe-url"
+                     }]]]]]
 
     ;; TODO why isn't search widget done this way?
     (page-hiccup contents title-text title-hiccup block-map
