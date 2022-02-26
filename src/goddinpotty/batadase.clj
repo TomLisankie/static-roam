@@ -283,8 +283,8 @@
 (u/defn-memoized alias-map
   "Extend a bm so aliases get mapped to pages as well as regular titles."
   [bm]
-  (merge (u/index-by-multiple :alias (vals bm))
-         bm))
+  (merge bm
+         (u/index-by-multiple :alias (vals bm))))
 
 ;;; Hierarchy
 

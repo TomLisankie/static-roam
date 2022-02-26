@@ -91,11 +91,14 @@
 
 (defn reset
   []
-  (reset-output)
-  (u/memoize-reset!))
+  (u/memoize-reset!)
+  ;; reset render/published-images
+  (reset! goddinpotty.rendering/published-images #{})
+  )
 
 (defn output-bm
   [bm]
+  (reset-output)
   (let [output-dir (config/config :output-dir)]
     (graph/write-page-data bm output-dir)
     (html-gen/generate-goddinpotty bm output-dir))

@@ -166,8 +166,8 @@
   (doseq [file @rendering/published-images]
     (u/ignore-report
     ;; this tree-hopping is ugly
-     (fs/copy+ (fs/expand-home (str logseq-dir "/assets/" file))
-               (fs/expand-home (str (:output-dir (config/config)) "/pages/" file))))))
+     (fs/copy+ (fs/expand-home (str logseq-dir file))
+               (fs/expand-home (str (:output-dir (config/config)) file))))))
 
 ;;; TODO Not Logseq specific
 (defn publish-assets
