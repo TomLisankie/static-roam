@@ -166,7 +166,7 @@
   [page-name bm]
   (let [[_ top] (or (re-find #"^(.*?)/(.*)$" page-name) [nil page-name])
   ;; Sort to avoid random order, but it's not really right...pages could annotate their order I suppose?
-        page-struct (sort (get (bd/compute-page-hierarchies bm) top))]
+        page-struct (sort (get (bd/page-hierarchies bm) top))]
     [:div
      (render/page-link top :bm bm)
      ;; TODO multilevel, also tweak css so long things look rightish

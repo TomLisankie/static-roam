@@ -34,7 +34,7 @@
   (let [pages (remove :special? (bd/displayed-regular-pages bm))
         page-loc (fn [col] (str (or (:page-title col)
                                     (format "Index-%s" (:name col)))
-                                ".html"))]
+                                ))]
     (apply
      merge
      (for [{:keys [name sort-key filter-key] :as index :or {filter-key identity}} indexes]
@@ -58,7 +58,7 @@
                       ((:render col) page))])])
                ]]
              title  (format "Index by %s" name)]
-         {(str "/pages/" (page-loc index))    ;pkm
+         {(str "/" (page-loc index))    ;pkm
           (templating/page-hiccup hiccup title title bm)}
          )))))
 

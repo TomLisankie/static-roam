@@ -48,11 +48,11 @@
     :children :parent
     )))
 
-;;; Deal with Logseq page hierarchy feature.
-;;; This gives pages with titles like [[Religion/Discordianism]] a link to
-;;; their parent [[Religion]], for inclusion purposes. The result is that if
-;;; any page of such a hierarchy is published, they all will be, unless explicitly
-;;; marked #Private
+;;; Deal with Logseq page hierarchy feature. This gives pages with titles
+;;; like [[Religion/Discordianism]] a link to their parent [[Religion]], for inclusion purposes.
+
+;;; One consequence of this is that if any page of such a hierarchy is published, they all will be,
+;;; unless explicitly marked #Private
 (defn page-hierarchy-ref
   [page]
   (let [[_ parent _local]

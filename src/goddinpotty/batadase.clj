@@ -286,18 +286,6 @@
   (merge bm
          (u/index-by-multiple :alias (vals bm))))
 
-;;; Hierarchy
-
-(defn compute-page-hierarchies
-  [bm]
-  (filter identity
-          (for [page (pages bm)]
-            (let [[_ parent local]
-                  (and (:title page)           ;temp
-                       (re-find #"^(.*)/(.*?)$" (:title page)))]
-              (when parent
-                [parent local])))))
-
 ;;;  in multiool 0.19
 (defn merge-recursive
   "Merge two arbitrariy nested map structures. Terminal seqs are concatentated, terminal sets are merged."
@@ -320,7 +308,7 @@
     (exec collect)
     @acc))
 
-(u/defn-memoized compute-page-hierarchies ;only need to compute this once
+(u/defn-memoized page-hierarchies ;only need to compute this once
   [bm]
   (collecting-merge
    (fn [collect]
@@ -335,4 +323,9 @@
   [page bm]
   (or (and (:title page)
            (re-find #"^(.*)/(.*?)$" (:title page)))
-      (get (compute-page-hierarchies bm) (:title page)))) ;top page
+      (get (page-hierarchies bm) (:title page))))  ;top page
+
+(defn page-children
+  [page bm]
+  ;; TODO this won't work for >1 level of hierarchy
+  (get (page-hierarchies bm) (:title page)))

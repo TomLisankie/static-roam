@@ -46,14 +46,14 @@
   (if (:special? block)                 ;I miss OOP
     ((:generator block) block-map output-dir)
     (export-page (page-hiccup block-map output-dir block)
-                 (str "/pages/" (utils/html-file-title (:id block)))
+                 (str "/" (utils/html-file-title (:id block)))
                  output-dir)))
 
 (defn generate-index-redir
   [output-dir]
   (export-page
    [:meta {:http-equiv "refresh"
-           :content (format "0; url=%s" (str "pages/"  (utils/html-file-title (config/config :main-page))))}]
+           :content (format "0; url=%s" (str (utils/html-file-title (config/config :main-page))))}]
    "/index.html"
    output-dir))
 
@@ -75,7 +75,7 @@
     "Recently changed"
     "Recently changed"
     block-map)
-   "/pages/New.html"
+   "/New.html"
    output-dir))
 
 (defn generate-index-pages
@@ -88,7 +88,7 @@
   [bm output-dir]
   (export-page
    (templating/map-page bm output-dir)
-   "/pages/Map.html"
+   "/Map.html"
    output-dir))
 
 (defn generate-goddinpotty

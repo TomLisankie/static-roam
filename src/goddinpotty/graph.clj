@@ -262,7 +262,7 @@
      :depth (:depth page)
      :start (str start)
      :end (str end)
-     :link (str "/pages/" (utils/html-file-title title)) ;TODO this should be abstracted
+     :link (str "/" (utils/html-file-title title)) ;TODO this should be abstracted
      ; TODO size in blocks would be interesting maybe
      :group (cond (bd/entry-point? block-map page) 2
                   (:include? page) 1
@@ -272,7 +272,7 @@
 
 (defn write-page-data
   [bm output-dir]
-  (utils/write-json (str output-dir "/pages/graphs/pages.json") (page-data bm)))
+  (utils/write-json (str output-dir "/graphs/pages.json") (page-data bm)))
 
 (def view1-spec
   {:mark {:type "point"

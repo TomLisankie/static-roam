@@ -104,11 +104,11 @@
 ; :missing "Mastery-of-Non-Mastery.html" :in "mimesis.html"
 (defn check-output-links
   []
-  (doseq [f (fs/list-dir "output/pages")]
+  (doseq [f (fs/list-dir "output")]
     (doseq [link (map second (re-seq #"href=\"(.*?)\"" (slurp f)))]
       (if (str/starts-with? link "http")
         nil                             ;ignore external links
-        (when-not (fs/exists? (str "output/pages/" link))
+        (when-not (fs/exists? (str "output/" link))
           (prn :missing link :in (.getName f)))))))
 
 
