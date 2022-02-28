@@ -22,7 +22,7 @@
 
 (defn html-file-name
   [page-name]
-  (str (utils/clean-page-title page-name) ".html"))
+  (str (utils/clean-page-title page-name)))
 
 (defn page-link
   [page-name & [link-text]]

@@ -111,10 +111,10 @@
 
 ;;; TODO handle slashes more intelligently
 (defn html-file-title
-  "Formats a page title as a name for its corresponding HTML page (including '.html' extension)"
+  "Formats a page title as a name for its corresponding HTML page"
   [string]
   {:pre [(have? string? string)]}
-  (str (clean-page-title string) ".html"))
+  (str (clean-page-title string)))
 
 (def date-formatter
   (java.text.SimpleDateFormat. "dd MMM yyyy hh:mm"))
