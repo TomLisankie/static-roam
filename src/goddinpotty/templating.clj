@@ -66,7 +66,7 @@
              :href "https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" 
              :integrity "sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU"
              :crossorigin "anonymous"}]
-     [:link {:rel "stylesheet" :href "/assets/default.css"}]
+     [:link {:rel "stylesheet" :href "../assets/default.css"}]
      ~@(for [css (config/config :site-css)]
          `[:link {:rel "stylesheet" :href ~css}])
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
@@ -215,7 +215,7 @@
            (graph/render-graph ;; render-graph-embedded
             block-map
             output-dir
-            {:name (utils/cleaner-page-title block-id)
+            {:name (utils/clean-page-title block-id)
              :width 290                  ;This depends on the column width css, currently my-3
              :height 350
              :controls? false

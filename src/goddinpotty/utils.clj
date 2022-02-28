@@ -101,8 +101,11 @@
   [string]
   (-> string
       (strip-chars #{\( \) \[ \] \? \! \. \@ \# \$ \% \^ \& \* \+ \= \; \: \" \' \\ \, \< \> \~ \` \{ \}}) ; experimentally removed  /
-      (s/replace #"\s" "-")))
+      (s/replace #"\s" "-")
+      (s/replace #"\/" "∕")             ;that's "replace real slash with fake slash that won't make a subir"
+      ))
 
+#_
 (defn cleaner-page-title
   [string]
   (-> string

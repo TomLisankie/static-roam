@@ -25,4 +25,4 @@
 (defn search-head
   []
   [[:script {:src "http://elasticlunr.com/elasticlunr.min.js"}]
-   [:script {:src "/assets/search.js"}]])
+   [:script {:src "../assets/search.js"}]])

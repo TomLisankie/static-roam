@@ -83,7 +83,7 @@
 (defn reset-output
   []
   (let [pages-dir (config/config :output-dir)]
-    (fs/delete-dir-contents pages-dir)
+    (delete-dir-contents pages-dir)
     (fs/mkdir pages-dir)))
 
 (defn gen-page

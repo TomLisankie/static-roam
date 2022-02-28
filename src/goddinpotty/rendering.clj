@@ -54,6 +54,7 @@
 
 ;;; Logseq stores links to images as "../assets/..." , which breaks
 ;;; when we have page hierarchy. This is an ugly fix for that problem
+#_
 (defn root-image-url
   [u]
   (let [[match? base] (re-find #"^\.\.(.*)$" u)]
@@ -65,7 +66,7 @@
   [image-ref-content]
   (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))
         image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))
-        image-source (root-image-url image-source)
+        image-source image-source
         ]
     (maybe-publish-image image-source)
     ;; Link to
@@ -138,10 +139,9 @@
   (let [page (if (string? opage) (get (bd/alias-map bm) opage) opage)
         alias (or alias (and (string? opage) opage)) ;argh
         page-id (:id page)]
-    (prn :page-link page-id current alias )
     (if (and page (bd/displayed? page))
       [:a (u/clean-map
-           {:href (str "/" (utils/html-file-title page-id))
+           {:href (str (utils/html-file-title page-id))
             ;; TODO behavior with empties should be configurable, I keep
             ;; changing my own mind about it.
             :class (str/join " "
