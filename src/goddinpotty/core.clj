@@ -74,18 +74,26 @@
   (reset! last-bm bm)
   bm)
 
+(defn delete-dir-contents
+  "Like fs/delete-dir, but clears rather than deletes"
+  [dir]
+  (doseq [f (fs/list-dir dir)]
+    (fs/delete-dir f)))
+
 (defn reset-output
   []
   (let [pages-dir (config/config :output-dir)]
-    (fs/delete-dir pages-dir)
+    (fs/delete-dir-contents pages-dir)
     (fs/mkdir pages-dir)))
 
 (defn gen-page
   [page]
+  (u/memoize-reset!)
   (html-gen/generate-content-page @last-bm (config/config :output-dir) (get @last-bm page)))
 
 (defn gen-pages
   []
+  (u/memoize-reset!)
   (reset-output)
   (html-gen/generate-goddinpotty @last-bm (config/config :output-dir)))
 

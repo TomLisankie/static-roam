@@ -153,7 +153,8 @@
       (do
         ;; This is normal but a sign that target might want to be exposed.
         (prn (str "ref to excluded page: " (or page-id opage)))
-        (block-content->hiccup (or alias page-id))))))
+        [:span.empty
+         (block-content->hiccup (or alias page-id))]))))
 
 (defn page-link-by-name
   [bm page-name & rest]

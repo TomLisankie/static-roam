@@ -87,9 +87,9 @@
        [:ul.navbar-nav.ml-auto
         ~@(for [page (config/config :right-navbar)]
             [:li.nav-item
-             (if (vector? page)         ;TODO wtf?
+             (if (vector? page) 
                ;[:a {:href (second page) :class "nav-link"} (first page)]
-               (render/page-link (second page) :class "nav-link" :bm block-map :alias (second page))
+               (render/page-link (second page) :class "nav-link" :bm block-map :alias (first page))
                (render/page-link page :class "nav-link" :bm block-map))]
             )]]]
      [:div.container.main

@@ -40,14 +40,24 @@
   (doseq [[fname hiccup] content]
     (export-page hiccup fname output-dir)))
 
+(defn actual-file-name
+  [bm block]
+  (let [bare (utils/html-file-title (:id block))]
+    (str "/"
+         (if (bd/page-children block bm)
+           (str bare "/index.html")     ;wotta hack
+           bare))))
+
 (defn generate-content-page
   [block-map output-dir block]
   (prn :generate-page (:id block))
-  (if (:special? block)                 ;I miss OOP
-    ((:generator block) block-map output-dir)
-    (export-page (page-hiccup block-map output-dir block)
-                 (str "/" (utils/html-file-title (:id block)))
-                 output-dir)))
+  (u/ignore-report                      ;TODO TEMP because a few case-sensitive issues are still screwing me
+   (if (:special? block)                 ;I miss OOP
+     ((:generator block) block-map output-dir)
+     (let [fname (actual-file-name block-map block)]
+       (export-page (page-hiccup block-map output-dir block)
+                    fname
+                    output-dir)))))
 
 (defn generate-index-redir
   [output-dir]
