@@ -53,13 +53,12 @@
 (defn generate-content-page
   [block-map output-dir block]
   (prn :generate-page (:id block))
-  (u/ignore-report                      ;TODO TEMP because a few case-sensitive issues are still screwing me
-   (if (:special? block)                 ;I miss OOP
-     ((:generator block) block-map output-dir) ;not clear why we need these, why not put them directly in the map?
-     (let [fname (str "/" (utils/html-file-title (:id block)))]
-       (export-page (page-hiccup block-map output-dir block)
-                    fname
-                    output-dir)))))
+  (let [fname (str "/" (utils/html-file-title (:id block)))]
+    (export-page (if (:special? block)
+                   ((:generator block) block-map)
+                   (page-hiccup block-map output-dir block))
+                 fname
+                 output-dir)))
 
 (defn generate-index-redir
   [output-dir]
@@ -97,11 +96,9 @@
    output-dir))
 
 (defn generate-global-map
-  [bm output-dir]
-  (export-page
-   (templating/map-page bm output-dir)
-   "/Map.html"
-   output-dir))
+  [bm]
+   (templating/map-page bm)
+  )
 
 (defn generate-goddinpotty
   [block-map output-dir]
@@ -120,3 +117,18 @@
           :include? true
           :page? true
           }))
+
+#_
+(defn generated-pages
+  "Add a generated page to the block map"
+  [block-map pages]
+  (reduce (fn [bm [name page]]
+            (assoc bm name
+                   {:id name
+                    :title name
+                    :special? true                ;I miss OOP
+                    :generator generator
+                    :include? true
+                    :page? true
+                    }))
+          pages))

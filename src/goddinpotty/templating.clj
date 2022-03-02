@@ -148,9 +148,9 @@
      ]])
 
 (defn map-page
-  [bm output-dir]
+  [bm]
   (page-hiccup
-   (graph/render-graph bm output-dir {:name "fullmap" ;warning: this name can't be the same as a page name!
+   (graph/render-graph bm (config/config :output-dir) {:name "fullmap" ;warning: this name can't be the same as a page name!
                                       :include-all? (config/config :unexclude?)
                                       })
    "Map"

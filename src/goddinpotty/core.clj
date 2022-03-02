@@ -5,16 +5,20 @@
             [goddinpotty.batadase :as bd]
             [goddinpotty.html-generation :as html-gen]
             [goddinpotty.graph :as graph]
+            [goddinpotty.index :as index]
             [goddinpotty.import.logseq :as logseq]
             [me.raynes.fs :as fs]
             [org.parkerici.multitool.core :as u]
             [org.parkerici.multitool.cljcore :as ju]))
 
+;;; TODO this is a mess and should be cleaned up
 (defn add-generated-pages
   [bm]
   (-> bm
-      (html-gen/generated-page "Index" html-gen/generate-index-pages)
-      (html-gen/generated-page "New" html-gen/generate-recent-page) ;TODO not used in current Logseq, so shouldn't bother to generate
+      (merge (index/make-index-pages bm))
+      ;; Out of service; Logseq doesn't generate per-block dates
+      ;; Although could pull them from git with some work... TODO
+      #_(html-gen/generated-page "New" html-gen/generate-recent-page) 
       (html-gen/generated-page "Map" html-gen/generate-global-map)
       ))
 

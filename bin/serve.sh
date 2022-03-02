@@ -1,4 +1,4 @@
-source bin/setup.sh
+# source bin/setup.sh
 
 export PORT=$1
 

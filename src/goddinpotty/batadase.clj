@@ -156,14 +156,23 @@
        (or (tagged? block-map block tag)
            (tagged-or-contained? block-map (block-parent block-map block) tag))))
 
+;;; These are the top-level entrypoints, other than those defined by tags. Crude at the moment
+(defn advertised-page-names
+  []
+  (conj
+   (set (map (fn [e]
+              (if (vector? e) (second e) e))
+             (config/config :right-navbar)))
+   (config/config :main-page)))
+
 (defn entry-point?
   "Determines whether or not a given page is tagged with #EntryPoint in its first child block"
   [block-map block]
   ;; TODO this should be done in logseq import, like convert this to a pseudo-tag
   (or (:public? block)                  ;the logseq block property
       (some #(tagged? block-map block %)
-            (config/config :entry-tags))))
-      
+            (config/config :entry-tags))
+      (get (advertised-page-names) (:title block))))
 
 (defn entry-points
   [block-map]
