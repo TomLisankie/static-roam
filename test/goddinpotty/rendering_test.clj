@@ -21,14 +21,14 @@
   (is (= [:span "what " [:a.external {:href "fuck"} "the fucking"] " is this"]
          (block-content->hiccup "what [the fucking](fuck) is this")))
 
-  (is (= [:span "foo " [:a {:href "bar.html" :class "empty"} "bar"] " baz " [:a.external {:href "yuck"} "ugh"]]
+  (is (= [:span "foo " [:a {:href "bar" :class "empty"} "bar"] " baz " [:a.external {:href "yuck"} "ugh"]]
          (block-hiccup (fake-block "foo [[bar]] baz [ugh](yuck)") fake-block-map)))
-  (is (= [:span "foo " [:a.external {:href "yuck"} "ugh"] " baz " [:a {:href "bar.html" :class "empty"} "bar"]]
+  (is (= [:span "foo " [:a.external {:href "yuck"} "ugh"] " baz " [:a {:href "bar" :class "empty"} "bar"]]
          (block-hiccup (fake-block "foo [ugh](yuck) baz [[bar]]") fake-block-map)
          ))
   (is (= [:span "foo " [:a.external {:href "yuck"} "ugh"] " baz " [:a.external {:href "zippy"} "yow"]]
          (block-hiccup (fake-block "foo [ugh](yuck) baz [yow](zippy)") {})))
-  (is (= [:span "foo " [:a {:href "bar.html" :class "empty"} "bar"] " and " [:a {:href "baz.html"} "baz"]]
+  (is (= [:span "foo " [:a {:href "bar" :class "empty"} "bar"] " and " [:a {:href "baz"} "baz"]]
          (block-hiccup (fake-block "foo [[bar]] and [[baz]]") fake-block-map)
          ))
   )
@@ -56,7 +56,7 @@ And its fallen Emanation, the Spectre and its cruel Shadow.") {}))))
  and so is this.```") {})))))
 
 (deftest markup-in-page-names-test
-  (is (= [:a {:href "__foo__.html" :class "empty"} [:i "foo"]] 
+  (is (= [:a {:href "__foo__" :class "empty"} [:i "foo"]] 
          (block-hiccup (fake-block "[[__foo__]]")
                        (assoc fake-block-map "__foo__"
                               {:id "__foo__" :include? true :page? true :content "eh"})))))
@@ -101,16 +101,16 @@ And its fallen Emanation, the Spectre and its cruel Shadow.") {}))))
 (deftest internal-external-test
   (is (= [:span
           "Blah blah "
-          [:a {:href "What-Motivated-Rescuers-During-the-Holocaust.html"} "finished coherent essay"]
+          [:a {:href "What-Motivated-Rescuers-During-the-Holocaust"} "finished coherent essay"]
           " or "
           [:a.external {:href "http://link"} "normal"]])
       (block-content->hiccup "Blah blah [finished coherent essay]([[What Motivated Rescuers During the Holocaust?]])")))
 
 (deftest page-alias-test
-  (mc/with-mock [utils/html-file-title :link-url]
-    (is (= [:span "A show about " [:a {:href :link-url :class "empty"} "The Big Nada"] ]
+  (mc/with-mock [utils/html-file-title "link-url"]
+    (is (= [:span "A show about " [:a {:href "link-url" :class "empty"} "The Big Nada"] ]
            (block-hiccup (fake-block "A show about {{alias:[[nihilism]]The Big Nada}}")
                          {"nihilism" {:id "nihilism" :page? true :include? true :content "foo"}})))
-    (is (= [:span "A show about " [:a {:href :link-url} "The Big Nada"] ]
+    (is (= [:span "A show about " [:a {:href "link-url"} "The Big Nada"] ]
            (block-hiccup (fake-block "A show about {{alias:[[nihilism]]The Big Nada}}")
                          {"nihilism" {:id "nihilism" :page? true :include? true :content (str (range 1000))}})))))

@@ -19,10 +19,10 @@
 
 (defn write-index
   [bm output-dir]
-  (utils/write-json (str output-dir "/index.js")
+  (utils/write-json (str output-dir "/assets/index.js")
                     (index bm)))
 
 (defn search-head
   []
   [[:script {:src "http://elasticlunr.com/elasticlunr.min.js"}]
-   [:script {:src "../assets/search.js"}]])
+   [:script {:src "assets/search.js"}]])

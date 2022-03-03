@@ -31,7 +31,9 @@
     (letfn [(convert [block]
               (let [b
                     {
-                     :title (or (get-in block [:block/properties :title])
+                     
+                     :title (or ;; looks like this is not necessary and in fact causes weird errors because non-page blocks get the property
+                             #_(get-in block [:block/properties :title])
                                 (:block/page-name block)) ; This is often wrong, eg lowercased, so ony use when we have tof
                      :id (if (:block/page-name block)
                            (or (get-in block [:block/properties :title])
@@ -166,8 +168,9 @@
   (doseq [file @rendering/published-images]
     (u/ignore-report
     ;; this tree-hopping is ugly
-     (fs/copy+ (fs/expand-home (str logseq-dir file))
-               (fs/expand-home (str (:output-dir (config/config)) file))))))
+     (fs/copy+ (fs/expand-home (str logseq-dir "/pages/" file))
+               ;; yes we have to dip down into hierarchy
+               (fs/expand-home (str (:output-dir (config/config)) "/assets/" file))))))
 
 ;;; TODO Not Logseq specific
 (defn publish-assets

@@ -16,7 +16,7 @@ function Get(yourUrl){
 }
 
 function getDocs() {
-    var docs = JSON.parse(Get("/index.js"));
+    var docs = JSON.parse(Get("assets/index.js"));
     docs.forEach(function(doc) {
 	index.addDoc(doc, false);
     });

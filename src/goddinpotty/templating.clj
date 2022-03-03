@@ -66,12 +66,13 @@
              :href "https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" 
              :integrity "sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU"
              :crossorigin "anonymous"}]
-     [:link {:rel "stylesheet" :href "../assets/default.css"}]
+     [:link {:rel "stylesheet" :href "assets/default.css"}]
      ~@(for [css (config/config :site-css)]
          `[:link {:rel "stylesheet" :href ~css}])
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
      ;; Using slightly-bold font for links for whatever reason.
-     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Lara:wght@400;500&display=swap"}]
+     ;; TODO fonts should be specifyiable in config
+     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&display=swap"}]
      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Varela+Round:wght@400;600&display=swap"}]
      ;; TODO this should be conditional on latex appearing on the page
      ;; see https://docs.mathjax.org/en/latest/web/typeset.html#load-for-math

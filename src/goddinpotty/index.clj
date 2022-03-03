@@ -81,9 +81,8 @@
 (defn make-index-pages
   [bm]
   (let [pages (remove :special? (bd/displayed-regular-pages bm))
-        page-loc (fn [col] (str (or (:page-title col)
-                                    (format "Index-%s" (:name col)))
-                                ))]
+        page-id (fn [name] (format "Index-%s" name))
+        ]
     (into {}
           (for [{:keys [name sort-key filter-key] :as index :or {filter-key identity}} indexes]
             (let [hiccup
@@ -96,7 +95,7 @@
                                                    (format "width: %s;" (:col-width col)))}
                         (if (= (:name col) name)
                           (:name col)
-                          [:a {:href (page-loc col)} (:name col)])])]]
+                          [:a {:href (page-id (:name col))} (:name col)])])]]
                    [:tbody 
                     (for [page (sort-by sort-key (filter filter-key pages))]
                       [:tr
@@ -106,9 +105,9 @@
                            ((:render col) page))])])
                     ]]
                   title  (format "Index by %s" name)]
-              [(format "Index-%s" name)
+              [(page-id name)
                (generated-page
-                name
+                (page-id name)
                 (fn [bm]
                   ;; TODO this no longer does the export
                   (templating/page-hiccup hiccup title title bm)
