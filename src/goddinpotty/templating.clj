@@ -163,20 +163,29 @@
   [[from to]]
   [:div.date (utils/render-time from) " - " (utils/render-time to)])
 
+
+;;; Note: not as elegant as it could be, but works
+(defn render-page-hierarchy-1
+  [path page-struct bm this]
+  (let [top (clojure.string/join "/" path)]
+    [:div
+     (render/page-link top :bm bm :alias (last path))
+   ;; TODO tweak css so long things look rightish
+   ;; whitespace: nowrap (but needs to truncate or something)
+   [:ul
+    (for [child (sort (keys page-struct))] ;Sort imposes some order, better than random I guess
+      (if (map? (get page-struct child))
+        (render-page-hierarchy-1 (conj path child)
+                                 (get page-struct child)
+                                 bm this)
+        [:li (render/page-link (str top "/" child) :bm bm :alias child :current this)]))]]))
+
+
 (defn render-page-hierarchy
   [page-name bm]
   (let [[_ top] (or (re-find #"^(.*?)/(.*)$" page-name) [nil page-name])
-  ;; Sort to avoid random order, but it's not really right...pages could annotate their order I suppose?
-        page-struct (sort (get (bd/page-hierarchies bm) top))]
-    [:div
-     (render/page-link top :bm bm)
-     ;; TODO multilevel, also tweak css so long things look rightish
-     ;; whitespace: nowrap (but needs to truncate or something)
-     [:ul
-      (for [child page-struct]
-        [:li (render/page-link (str top "/" child) :bm bm :alias child :current page-name)])
-      ] 
-     ]))
+        page-struct (get (bd/page-hierarchies bm) top)]
+    (render-page-hierarchy-1 [top] page-struct bm page-name)))
 
 (defn block-page-hiccup
   [block-id block-map output-dir]
@@ -237,16 +246,16 @@
                (linked-references-template linked-refs block-map)]]]))
 
         page-hierarchy-widget
-        ;; TODO oops, omits the top page!
         (when (bd/page-in-hierarchy? block block-map)
           [:div.card.my-3
-           [:h5.card-header "Page Outline"]
+           [:h5.card-header "Contents"] ;for lack of a better name
            [:div.card-body
             (render-page-hierarchy (:title block) block-map)]])
 
         ;; See http://webseitz.fluxent.com/wiki/TwinPages , but this doesn't work for a number of reasons:
         ;; - Needs page names like /AlanKay, not /Alan-Kay.html
         ;; - Needs to be added to a list?
+        ;; to test: curl -v -H Referer:http://hyperphor.com/ammdi/Logseq http://www.wikigraph.net/twinpages.js  
         #_
         twin-pages-widget
         #_

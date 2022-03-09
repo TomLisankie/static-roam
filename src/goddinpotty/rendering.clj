@@ -52,16 +52,6 @@
   (when (local-path? src)
     (swap! published-images conj src)))
 
-;;; Logseq stores links to images as "../assets/..." , which breaks
-;;; when we have page hierarchy. This is an ugly fix for that problem
-#_
-(defn root-image-url
-  [u]
-  (let [[match? base] (re-find #"^\.\.(.*)$" u)]
-    (if match?
-      base
-      u)))
-
 (defn- format-image
   [image-ref-content]
   (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))

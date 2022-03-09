@@ -317,16 +317,27 @@
     (exec collect)
     @acc))
 
-(u/defn-memoized page-hierarchies ;only need to compute this once
-  [bm]
+;;; → Multitool? 
+(defn vec->maps
+  [v]
+  (if (empty? v)
+    nil                                 ;Note: other values won't work!
+    {(first v) (vec->maps (rest v))}))
+
+;;; Handles multilevel 
+(defn- page-hierarchies-1
+  [page-names]
   (collecting-merge
    (fn [collect]
-     (doseq [page (pages bm)]
-       (let [[_ parent local]
-             (and (:title page)           ;temp
-                  (re-find #"^(.*)/(.*?)$" (:title page)))]
-         (when parent
-           (collect {parent [local]})))))))
+     (doseq [title page-names]
+       (when (re-find #"/" title)
+         (prn  (vec->maps (str/split title #"/")))
+         (collect (vec->maps (str/split title #"/"))))))))
+
+(u/defn-memoized page-hierarchies ;only need to compute this once
+  [bm]
+  (page-hierarchies-1 (map :title (pages bm))))
+
 
 (defn page-in-hierarchy?
   [page bm]
