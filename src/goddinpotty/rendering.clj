@@ -52,16 +52,22 @@
   (when (local-path? src)
     (swap! published-images conj src)))
 
+(defn maybe-relocate-local-image
+  [source]
+  (if (re-matches #"\.\./assets.*" source)
+    (subs source 3)
+    source))
+
 (defn- format-image
   [image-ref-content]
   (let [alt-text (utils/remove-n-surrounding-delimiters 1 (re-find #"\[.*?\]" image-ref-content))
         image-source (utils/remove-n-surrounding-delimiters 1 (re-find #"\(.*?\)" image-ref-content))
-        image-source image-source
+        image-published (maybe-relocate-local-image image-source)
         ]
     (maybe-publish-image image-source)
     ;; Link to
-    [:a.imga {:href image-source :target "_image"} ;cheap way to get expansion. TODO link highlighhting looking slightly crufty
-     [:img {:src image-source :alt alt-text}]]))
+    [:a.imga {:href image-published :target "_image"} ;cheap way to get expansion. TODO link highlighhting looking slightly crufty
+     [:img {:src image-published :alt alt-text}]]))
 
 (defn youtube-vid-embed
   "Returns an iframe for a YouTube embedding"
@@ -126,7 +132,9 @@
 ;;;  page can be page or page-id (requires bm)
 (defn page-link
   [opage & {:keys [alias class bm current]}]     
-  (let [page (if (string? opage) (get (bd/alias-map bm) opage) opage)
+  (let [page (if (string? opage)
+               (bd/get-with-aliases bm opage)
+               opage)
         alias (or alias (and (string? opage) opage)) ;argh
         page-id (:id page)]
     (if (and page (bd/displayed? page))
@@ -146,16 +154,22 @@
         [:span.empty
          (block-content->hiccup (or alias page-id))]))))
 
+;;; Argh this is stupid
 (defn page-link-by-name
   [bm page-name & rest]
-  (let [bm (bd/alias-map bm)]
-    (cond (contains? bm page-name)
-        (apply page-link page-name :bm bm rest)
-        (empty? bm)                     ;this can happen when a page title contains a link. (???)
-        [:span page-name]
-        :else
-        [:span.missing page-name]       ;In Logseq world, this happens if you have a single link to a non-existant (empty) page
-        )))
+  (apply page-link page-name :bm bm rest))
+
+
+
+    ;; (cond (contains? bm page-name)
+    ;;     (apply page-link page-name :bm bm rest)
+    ;;     (empty? bm)                     ;this can happen when a page title contains a link. (???)
+    ;;     [:span page-name]
+    ;;     :else
+    ;;     [:span.missing page-name]       ;In Logseq world, this happens if you have a single link to a non-existant (empty) page
+    ;;     )))
+
+
 
 (declare block-hiccup)
 

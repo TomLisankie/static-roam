@@ -60,26 +60,7 @@
              (re-find #"^(.*)/(.*?)$" (:title page)))]
     parent))
 
-(defn block-refs
-  [block]
-  (letfn [(struct-entities [struct]
-            (if (string? struct)
-              []
-              ;; Would make sense to do some of this in parser/transform-to-ast
-              (case (first struct)
-                ;; :block-ref – but you don't want to follow those up for inclusion
-                :block (mapcat struct-entities (rest struct))
-                :hashtag [(utils/parse-hashtag (second struct))]
-                :page-link [(utils/remove-double-delimiters (second struct))]
-                :blockquote (struct-entities (second struct))
-                :alias (if-let [v (second (re-find #"\[.*\]\(\[\[(.*)\]\]\)" (second struct)))];kluge alert
-                         [v] [])
-                ;; default
-                (mapcat struct-entities (rest struct)))))]
-    (let [base (set (struct-entities (:parsed block)))]
-      (if-let [page-hierarch-ref (page-hierarchy-ref block)]
-        (conj base page-hierarch-ref)
-        base))))
+
 
 ;;; New version computes degree as well as acctually the map
 ;;; Seems to compute the same set as other method
@@ -112,10 +93,33 @@
   [db]
   (ju/pmap-values parse-block db))
 
+;;; Computes the value of the :refs attribute
+(defn block-refs
+  [block aliases]
+  (letfn [(struct-entities [struct]
+            (if (string? struct)
+              []
+              ;; Would make sense to do some of this in parser/transform-to-ast
+              (case (first struct)
+                ;; :block-ref – but you don't want to follow those up for inclusion
+                :block (mapcat struct-entities (rest struct))
+                :hashtag [(utils/parse-hashtag (second struct))]
+                :page-link [(utils/remove-double-delimiters (second struct))]
+                :blockquote (struct-entities (second struct))
+                :alias (if-let [v (second (re-find #"\[.*\]\(\[\[(.*)\]\]\)" (second struct)))];kluge alert
+                         [v] [])
+                ;; default
+                (mapcat struct-entities (rest struct)))))]
+    (let [base (set (map #(get aliases % %) (struct-entities (:parsed block))))]
+      (if-let [page-hierarch-ref (page-hierarchy-ref block)]
+        (conj base page-hierarch-ref)
+        base))))
+
 (defn generate-refs
   [db]
-  (ju/pmap-values #(assoc % :refs (block-refs %))
-                  db))
+  (let [aliases (bd/alias-map db)]
+    (ju/pmap-values #(assoc % :refs (block-refs % aliases))
+                    db)))
 
 (defn generate-inverse-refs
   [db]

@@ -7,6 +7,8 @@
 
 ;;; http://elasticlunr.com/elasticlunr.min.js
 
+;;; TODO should index aliases
+
 (defn index
   [bm]
   (u/for* [page (bd/displayed-pages bm)

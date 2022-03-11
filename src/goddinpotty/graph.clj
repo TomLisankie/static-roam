@@ -26,6 +26,7 @@
 
 (defn page-neighbors
   [bm from n max-degree]
+  ;; TODO page-empty? here seems wrong, should be included in :included?
   (let [neighbors (fn [b] (take max-degree (remove bd/page-empty? (map bm (bd/page-refs bm b)))))]
     (u/neighborhood from n neighbors)))
 

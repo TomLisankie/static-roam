@@ -19,7 +19,7 @@
 ;;; Note: there's not a lot to be gained by using that (and it requires a manual export
 ;;; Might be better to just build from .md files like Logseq does. Might even steal their code!
 
-(defn logseq-edn->blockmap
+(defn- logseq-edn->blocks
   [f]
   (prn :reading f)
   (let [pages (-> f
@@ -155,7 +155,7 @@
   [config]
   (let [{:keys [directory file-pattern]} (:source config)]
     (-> (utils/latest directory file-pattern)
-        logseq-edn->blockmap
+        logseq-edn->blocks
         db/index-blocks    
         db/roam-db-1
         get-edit-times                  

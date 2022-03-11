@@ -72,7 +72,7 @@
      [:link {:rel "preconnect" :href "https://fonts.gstatic.com"}]
      ;; Using slightly-bold font for links for whatever reason.
      ;; TODO fonts should be specifyiable in config
-     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&display=swap"}]
+     [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;550&display=swap"}]
      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css2?family=Varela+Round:wght@400;600&display=swap"}]
      ;; TODO this should be conditional on latex appearing on the page
      ;; see https://docs.mathjax.org/en/latest/web/typeset.html#load-for-math

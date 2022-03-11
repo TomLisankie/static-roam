@@ -289,12 +289,6 @@
        block))
    bm))
 
-(u/defn-memoized alias-map
-  "Extend a bm so aliases get mapped to pages as well as regular titles."
-  [bm]
-  (merge bm
-         (u/index-by-multiple :alias (vals bm))))
-
 ;;;  in multiool 0.19
 (defn merge-recursive
   "Merge two arbitrariy nested map structures. Terminal seqs are concatentated, terminal sets are merged."
@@ -316,6 +310,23 @@
         collect #(swap! acc merge-recursive %)]
     (exec collect)
     @acc))
+
+(u/defn-memoized alias-map
+  "Return map of aliases to real page names"
+  [bm]
+  (collecting-merge
+   (fn [collect]
+     (doseq [block (vals bm)]
+       (when (:alias block)
+         (doseq [alias (:alias block)]
+           (collect {alias (:id (block-page bm block))})
+           ))))))
+
+(defn get-with-aliases
+  [bm page-name]
+  (let [aliases (alias-map bm)]
+    (or (get bm page-name)
+        (get bm (get aliases page-name)))))
 
 ;;; → Multitool? 
 (defn vec->maps
