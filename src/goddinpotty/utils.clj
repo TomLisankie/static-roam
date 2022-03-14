@@ -105,13 +105,6 @@
       (s/replace #"\/" "∕")             ;that's "replace real slash with fake slash that won't make a subir"
       ))
 
-#_
-(defn cleaner-page-title
-  [string]
-  (-> string
-      clean-page-title
-      (s/replace #"\/" "-")))
-
 ;;; TODO handle slashes more intelligently
 (defn html-file-title
   "Formats a page title as a name for its corresponding HTML page"

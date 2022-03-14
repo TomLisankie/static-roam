@@ -8,6 +8,7 @@ elasticlunr.tokenizer.seperator = /[\s\-\/]+/;
 
 var index = elasticlunr(function () {
     this.addField('title');	// TODO adjust config
+    this.addField('alias');
     this.addField('body');
     this.setRef('id');		// TODO is this used?
 });
@@ -35,6 +36,7 @@ function keypress(evt) {
 var config = {
     fields: {
         title: {boost: 2},
+	alias: {boost: 2},
         body: {boost: 1}
     },
     expand: true

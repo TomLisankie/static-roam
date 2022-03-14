@@ -2,7 +2,9 @@
   (:require [org.parkerici.multitool.core :as u]
             [goddinpotty.batadase :as bd]
             [goddinpotty.rendering :as render]
-            [goddinpotty.utils :as utils])
+            [goddinpotty.utils :as utils]
+            [clojure.string :as str]
+            )
   )
 
 ;;; http://elasticlunr.com/elasticlunr.min.js
@@ -11,13 +13,17 @@
 
 (defn index
   [bm]
+  (let [aliases (u/map-invert-multiple (bd/alias-map bm))]
   (u/for* [page (bd/displayed-pages bm)
            index (range)]
+   (u/clean-map          
     {:id index                          ;TODO not sure this is necessary, we don't use it
      :url (utils/html-file-title (:id page))
-     ;; TODO should strip markup like __foo__, would be nice if it could be rendered in search results, but that looks tricky
-     :title (:title page) 
-     :body (render/block-full-text bm page)}))
+     ;; If punctuation is causing problems, try fiddling with elasticlunr.tokenizer.seperator
+     :title (:title page)
+     :alias (when-let [aliases (get aliases (:title page))]
+              (str/join " " aliases))
+     :body (render/block-full-text bm page)}))))
 
 (defn write-index
   [bm output-dir]

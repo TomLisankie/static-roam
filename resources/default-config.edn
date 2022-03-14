@@ -5,6 +5,7 @@
           :file-pattern ".edn"          ;You probably want something more specific
           } 
  :entry-tags ["EntryPoint"]
+ ;; TODO should get rid of these Roam names at least
  :exit-tags #or [#split [#env ROAM_EXIT_TAGS] ["ExitPoint" "Private"]]
  :dev-mode #boolean #or [#env ROAM_DEV_MODE "false"]
  :daily-notes? #boolean #or [#env ROAM_DAILY_NOTES "false"]
