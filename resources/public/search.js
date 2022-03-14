@@ -1,6 +1,10 @@
+
 // Hacky code to support search widget
 // TODO should have a visible "no results" indicater
 // TODO might want to trim results to n or use threshold
+
+// Treat / as separator
+elasticlunr.tokenizer.seperator = /[\s\-\/]+/;
 
 var index = elasticlunr(function () {
     this.addField('title');	// TODO adjust config

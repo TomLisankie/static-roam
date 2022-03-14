@@ -1,7 +1,6 @@
 (ns goddinpotty.config
   (:require [aero.core :as aero]
             [clojure.string :as s]
-            [me.raynes.fs :as fs]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             ))
