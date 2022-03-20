@@ -256,9 +256,7 @@
         ;; - Needs page names like /AlanKay, not /Alan-Kay.html
         ;; - Needs to be added to a list?
         ;; to test: curl -v -H Referer:http://hyperphor.com/ammdi/Logseq http://www.wikigraph.net/twinpages.js  
-        #_
         twin-pages-widget
-        #_
         [:div.card.my-3
          [:h5.card-header "Twin Pages"]
          [:div.card-body
@@ -271,7 +269,7 @@
     ;; TODO why isn't search widget done this way?
     (page-hiccup contents title-text title-hiccup block-map
                  :head-extra (graph/vega-lite-head) ;lite to support new dataviz
-                 :widgets [map-widget page-hierarchy-widget incoming-links-widget])
+                 :widgets [map-widget page-hierarchy-widget incoming-links-widget twin-pages-widget])
     ))
 
 
