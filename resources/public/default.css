@@ -239,7 +239,37 @@ iframe {
     font-size: 10pt;
 }
 
+/* LH widget related */
+
+.minicard-body {
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 11pt;
+}
+
+
 /* Search related */
+
+#searchh {
+    line-height: 2;
+}
+
+#searcht {
+    float: right;
+    display: flex;
+    width: 70%;
+
+}
+
+#searchb {
+    padding: 0.25rem;
+}
+
+#searcho {
+    margin-left: 10px;
+    margin-top: 5px;
+    display: none;		/* Changed when results generated */
+}
 
 .searchentry {
     text-indent: -5px;

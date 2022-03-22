@@ -100,27 +100,7 @@
 
         ;; TODO Is there a reason this isn't under widget mechanism?
         "<!-- Search Widget -->"
-        [:div.card.my-3
-         [:h5.card-header [:span {:style ~(utils/css-style {:line-height "2"})} ;makes it line up, god knows why its necessary
-                           "Search"]
-          [:input.form-control {:id "searcht"
-                                :type "text"
-                                ;; :placeholder "Search for..."
-                                :onkeyup "keypress(event)"
-                                :style ~(utils/css-style
-                                         {:float "right"
-                                          :display "flex"
-                                          :width "70%"})
-                                }]
-          ]
-         [:div.card-body {:style ~(utils/css-style {:padding "0.25rem"})}
-          ;; output goes here
-          [:div#searcho {:style ~(utils/css-style
-                                  {:margin-left "10px"
-                                   :margin-top "5px"
-                                   :display "none" ;javascript changes this when there are results
-                                   })}] 
-          ]]
+
         ~@widgets
         ]
 
@@ -203,6 +183,28 @@
          (render/page-hiccup block-id block-map)
          [:hr {}]]
 
+        search-widget
+        [:div.card.my-3
+         [:h5.card-header
+          [:span#searchh
+           "Search"]
+          [:input#searcht.form-control {:type "text"
+                                        ;; :placeholder "Search for..."
+                                        :onkeyup "keypress(event)"
+                                        }]
+          ]
+         [:div#searchb.card-body
+          ;; output goes here
+          [:div#searcho] 
+          ]]
+        about-widget
+        ;; TODO this page should be hidden, or something
+        (when-let [about-content (render/block-full-hiccup "AboutBlock" block-map)]
+        [:div.card.my-3
+         [:h5.card-header "About"]
+         [:div.card-body.minicard-body
+          about-content]])
+
         map-widget
         [:div.card.my-3
          [:h5.card-header
@@ -266,10 +268,9 @@
                      :referrerpolicy "unsafe-url"
                      }]]]]]
 
-    ;; TODO why isn't search widget done this way?
     (page-hiccup contents title-text title-hiccup block-map
                  :head-extra (graph/vega-lite-head) ;lite to support new dataviz
-                 :widgets [map-widget page-hierarchy-widget incoming-links-widget twin-pages-widget])
+                 :widgets [about-widget search-widget map-widget page-hierarchy-widget incoming-links-widget twin-pages-widget])
     ))
 
 
