@@ -167,6 +167,15 @@
         page-struct (get (bd/page-hierarchies bm) top)]
     (render-page-hierarchy-1 [top] page-struct bm page-name)))
 
+(defn render-toc
+  [toc bm]
+  [:ul
+   (for [[indent id] toc]
+     [:li 
+      [:span {:style (utils/css-style {:width (* 15 (-  indent 1))})}]     ;ech
+      [:a {:href (str "#" id)} (render/block-local-text (get bm id))]]
+     )])
+
 (defn block-page-hiccup
   [block-id block-map output-dir]
   (let [block (get block-map block-id)
@@ -254,23 +263,37 @@
            [:div.card-body
             (render-page-hierarchy (:title block) block-map)]])
 
-        ;; See http://webseitz.fluxent.com/wiki/TwinPages , but this doesn't work for a number of reasons:
-        ;; - Needs page names like /AlanKay, not /Alan-Kay.html
-        ;; - Needs to be added to a list?
-        ;; to test: curl -v -H Referer:http://hyperphor.com/ammdi/Logseq http://www.wikigraph.net/twinpages.js  
+        ;; See http://webseitz.fluxent.com/wiki/TwinPages 
         twin-pages-widget
-        [:div.card.my-3
-         [:h5.card-header "Twin Pages"]
-         [:div.card-body
-          [:div#twin_pages
-           {:style {}} ;"border:1px; vertical-align:top; horizontal-align:center"
-           [:script {:src "http://www.wikigraph.net/twinpages.js"
-                     :referrerpolicy "unsafe-url"
-                     }]]]]]
+        (when (config/config :twin-pages?)
+          [:div.card.my-3
+           [:h5.card-header "Twin Pages"]
+           [:div.card-body
+            [:div#twin_pages
+             {:style {}} ;"border:1px; vertical-align:top; horizontal-align:center"
+             [:script {:src "http://www.wikigraph.net/twinpages.js"
+                       :referrerpolicy "unsafe-url"
+                       }]]]])
+
+        page-contents-widget
+          [:div.card.my-3
+           [:h5.card-header "Page Contents"]
+           [:div.card-body
+            (render-toc (bd/toc block) block-map)
+            ]]
+        ]
 
     (page-hiccup contents title-text title-hiccup block-map
                  :head-extra (graph/vega-lite-head) ;lite to support new dataviz
-                 :widgets [about-widget search-widget map-widget page-hierarchy-widget incoming-links-widget twin-pages-widget])
+                 ;; TODO wants to be configurable 
+                 ;; TODO also all widgets should be collapsible and the state remembered (map does this, but they all should)
+                 :widgets [about-widget ;eg don't need this in my personal versioN!
+                           search-widget
+                           page-contents-widget ;TODO only render when needed
+                           map-widget
+                           page-hierarchy-widget
+                           incoming-links-widget
+                           twin-pages-widget])
     ))
 
 

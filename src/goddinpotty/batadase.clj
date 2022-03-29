@@ -360,3 +360,55 @@
   [page bm]
   ;; TODO this won't work for >1 level of hierarchy
   (get (page-hierarchies bm) (:title page)))
+
+;;; Table o' contents
+
+;;; This must exist? core.match, but not quite
+;;; https://github.com/dcolthorp/matchure
+
+;;; Note: this is minimal, and in some cases just wrong, but good enoug
+;;; → multitool
+(defn extend-seq
+  [seq]
+  (concat seq (repeat nil)))
+
+;;; → multitool
+(defn str-match
+  [pat thing]
+  (cond (and (list? pat) (= '? (first pat)))
+        (if thing
+          {(keyword (second pat)) thing}
+          nil)
+        (and (sequential? pat) (sequential? thing))
+        (reduce (fn [a b] (and a b (merge a b)))
+                {}
+                (map str-match pat (extend-seq thing)))
+        (= pat thing) {}
+        :else nil))
+
+;;; Page table of contents generation
+
+(defn- toc-1
+  [block]
+  (let [head (when-let [{:keys [depth content]}
+                        (str-match '[:block [:heading (? depth) (? content)]]
+                                   (:parsed block))]
+               (when (zero? (count depth)) (prn :foo block))
+               [(count depth) (:id block)]) ; might be nice to add rendered text but namespace fucks us, it's render/block-locak-text
+        rest
+        (filter identity (map toc-1 (:dchildren block)))]
+    (if head
+      (cons head rest)
+      (if (empty? rest)
+        nil
+        rest))))
+
+(defn toc
+  [block]
+  (partition 2 (flatten (toc-1 block))))
+
+
+          
+          
+          
+        

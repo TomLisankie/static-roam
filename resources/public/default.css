@@ -353,3 +353,12 @@ iframe {
     background: lightgoldenrodyellow;
 }
 
+/* This makes internal hrefs scroll to visibility. See https://css-tricks.com/hash-tag-links-padding/ */
+ul::before { 
+  display: block; 
+  content: " "; 
+  margin-top: -65px; 
+  height: 65px; 
+  visibility: hidden; 
+  pointer-events: none;
+}
