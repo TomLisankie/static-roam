@@ -313,12 +313,6 @@
             basic))
     ))
 
-;;; TODO this doesn't work, should be using block-id rather than page titles
-;;; goddinpotty fucks this up...sigh, should have rolled my own from the start
-(defn roam-url
-  [block-id]
-  (str (config/config :roam-base-url) block-id))
-
  ;Has to do full hiccup to include children
 (defn block-full-hiccup-sidenotes
   [block-id block-map & [depth]]
@@ -326,14 +320,20 @@
   (let [depth (or depth 0)
         block (get block-map block-id)]
     (when (bd/displayed? block)
-      [:ul {:id block-id :class (if (< depth 2) "nondent" "")} ;don't indent the first 2 levels
+      [:ul {:id block-id :class (cond (not (bd/included? block)) "excluded"
+                                      (< depth 2) "nondent" ;don't indent the first 2 levels
+                                      :else "")}
        "\n"
        [:li.block
+        ;; TODO Would be cool if could jigger logseq into viewing the page, but a no-op for now
+        #_
         (when (config/config :dev-mode)
-          [:a.edit {:href (roam-url block-id)
+                [:a.edit {:href (roam-url block-id)
                     :target "_roam"}
            (icon "pencil")
            ])           
+        ;; ugly, trying something different
+        #_
         (when-not (bd/included? block)
           [:span.edit 
            (icon "file-lock2")])

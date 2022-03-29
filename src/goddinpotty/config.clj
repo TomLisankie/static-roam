@@ -5,6 +5,8 @@
             [clojure.pprint :as pprint]
             ))
 
+;;; For config specifics, see resources/default-config.edn
+
 (defmethod aero/reader 'split
   [_ _ [s]]
   (and s (s/split s #",")))

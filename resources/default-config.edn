@@ -23,4 +23,5 @@
 ;;; :markdown-output-dir false
 ;;; :real-base-url "https://mysite.com/mygraph/pages/" ; Used for markdown version to point home. 
  :bullets? false                        ;TODO not implemented; change this in CSS
+ :twin-pages? false                     ;Whether to include twin pages widget, requires being registered at http://webseitz.fluxent.com/wiki/TwinPages
  }
