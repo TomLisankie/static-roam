@@ -167,9 +167,10 @@
         page-struct (get (bd/page-hierarchies bm) top)]
     (render-page-hierarchy-1 [top] page-struct bm page-name)))
 
+;;; Note: these links have a different semnatics than normal ones, and so maybe should be styled differently
 (defn render-toc
   [toc bm]
-  [:ul
+  [:ul.ulz
    (for [[indent id] toc]
      [:li 
       [:span {:style (utils/css-style {:width (* 15 (-  indent 1))})}]     ;ech
@@ -209,17 +210,17 @@
         about-widget
         ;; TODO this page should be hidden, or something
         (when-let [about-content (render/block-full-hiccup "AboutBlock" block-map)]
-        [:div.card.my-3
-         [:h5.card-header "About"]
-         [:div.card-body.minicard-body
-          about-content]])
+          [:div.card.my-3
+           [:h5.card-header "About"]
+           [:div.card-body.minicard-body
+            about-content]])
 
         map-widget
         [:div.card.my-3
          [:h5.card-header
           [:a {:data-bs-toggle "collapse"
                :data-bs-target "#mapgraph"
-;               :type "button"
+                                        ;               :type "button"
                :aria-expanded "false"
                :aria-controls "mapgraph"
                :onclick "toggleMap();"  ;hack to persist state, see search.js
@@ -256,10 +257,12 @@
               [:div.incoming
                (linked-references-template linked-refs block-map)]]]))
 
+        ;; TODO well the fact that I have these two similar-yet-different things is a sign that this whole page-based hypertext thing is a crock. Not sure what to do about it though.
+
         page-hierarchy-widget
         (when (bd/page-in-hierarchy? block block-map)
           [:div.card.my-3
-           [:h5.card-header "Contents"] ;for lack of a better name
+           [:h5.card-header "Page Tree"] ;was Contents but now we have intrapage contents...
            [:div.card-body
             (render-page-hierarchy (:title block) block-map)]])
 
@@ -276,11 +279,13 @@
                        }]]]])
 
         page-contents-widget
-          [:div.card.my-3
-           [:h5.card-header "Page Contents"]
-           [:div.card-body
-            (render-toc (bd/toc block) block-map)
-            ]]
+        (let [toc (bd/toc block)]
+          (when (> (count toc) 2)       ;TODO maybe make this configurable
+            [:div.card.my-3
+             [:h5.card-header "Page Contents"]
+             [:div.card-body
+              (render-toc toc block-map)
+              ]]))
         ]
 
     (page-hiccup contents title-text title-hiccup block-map

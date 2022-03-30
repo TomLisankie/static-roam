@@ -287,13 +287,52 @@
     (when (< (fs/size f) 5)
       (prn (str f) (fs/size f) (java.util.Date. (fs/mod-time f))))))
 
-(process-files
- (fn [l]
-   
 
- (defn convert-twitter-links
+(defn convert-twitter-links
   [l]
   (let [link (re-find #"http.*twitter.com/\S*" l)]
     (when (and link
                (not (re-find #"\{\{tweet" l)))
       (str/replace l  #"http.*twitter.com/\S*" (format "{{tweet %s}}" link)))))
+
+(defn detect-case-fucks
+  [bm]
+  (filter #(> (count %) 1) (vals (group-by str/lower-case (keys bm)))))
+
+;;; Damn, quite a few!
+
+(["play" "Play"]
+ ["vitalism" "Vitalism"]
+ ["clojure" "Clojure"]
+ ["rationalism" "Rationalism"]
+ ["logseq" "Logseq"]
+ ["rawsugar" "RawSugar"]
+ ["author" "Author"]
+ ["Private" "private"]
+ ["morose delectation" "Morose delectation"]
+ ["This is your mind on plants, Pollan" "This is Your Mind on Plants, Pollan"]
+ ["Music" "music"]
+ ["Status" "status"]
+ ["Doctor" "doctor"]
+ ["emacs" "Emacs"]
+ ["roam" "Roam"]
+ ["Magick" "magick"]
+ ["Dream" "dream"]
+ ["Meta" "meta"]
+ ["Stoicism" "stoicism"]
+ ["Lisp" "lisp"]
+ ["notes" "Notes"]
+ ["Meaningness" "meaningness"]
+ ["Tarot" "tarot"])
+
+;;; Wonder how many are from bad links and how many are in the thing...
+
+
+(defn detect-case-fucks-2
+  []
+  (filter #(> (count %) 1) (vals (group-by str/lower-case (map str (fs/list-dir "/opt/mt/repos/ammdi/pages"))))))
+
+;;; None, because mac fs won't allow it, duh.
+
+;;; Meaning, link resolution should be smarter.
+   

@@ -391,8 +391,9 @@
 (defn- toc-1
   [block]
   (let [head (when-let [{:keys [depth content]}
-                        (str-match '[:block [:heading (? depth) (? content)]]
-                                   (:parsed block))]
+                        (and (displayed? block)
+                             (str-match '[:block [:heading (? depth) (? content)]]
+                                        (:parsed block)))]
                (when (zero? (count depth)) (prn :foo block))
                [(count depth) (:id block)]) ; might be nice to add rendered text but namespace fucks us, it's render/block-locak-text
         rest
