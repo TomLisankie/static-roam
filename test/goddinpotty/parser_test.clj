@@ -93,13 +93,13 @@ And its fallen Emanation, the Spectre and its cruel Shadow.")))))
   (is (= [:block "foo, "
           [:italic "bar"]
           " blag "
-          [:italic "The" " " "Confidence" " " "Man"]
+          [:italic "The Confidence Man"]
           " and"]
          (parse-to-ast "foo, __bar__ blag __The Confidence Man__ and")))
   (is (= [:block "foo, "
           [:italic "bar"]
           " blag "
-          [:italic "The" " " "Confidence" " " "Man"]
+          [:italic "The Confidence Man"]
           " and "]
          (parse-to-ast "foo, __bar__ blag __The Confidence Man__ and ")))
   ;; Apparently this one is very tough to parse, maybe due to the heavy literary pretentiousness
@@ -141,3 +141,9 @@ And its fallen Emanation, the Spectre and its cruel Shadow.")))))
           [:italic "Curiosity"]
           ", "]
          (parse-to-ast "blah __Epistemology__, __Agency__, and __Curiosity__, "))))
+
+(deftest parse-many-bolds
+  (is (= [:block "a " [:bold "b"] " c " [:bold "d"] " e"]
+         (parse-to-ast "a **b** c **d** e")))
+  (is (= [:block "a " [:bold "b"] " c " [:bold "d"] " e " [:bold "f"] " g"]
+         (parse-to-ast "a **b** c **d** e **f** g"))))

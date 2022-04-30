@@ -1,11 +1,13 @@
 (ns goddinpotty.endure
   (:require [alandipert.enduro :as e]))
 
-;;; Generalized persistent memoing based on Enduro https://github.com/alandipert/enduro
+;;; Generalized persistent memoizing based on Enduro https://github.com/alandipert/enduro
 
 ;;; This is a loose copy of stuff in multitool, modified to work with an enduro atom
 ;;; Enduro can support different backing stores, might want to support that.
 ;;; TODO would be better to have separate atom and file for each fn, if there are ever > 1. 
+;;; → multitool except I don't want to bring along the dependencies (includes postgres)
+;;; TODO should be a version of Enduro that backs onto gcs or other cloud service.
 
 (def memoizers (e/file-atom {} ".enduro" :pending-dir "/tmp"))
 

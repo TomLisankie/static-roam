@@ -40,16 +40,6 @@
   (doseq [[fname hiccup] content]
     (export-page hiccup fname output-dir)))
 
-;;; TODO no need for this if we fake out subdirs.
-#_
-(defn actual-file-name
-  [bm block]
-  (let [bare]
-    (if (bd/page-children block bm)
-           (str bare "/index.html")     ;wotta hack
-           bare)
-    ))
-
 (defn generate-content-page
   [block-map output-dir block]
   (prn :generate-page (:id block))

@@ -356,11 +356,6 @@
            (re-find #"^(.*)/(.*?)$" (:title page)))
       (get (page-hierarchies bm) (:title page))))  ;top page
 
-(defn page-children
-  [page bm]
-  ;; TODO this won't work for >1 level of hierarchy
-  (get (page-hierarchies bm) (:title page)))
-
 ;;; Table o' contents
 
 ;;; This must exist? core.match, but not quite
