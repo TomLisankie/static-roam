@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 
 # usage: bin/simple_server.sh port base-dir
 
 
-import SimpleHTTPServer
-import SocketServer
+import http.server
+import socketserver
 import sys
 import os
 
@@ -13,13 +13,13 @@ BASE = sys.argv[2]
 
 os.chdir(BASE)                  # I'm sure there's a better way to do this
 
-Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+Handler = http.server.SimpleHTTPRequestHandler
 # Make extensionless files serve as html
 Handler.extensions_map.update({
     '': 'text/html',
 });
 
-httpd = SocketServer.TCPServer(("", PORT), Handler)
+httpd = socketserver.TCPServer(("", PORT), Handler)
 
-print "Serving at port", PORT
+print("Serving at port", PORT)
 httpd.serve_forever()
