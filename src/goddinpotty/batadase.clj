@@ -11,7 +11,7 @@
 
 (defn block? [x]
   (and (map? x)
-       (string? (:id x))))
+       (:id x)))
 
 (defn assert-block
   [x]
@@ -140,15 +140,18 @@
   [block-map]
   (remove :special? (displayed-pages block-map)))
 
+(declare alias-map)
+
 (defn tagged?
   [block-map block tag]
-  (or (contains? (:refs block) tag)
+  (let [tag-id (get (alias-map block-map) tag)]
+  (or (contains? (:refs block) tag-id)
       ;; This implements the somewhat weird convention that tags are done in contained elts, eg
       ;; - Some private stuff
       ;;   - #Private
       ;; partly for historical reasons and partly so pages can be tagged
-      (some #(contains? (:refs %) tag)
-            (block-children block-map block))))
+      (some #(contains? (:refs %) tag-id)
+            (block-children block-map block)))))
 
 (defn tagged-or-contained?
   [block-map block tag]
@@ -234,8 +237,7 @@
 (defn page-empty?
   [page]
   (and (not (:special? page))
-       (< (- (size page)
-             (count (:id page)))
+       (< (size page)                   ;TODO might need tweaking, used to take title size into account?
           10)))
 
 (defn expand-to [block-map block minsize]
@@ -311,22 +313,29 @@
     (exec collect)
     @acc))
 
+;;; All legit names of block, main and aliases
+(defn block-names
+  [block]
+  (if (:title block)
+    (conj (:alias block) (:title block))
+    (:alias block)))
+
 (u/defn-memoized alias-map
-  "Return map of aliases to real page names"
+  "Return map of aliases to real page ids"
   [bm]
   (collecting-merge
    (fn [collect]
      (doseq [block (vals bm)]
-       (when (:alias block)
-         (doseq [alias (:alias block)]
+         (doseq [alias (block-names block)]
            (collect {alias (:id (block-page bm block))})
-           ))))))
+           )))))
 
 (defn get-with-aliases
-  [bm page-name]
-  (let [aliases (alias-map bm)]
-    (or (get bm page-name)
-        (get bm (get aliases page-name)))))
+  ([bm page-name]
+   (get-with-aliases bm  (alias-map bm) page-name))
+  ([bm aliases page-name]
+   (or (get bm page-name)
+       (get bm (get aliases page-name)))))
 
 ;;; → Multitool? 
 (defn vec->maps

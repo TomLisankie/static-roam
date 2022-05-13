@@ -6,7 +6,7 @@
             [org.parkerici.multitool.core :as u]
             ))
 
-;;; These are sort of high-level integration tests, at least proves that the basic machinery is working.
+;;; These are sort of high-level integration tests, to prove that the basic machinery is working.
 
 ;;; TODO requires test graph be registered with Logseq
 (deftest nbb-extract-test
@@ -22,9 +22,17 @@
   (let [config (config/read-config "test/logseq-test-config.edn")
         bm (sut/produce-bm config)]
     (is (map? bm))
-    (let [block (u/some-thing #(= "A [[page]] link"
+    (let [{:keys [parsed refs]}
+          (u/some-thing #(= "A [[page]] link"
                                   (:content %))
                               (vals bm))]
-      (is (= #{"page"} (:refs block)))   ;TODO need to figure out how refs work
-      (is (= [:block "A " [:page-link "[[page]]"] " link"] (:parsed block))))))
 
+      (is (= [:block "A " [:page-link "[[page]]"] " link"] parsed))
+      (is (set? refs))
+      (is (= 1 (count refs)))
+      (let [ref-block (get bm (first refs))]
+        (is (:page? ref-block))
+        (is (= "page" (:title ref-block)))))))
+
+
+  

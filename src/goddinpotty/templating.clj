@@ -209,6 +209,7 @@
           ]]
         about-widget
         ;; TODO this page should be hidden, or something
+        ;; TODO dies if no AboutBlock, should be more robust
         (when-let [about-content (render/block-full-hiccup "AboutBlock" block-map)]
           [:div.card.my-3
            [:h5.card-header "About"]
@@ -237,7 +238,7 @@
            (graph/render-graph ;; render-graph-embedded
             block-map
             output-dir
-            {:name (utils/clean-page-title block-id)
+            {:name (utils/clean-page-title title-text)
              :width 290                  ;This depends on the column width css, currently my-3
              :height 350
              :controls? false

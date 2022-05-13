@@ -18,7 +18,7 @@
            index (range)]
    (u/clean-map          
     {:id index                          ;TODO not sure this is necessary, we don't use it
-     :url (utils/html-file-title (:id page))
+     :url (utils/html-file-title (:title page))
      ;; If punctuation is causing problems, try fiddling with elasticlunr.tokenizer.seperator
      :title (:title page)
      :alias (when-let [aliases (get aliases (:title page))]

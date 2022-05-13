@@ -4,6 +4,7 @@
             [goddinpotty.database :as database]
             [goddinpotty.utils :as utils]
             [org.parkerici.multitool.core :as u]
+            [me.raynes.fs :as fs]
             ))
 
 ;;; TODO these are broken by logseq changes
@@ -133,6 +134,10 @@
           (is (= test1-block-map clean-block-map))
           )))))
 
-
-  
-
+;;; Test build from Logseq
+(deftest generate-from-logseq
+  (fs/delete-dir "taget/logseq-test")
+  (main "test/logseq-test-config.edn")
+  (is (fs/exists? "target/logseq-test/Superman"))
+  ;; MORE!
+  )

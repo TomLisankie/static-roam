@@ -5,19 +5,11 @@
            :graph "logseq-test"
            }
 
-  :exit-tags ["ExitPoint" "Private" "private" "charliebrowning" "InProgress"]
-  :real-base-url "http://www.hyperphor.com/ammdi/" ; pointed at by markdown, may be other uses
+  :exit-tags ["ExitPoint" "Private"]
   :site-css ["assets/hyper-roam.css"]
-  :short-title "AMMDI"
-  :main-page "Agency Made Me Do It"
-  :colophon  ["Copyright © " [:a {:href "http://hyperphor.com" :style "color: white;"} "Hyperphor"] " 2020-2022"]
-;;; GA is evil so maybe skip
-  :google-analytics "G-SK8PZVFHTW" 
-  ;; :markdown-output-dir "/misc/repos/ammdi-logseq/goddinpotty/"
-
-  ;; Recent page is broken in Logseq world, so redirect to Index-Date
+  :short-title "Logseq:Goddinpotty Test Graph"
+  :main-page "Front Page"
   :right-navbar [["All Pages" "Index-Date"]] ; "About" replaced with side widget
-  :output-dir "/opt/mt/repos/hyperphor-git/ammdi" 
-  :twin-pages? true
+  :output-dir "target/logseq-test" 
   }]
 

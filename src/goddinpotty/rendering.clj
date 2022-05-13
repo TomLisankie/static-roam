@@ -136,10 +136,11 @@
                (bd/get-with-aliases bm opage)
                opage)
         alias (or alias (and (string? opage) opage)) ;argh
-        page-id (:id page)]
+        page-id (:id page)
+        page-title (:title page)]
     (if (and page (bd/displayed? page))
       [:a (u/clean-map
-           {:href (str (utils/html-file-title page-id))
+           {:href (str (utils/html-file-title page-title))
             ;; TODO behavior with empties should be configurable, I keep
             ;; changing my own mind about it.
             :class (str/join " "
@@ -147,7 +148,7 @@
                                      (list (when (bd/page-empty? page) "empty")
                                            (when (= current page-id) "self")
                                            class)))})
-       (block-content->hiccup (or alias page-id))]
+       (block-content->hiccup (or alias page-title))]
       (do
         ;; This is normal but a sign that target might want to be exposed.
         (prn (str "ref to excluded page: " (or page-id opage)))
@@ -316,9 +317,8 @@
  ;Has to do full hiccup to include children
 (defn block-full-hiccup-sidenotes
   [block-id block-map & [depth]]
-  {:pre [(have? string? block-id)]}
   (let [depth (or depth 0)
-        block (get block-map block-id)]
+        block (bd/get-with-aliases block-map block-id)]
     (when (bd/displayed? block)
       [:ul {:id block-id :class (cond (not (bd/included? block)) "excluded"
                                       (< depth 2) "nondent" ;don't indent the first 2 levels

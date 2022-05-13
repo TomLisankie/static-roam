@@ -51,7 +51,7 @@
                      :alias (get-in block [:block/properties :alias])
                      :class (get-in block [:block/properties :class])
                      }]
-                (swap! bm assoc (:id b) b)
+                (swap! bm assoc (:id b) (u/clean-map b))
                 b))]
       (doseq [p pages]
         (convert p))
@@ -197,13 +197,15 @@
              db
              db))
              
+;;; TODO do something with :block/refs and/or :block/path-refs probably?
+;;; path-refs seems to be union of refs and parent?
 (defn logseq-nbb->blocks-base
   [blocks]
   (->> blocks
        (map (fn [block]
               {:title (or
                        (get-in block [:block/properties :title])
-                       (:block/original-name block) ;??? Not sure what actual semnatics are, but this is often better
+                       (:block/original-name block) ;??? Not sure what actual semnatics are, but this is often better TODO should name be alias?
                        (:block/name block))
                :id (:db/id block) ;note: has to be id so refs work
                :uid (str (:block/uuid block))
@@ -229,19 +231,31 @@
   (add-children base :parent :children))
 
 ;;; Requires nbb-logseq to be installed
-(defn nbb-extract
-  [graph-name]
+(defn nbb-query
+  [graph-name query]
   (let [{:keys [exit out err]}
         ;; TODO ugly and maybe antiperformant that this returns a string. But sh/sh is incapable of
         ;; writing to a file. Takes about a minute for my big graph, but most of that is in nbb, not
         ;; parse.
         (sh/sh "nbb-logseq"
-               "/opt/mt/reposed/nbb-logseq/examples/query.cljs" ;TODO
+               "resources/nbb-query.cljs" 
                graph-name
-               "[:find (pull ?b [*]) :where [?b :block/page]]")]
+               (str query))]
     (if (= exit 0)
       (read-string out)
-      (throw (ex-info err)))))
+      (throw (ex-info err {:exit exit :err err})))))
+
+
+(defn nbb-extract
+  [graph-name]
+  (map first
+       (nbb-query graph-name '[:find (pull ?b [*]) :where [?b :block/uuid _]])))
+
+;;; dev only for now
+(defn nbb-datoms
+  [graph-name]
+  (group-by first (nbb-query graph-name '[:find ?a ?b ?c :where [?a ?b ?c]])))
+
 
 (defn produce-bm
   [config]

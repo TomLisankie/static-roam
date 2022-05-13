@@ -134,8 +134,8 @@
 (defmethod post-generation :logseq [_ _]
   (logseq/post-generation))
 
-(defn -main
-  [& [config-or-path]]
+(defn main
+  [config-or-path]
   (if (map? config-or-path)
     (config/set-config-map! config-or-path)
     (config/set-config-path! (or config-or-path "default-config.edn")))
@@ -146,6 +146,10 @@
     (html-gen/generate-index-redir (config/config  :output-dir))
     (post-generation (config/config) bm)
     ))
+
+(defn -main
+  [& [config-or-path]]
+  (main config-or-path))
 
 #_
 (defn scarf-images
