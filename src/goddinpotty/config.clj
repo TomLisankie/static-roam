@@ -18,11 +18,16 @@
   (reset! the-config m)
   (pprint/pprint @the-config))
 
-(defn set-config-path!
+;;; TODO probably the wrong thing to use resources? Convenient for now
+(defn read-config
   [path]
    (if-let [resource (io/resource path)]
-     (set-config-map! (aero/read-config resource))
+     (aero/read-config resource)
      (throw (ex-info "Config not found" {:resource path}))))
+
+(defn set-config-path!
+  [path]
+  (set-config-map! (read-config path)))
 
 (defn config
   [& [att]]

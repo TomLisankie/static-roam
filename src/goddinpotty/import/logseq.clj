@@ -137,8 +137,7 @@
   (-> page
       :title
       source-file
-      safe-times
-))
+      safe-times))
 
 ;;; Set last edit time of all blocks to file write date. Best we can do
 (defn get-edit-times
@@ -151,6 +150,7 @@
                     b))
                 bm))
 
+#_
 (defn produce-bm
   [config]
   (let [{:keys [directory file-pattern]} (:source config)]
@@ -184,3 +184,74 @@
   (publish-images (get-in (config/config) [:source :repo]) )
   (publish-assets))
 
+;;; Alt: try using an exported nbb graph
+
+;;; nbb dumps have no :block/children, just parent
+;;; → multitool
+(defn add-children
+  [db parent-att child-att]
+  (reduce-kv (fn [acc key item]
+               (if-let [parent (get item parent-att)]
+                 (update-in acc [parent child-att] conj key)
+                 acc))
+             db
+             db))
+             
+(defn logseq-nbb->blocks-base
+  [blocks]
+  (->> blocks
+       (map (fn [block]
+              {:title (or
+                       (get-in block [:block/properties :title])
+                       (:block/original-name block) ;??? Not sure what actual semnatics are, but this is often better
+                       (:block/name block))
+               :id (:db/id block) ;note: has to be id so refs work
+               :uid (str (:block/uuid block))
+               :content (:block/content block) ;TODO strip out properties
+               :edit-time (utils/coerce-time (get-in block [:block/properties :updated-at]))
+               :create-time (utils/coerce-time (get-in block [:block/properties :created-at]))
+
+               :parent (get-in block [:block/parent :db/id])
+               :left (get-in block [:block/left :db/id])
+               :page? (boolean (:block/name block)) ;???
+               ;; Support Logseq publish tag
+               ;; TODO make this more general
+               :public? (get-in block [:block/properties :public])
+               :alias (get-in block [:block/properties :alias])
+               :class (get-in block [:block/properties :class])
+               }))
+       (u/index-by :id)
+       ))
+
+(defn nbb-index
+  [base]
+  ;; TODO Rejigger child order
+  (add-children base :parent :children))
+
+;;; Requires nbb-logseq to be installed
+(defn nbb-extract
+  [graph-name]
+  (let [{:keys [exit out err]}
+        ;; TODO ugly and maybe antiperformant that this returns a string. But sh/sh is incapable of
+        ;; writing to a file. Takes about a minute for my big graph, but most of that is in nbb, not
+        ;; parse.
+        (sh/sh "nbb-logseq"
+               "/opt/mt/reposed/nbb-logseq/examples/query.cljs" ;TODO
+               graph-name
+               "[:find (pull ?b [*]) :where [?b :block/page]]")]
+    (if (= exit 0)
+      (read-string out)
+      (throw (ex-info err)))))
+
+(defn produce-bm
+  [config]
+  (-> config
+      (get-in [:source :graph])
+      nbb-extract
+      logseq-nbb->blocks-base
+      nbb-index
+      db/roam-db-1
+      get-edit-times                  
+      bd/add-empty-pages
+      db/generate-inverse-refs ;have to redo this after add-empty-pages
+      ))
