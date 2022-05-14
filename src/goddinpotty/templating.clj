@@ -177,6 +177,14 @@
       [:a {:href (str "#" id)} (render/block-local-text (get bm id))]]
      )])
 
+;; TODO this page should be hidden, or something
+(def about-block-title "AboutBlock")    ;TODO config option
+
+(defn about-content
+  [bm]
+  (when-let [block (bd/get-with-aliases bm about-block-title)]
+    (render/block-full-hiccup about-block-title bm)))
+
 (defn block-page-hiccup
   [block-id block-map output-dir]
   (let [block (get block-map block-id)
@@ -208,9 +216,7 @@
           [:div#searcho] 
           ]]
         about-widget
-        ;; TODO this page should be hidden, or something
-        ;; TODO dies if no AboutBlock, should be more robust
-        (when-let [about-content (render/block-full-hiccup "AboutBlock" block-map)]
+        (when-let [about-content (about-content block-map)]
           [:div.card.my-3
            [:h5.card-header "About"]
            [:div.card-body.minicard-body

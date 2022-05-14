@@ -6,14 +6,24 @@
             [clojure.test :refer :all]))
 
 (def fake-block-map
-  {"foo" {:id "foo" :page? true :include? true :content "foo"}
-   "bar" {:id "bar" :page? true :include? true :content "short"}
-   "baz" {:id "baz" :page? true :include? true :content (str (range 1000))}})
+  {1 {:id 1 :page? true :include? true :content "foo" :title "foo"}
+   2 {:id 2 :page? true :include? true :content "short" :title "bar"}
+   3 {:id 3 :page? true :include? true :content (str (range 1000)) :title "baz"}})
+
+
+(defn prep-block
+  [b]
+  (-> b
+      (assoc :parsed (parser/parse-to-ast (:content b)))
+      (assoc :id (or (:id b) (gensym "id")))))
 
 (defn fake-block
   [content]
-  {:content content
-   :parsed (parser/parse-to-ast content)})
+  (prep-block {:content content}))
+
+(defn fake-block-map+
+  [block]
+  (assoc fake-block-map (:id block) block))
 
 (deftest alias-html-test
   (is (= [:span "what " [:a.external {:href "fuck"} "the"] " is this"]
@@ -21,6 +31,7 @@
   (is (= [:span "what " [:a.external {:href "fuck"} "the fucking"] " is this"]
          (block-content->hiccup "what [the fucking](fuck) is this")))
 
+  ;; TODO shouldn't this be [:span.empty ...] ??? Are both of those needed or should they be collapsed
   (is (= [:span "foo " [:a {:href "bar" :class "empty"} "bar"] " baz " [:a.external {:href "yuck"} "ugh"]]
          (block-hiccup (fake-block "foo [[bar]] baz [ugh](yuck)") fake-block-map)))
   (is (= [:span "foo " [:a.external {:href "yuck"} "ugh"] " baz " [:a {:href "bar" :class "empty"} "bar"]]
@@ -58,8 +69,12 @@ And its fallen Emanation, the Spectre and its cruel Shadow.") {}))))
 (deftest markup-in-page-names-test
   (is (= [:a {:href "__foo__" :class "empty"} [:i "foo"]] 
          (block-hiccup (fake-block "[[__foo__]]")
-                       (assoc fake-block-map "__foo__"
-                              {:id "__foo__" :include? true :page? true :content "eh"})))))
+                       (fake-block-map+
+                        (prep-block
+                         {:title "__foo__"
+                          :include? true
+                          :page? true
+                          :content "eh"}))))))
 
 (deftest italic-link-bug
   (testing "link inside italics"
