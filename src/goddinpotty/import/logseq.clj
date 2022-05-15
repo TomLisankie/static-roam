@@ -189,13 +189,26 @@
 ;;; nbb dumps have no :block/children, just parent
 ;;; → multitool
 (defn add-children
-  [db parent-att child-att]
+  [parent-att child-att db]
   (reduce-kv (fn [acc key item]
                (if-let [parent (get item parent-att)]
                  (update-in acc [parent child-att] conj key)
                  acc))
              db
              db))
+
+;;; Uses the :left property to order the children properly. Relies that :left of leftmost child points to parent.
+(defn- order-children
+  ([db]
+   (u/map-values (fn [block]
+                   (update block :children #(order-children db (set %) (:id block))))
+                 db))
+  ([db child-ids left]
+   (if (empty? child-ids)
+     []
+     (let [next (u/some-thing (fn [child-id] (= left (get-in db [child-id :left]))) child-ids)]
+       (cons next (order-children db (disj child-ids next) next))))))
+
              
 ;;; TODO do something with :block/refs and/or :block/path-refs probably?
 ;;; path-refs seems to be union of refs and parent?
@@ -223,12 +236,10 @@
                :class (get-in block [:block/properties :class])
                }))
        (u/index-by :id)
+       (add-children :parent :children)
+       (order-children)
        ))
 
-(defn nbb-index
-  [base]
-  ;; TODO Rejigger child order
-  (add-children base :parent :children))
 
 ;;; Requires nbb-logseq to be installed
 (defn nbb-query
@@ -263,7 +274,6 @@
       (get-in [:source :graph])
       nbb-extract
       logseq-nbb->blocks-base
-      nbb-index
       db/roam-db-1
       get-edit-times                  
       bd/add-empty-pages
