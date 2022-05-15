@@ -2,7 +2,7 @@
 (* TODO should make more use of instaparse compositionality *)
 (* TODO I suppose there should be separate versions of this for Roam and Logseq. *)
 
-block = block-property* (tweet | heading | blockquote | prop-block | (syntax-in-block / text)*) block-property*
+block = block-property* (tweet | heading | hiccup | blockquote | prop-block | (syntax-in-block / text)*) block-property*
 
 <syntax-in-block> = (todo | done | image | alias | block-embed | hashtag | page-link | block-ref | code-line | code-block | youtube | bold | italic | bare-url | page-alias | hr | latex ) (* add query later*)
 
@@ -42,10 +42,12 @@ latex= #"\$\$(.*?)\$\$"
 
 (* should match all punc that is not otherwise used for syntax, not sure I have everything  *)
    text = #'[A-Za-z0-9\.\,\!\"\'\?]+|[\s\W_]+?'
-textier = #'[A-Za-z0-9\.\,\!\"\'\?\s\:]+' 
+textier = #'[A-Za-z0-9\.\,\!\"\'\?\s\:\-]+' 
 
 heading = #"#{1,3}" block
 
 prop-block = #"---\n(.|\n)*---\n\n"
 
 tweet = <"{{tweet ">, bare-url, <"}}">
+
+hiccup = #"(?s)\[\:[a-z]+.*"

@@ -142,9 +142,11 @@ And its fallen Emanation, the Spectre and its cruel Shadow.")))))
           ", "]
          (parse-to-ast "blah __Epistemology__, __Agency__, and __Curiosity__, "))))
 
-(deftest italic-colon-bug
+(deftest italic-punc-bug
   (is (= [:block "what " [:italic "the: fuck"] " charlie?"]
-         (parse-to-ast "what __the: fuck__ charlie?")))  )
+         (parse-to-ast "what __the: fuck__ charlie?")))
+  (is (= [:block "title " [:italic "Entering the Dharma Door of Non-Duality"] " "]
+         (parse-to-ast "title __Entering the Dharma Door of Non-Duality__ "))))
 
 (deftest parse-many-bolds
   (is (= [:block "a " [:bold "b"] " c " [:bold "d"] " e"]

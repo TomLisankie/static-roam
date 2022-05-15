@@ -201,6 +201,12 @@
     (assoc thing 0 head)
     [head thing]))
   
+;;; Bootstrap requires some classes to look good. This might be extended
+;;; for other things. Not sure this is right thing, but solves an immediate problem
+(defn hiccup-fixups
+  [hic]
+  (u/substitute hic {:table :table.table}))
+
 ;;; Does most of the real work of rendering.
 (defn ele->hiccup
   [ast-ele block-map & [block]]
@@ -283,7 +289,7 @@
             ;; See https://www.mathjax.org/ This produces an inline LaTex rendering.
             :latex [:span.math.display (str "\\(" (utils/remove-double-delimiters ele-content) "\\)")]
             :tweet (embed-twitter (second (second ast-ele)))
-            )))))))
+            :hiccup (hiccup-fixups (read-string ele-content)))))))))
 
 ;;; Used for converting things like italics in blocknames
 (defn block-content->hiccup

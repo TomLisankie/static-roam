@@ -129,3 +129,10 @@ And its fallen Emanation, the Spectre and its cruel Shadow.") {}))))
     (is (= [:span "A show about " [:a {:href "link-url"} "The Big Nada"] ]
            (block-hiccup (fake-block "A show about {{alias:[[nihilism]]The Big Nada}}")
                          {"nihilism" {:id "nihilism" :page? true :include? true :content (str (range 1000))}})))))
+
+(deftest hiccup-render-test
+  (= [:table.table
+      [:tr [:th "The Magician"] [:td "concentration without effort"] [:td "pure act"]]
+      [:tr [:th "The High Priestess"] [:td "vigilant inner silence"] [:td "reflection of pure act"]]
+      ]
+     (block-content->hiccup "[:table \n[:tr [:th \"The Magician\"] [:td \"concentration without effort\"] [:td \"pure act\"]]\n [:tr [:th \"The High Priestess\"] [:td \"vigilant inner silence\"] [:td \"reflection of pure act\"]]]")))
