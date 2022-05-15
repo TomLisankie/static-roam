@@ -207,6 +207,12 @@
   [hic]
   (u/substitute hic {:table :table.table}))
 
+(u/defn-memoized uid-indexed
+  [bm]
+  (->> bm
+       vals
+       (u/index-by :uid)))
+
 ;;; Does most of the real work of rendering.
 (defn ele->hiccup
   [ast-ele block-map & [block]]
@@ -242,7 +248,7 @@
             :page-alias (let [[_ page alias] (re-matches #"\{\{alias\:\[\[(.+)\]\](.*)\}\}"
                                                          ele-content)]
                           (page-link-by-name block-map page :alias alias))
-            :block-ref (let [ref-block (get block-map (utils/remove-double-delimiters ele-content))]
+            :block-ref (let [ref-block (get (uid-indexed block-map) (utils/remove-double-delimiters ele-content))]
                          ;; ARGh can't work because of fucking namespace rules. POS!
                          (try 
                            (if (and block (= (bd/block-page block-map ref-block)

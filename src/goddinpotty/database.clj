@@ -123,10 +123,9 @@
                          [v] [])
                 ;; default
                 (mapcat struct-entities (rest struct)))))]
-    (let [base (set (map #(get aliases % %) (struct-entities (:parsed block))))]
-      (if-let [page-hierarch-ref (page-hierarchy-ref block)]
-        (conj base page-hierarch-ref)
-        base))))
+    (let [base (conj (struct-entities (:parsed block))  (page-hierarchy-ref block))]
+      (set (filter identity (map #(get aliases % %) base))))))
+
 
 (defn generate-refs
   [db]
