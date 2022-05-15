@@ -138,7 +138,7 @@
         alias (or alias (and (string? opage) opage)) ;argh
         page-id (:id page)
         page-title (:title page)]
-    (if (and page (bd/displayed? page))
+    (if (and page (bd/displayed? page) page-title)
       [:a (u/clean-map
            {:href (str (utils/html-file-title page-title))
             ;; TODO behavior with empties should be configurable, I keep
@@ -151,9 +151,9 @@
        (block-content->hiccup (or alias page-title))]
       (do
         ;; This is normal but a sign that target might want to be exposed.
-        (prn (str "ref to excluded page: " (or page-id opage)))
+        (prn (str "ref to excluded or missing page: " (or page-id opage)))
         [:span.empty
-         (block-content->hiccup (or alias page-id))]))))
+         (block-content->hiccup (or alias page-title))]))))
 
 ;;; Argh this is stupid
 (defn page-link-by-name

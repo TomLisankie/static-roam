@@ -42,7 +42,7 @@
 
 (defn generate-content-page
   [block-map output-dir block]
-  (prn :generate-page (:id block))
+  (prn :generate-page (:title block))
   (let [fname (str "/" (utils/html-file-title (:title block)))]
     (export-page (if (:special? block)
                    ((:generator block) block-map)

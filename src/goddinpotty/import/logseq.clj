@@ -244,6 +244,10 @@
 ;;; Requires nbb-logseq to be installed
 (defn nbb-query
   [graph-name query]
+  (prn :nbb-logseq
+       "resources/nbb-query.cljs" 
+       graph-name
+       (str query))
   (let [{:keys [exit out err]}
         ;; TODO ugly and maybe antiperformant that this returns a string. But sh/sh is incapable of
         ;; writing to a file. Takes about a minute for my big graph, but most of that is in nbb, not
@@ -276,6 +280,7 @@
       logseq-nbb->blocks-base
       db/roam-db-1
       get-edit-times                  
-      bd/add-empty-pages
+      ;; Going to guess this is no longer necessary?
+      #_ bd/add-empty-pages
       db/generate-inverse-refs ;have to redo this after add-empty-pages
       ))

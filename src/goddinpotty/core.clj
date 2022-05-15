@@ -93,7 +93,8 @@
 (defn gen-page
   [page]
   (u/memoize-reset!)
-  (html-gen/generate-content-page @last-bm (config/config :output-dir) (get @last-bm page)))
+  (html-gen/generate-content-page @last-bm (config/config :output-dir)
+                                  (bd/get-with-aliases @last-bm page)))
 
 (defn gen-pages
   []
@@ -146,6 +147,10 @@
     (html-gen/generate-index-redir (config/config  :output-dir))
     (post-generation (config/config) bm)
     ))
+
+(defn get-page
+  [name]
+  (bd/get-with-aliases @last-bm name))
 
 (defn -main
   [& [config-or-path]]

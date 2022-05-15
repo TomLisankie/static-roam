@@ -61,29 +61,42 @@
     parent))
 
 
+(defn trim-string
+  [s n]
+  (and s
+       (subs s 0 (min n (count s)))))
+
 
 ;;; New version computes degree as well as acctually the map
 ;;; Seems to compute the same set as other method
 (defn compute-depths
   "Computes depths from entry points"
   [block-map]
-  (let [exit-point? (u/memoize-named :exit-point #(bd/exit-point? block-map (get block-map %)))] ;performance hack
+  (let [exit-point? (u/memoize-named :exit-point #(bd/exit-point? block-map %))
+        alias-map (bd/alias-map block-map)] ;performance hack
     (letfn [(propagate [depth block-map from]
-              (let [current-depth (or (get-in block-map [from :depth]) 1000)]
-                (if (and (contains? block-map from)
-                         (< depth current-depth)
-                         (not (exit-point? from)))
+              (let [from-block (bd/get-with-aliases block-map alias-map from)
+                    from-depth (get from-block :depth 1000)]
+                (if (and from-block
+                         (< depth from-depth)
+                         (not (exit-point? from-block)))
                   (reduce (fn [bm r]
                             (propagate (+ depth 1) bm r))
-                          (assoc-in block-map [from :depth] depth)
-                          (bd/all-refs (get block-map from)))
+                          (assoc-in block-map [(:id from-block) :depth] depth)
+                          (bd/all-refs from-block))
                   block-map)))]
-      (reduce (partial propagate 0) block-map (map :id (bd/entry-points block-map))))))
+      (reduce (partial propagate 0)
+              block-map
+              (map :id (bd/entry-points block-map))))))
+
+
 
 ;;; This is where inclusion is computed.
 (defn compute-includes
   [block-map]
-  (u/map-values #(assoc % :include? (not (nil? (:depth %)))) block-map))
+  (u/map-values #(assoc % :include? (and (not (nil? (:depth %)))
+                                         (not (empty? %)))) ;NEW checking this here
+                block-map))
 
 (defn parse-block
   [block]
