@@ -17,7 +17,7 @@ block-property =  #"(\n)?.+?:: .+(\n)?"
 code-line = #"\`.*?\`"
 code-block = #"(?is)^```.*```"
 (* query = #"\{\{query: .*?:.*?\}\}" | #"\{\{[[query]]: .*?:.*?\}\}" *)
-youtube = #"\{\{youtube: .*?\}\}" | #"\{\{\[\[youtube\]\]: .*?:.*?\}\}" | #"\{\{\[\[video\]\]: .*?:.*?\}\}"
+youtube = #"\{\{youtube .*?\}\}" | #"\{\{\[\[youtube\]\]: .*?:.*?\}\}" | #"\{\{\[\[video\]\]: .*?:.*?\}\}"
 page-alias = #"\{\{alias\:\[\[.+\]\].*\}\}"
 
 (* Logseq also uses *foo* for italic, but no real need for it *)
@@ -42,7 +42,7 @@ latex= #"\$\$(.*?)\$\$"
 
 (* should match all punc that is not otherwise used for syntax, not sure I have everything  *)
    text = #'[A-Za-z0-9\.\,\!\"\'\?]+|[\s\W_]+?'
-textier = #'[A-Za-z0-9\.\,\!\"\'\?\s]+' 
+textier = #'[A-Za-z0-9\.\,\!\"\'\?\s\:]+' 
 
 heading = #"#{1,3}" block
 

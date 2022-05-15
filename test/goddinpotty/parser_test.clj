@@ -6,14 +6,14 @@
 
 
 (deftest parsing-test
-  (let [parsed (set (rest (parse-to-ast "According to [[BJ Fogg]], we have [[motivation waves]].  Tie that in with the [[Fogg Behavior Model]] and you find that when people have high motivation, you should ask them to do something big and impactful, because if people are motivated to do more than the task that we ask them to do, it would be a waste for us not to prompt them to do so.  On the flip side, if people aren't particularly motivated, we shouldn't ask them to do something hard. ((j598fj6)) This is similar to the premise of #[[difficulty matching]] #yessereebob `this is a line of code` {{query: {and: [[note]] [[January]] }}} {{youtube: https://youtu.be/5iI_0wnwIpU}} [fasfa]([[Hello page]]) **IMPORTANT** __emphasis__ ^^pop out^^ ~~old news~~")))
+  (let [parsed (set (rest (parse-to-ast "According to [[BJ Fogg]], we have [[motivation waves]].  Tie that in with the [[Fogg Behavior Model]] and you find that when people have high motivation, you should ask them to do something big and impactful, because if people are motivated to do more than the task that we ask them to do, it would be a waste for us not to prompt them to do so.  On the flip side, if people aren't particularly motivated, we shouldn't ask them to do something hard. ((j598fj6)) This is similar to the premise of #[[difficulty matching]] #yessereebob `this is a line of code` {{query: {and: [[note]] [[January]] }}} {{youtube https://youtu.be/5iI_0wnwIpU}} [fasfa]([[Hello page]]) **IMPORTANT** __emphasis__ ^^pop out^^ ~~old news~~")))
         ]
     (is (contains? parsed [:page-link "[[BJ Fogg]]"]))
     (is (contains? parsed [:block-ref "((j598fj6))"]))
     (is (contains? parsed [:hashtag "#[[difficulty matching]]"]))
     (is (contains? parsed [:hashtag "#yessereebob"]))
     (is (contains? parsed [:alias "[fasfa]([[Hello page]])"]))
-    (is (contains? parsed [:youtube "{{youtube: https://youtu.be/5iI_0wnwIpU}}"]))
+    (is (contains? parsed [:youtube "{{youtube https://youtu.be/5iI_0wnwIpU}}"]))
     (is (contains? parsed [:bold "IMPORTANT"]))
     (is (contains? parsed [:italic "emphasis"]))
     ;; Turned off for performance
@@ -141,6 +141,10 @@ And its fallen Emanation, the Spectre and its cruel Shadow.")))))
           [:italic "Curiosity"]
           ", "]
          (parse-to-ast "blah __Epistemology__, __Agency__, and __Curiosity__, "))))
+
+(deftest italic-colon-bug
+  (is (= [:block "what " [:italic "the: fuck"] " charlie?"]
+         (parse-to-ast "what __the: fuck__ charlie?")))  )
 
 (deftest parse-many-bolds
   (is (= [:block "a " [:bold "b"] " c " [:bold "d"] " e"]
